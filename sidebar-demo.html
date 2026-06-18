@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>侧边导航栏实战演示 | Sidebar Navigation Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sidebar-w: 260px;
+    --sidebar-collapsed: 64px;
+    --nav-bg: #1e293b;
+    --nav-hover: #334155;
+    --accent: #3b82f6;
+  }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: #f1f5f9; color: #1e293b; min-height: 100vh;
+  }
+
+  /* ===== 侧边栏 ===== */
+  .sidebar {
+    position: fixed; top: 0; left: 0; height: 100vh;
+    width: var(--sidebar-w); z-index: 200;
+    background: var(--nav-bg); color: #cbd5e1;
+    display: flex; flex-direction: column;
+    transition: width .3s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+  }
+  .sidebar.collapsed { width: var(--sidebar-collapsed); }
+
+  /* Logo区 */
+  .sidebar .sidebar-logo {
+    display: flex; align-items: center; gap: .8rem;
+    padding: 1rem 1.2rem; height: 60px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    white-space: nowrap;
+  }
+  .sidebar .sidebar-logo .logo-icon {
+    width: 36px; height: 36px; background: var(--accent);
+    border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; font-size: 1.2rem; flex-shrink: 0;
+  }
+  .sidebar .sidebar-logo .logo-text {
+    font-weight: 900; font-size: 1rem; color: white;
+    opacity: 1; transition: opacity .2s;
+  }
+  .sidebar.collapsed .sidebar-logo .logo-text { opacity: 0; }
+
+  /* 菜单滚动区 */
+  .sidebar .menu-wrap {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    padding: .8rem 0;
+    scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.08) transparent;
+  }
+  .sidebar .menu-wrap::-webkit-scrollbar { width: 4px; }
+  .sidebar .menu-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+
+  /* 菜单项 */
+  .sidebar .menu, .sidebar .submenu { list-style: none; }
+  .sidebar .submenu {
+    max-height: 0; overflow: hidden;
+    transition: max-height .4s cubic-bezier(.4,0,.2,1);
+    background: rgba(0,0,0,.15);
+  }
+  .sidebar .submenu.open { max-height: 600px; }
+
+  .sidebar .menu a, .sidebar .menu .menu-toggle {
+    display: flex; align-items: center; gap: .7rem;
+    padding: .7rem 1.2rem; color: #94a3b8;
+    text-decoration: none; font-size: .88rem; white-space: nowrap;
+    cursor: pointer; transition: all .15s;
+    border-left: 3px solid transparent;
+    /* 触控优化 */
+    min-height: 44px;
+  }
+  .sidebar .submenu a { padding-left: 2.8rem; font-size: .83rem; }
+  .sidebar .submenu .submenu a { padding-left: 4rem; font-size: .8rem; }
+
+  .sidebar .menu a:hover, .sidebar .menu .menu-toggle:hover {
+    background: var(--nav-hover); color: #e2e8f0;
+  }
+  .sidebar .menu a.active {
+    background: rgba(59,130,246,.12); color: #60a5fa;
+    border-left-color: var(--accent); font-weight: 600;
+  }
+
+  /* 图标 */
+  .sidebar .menu a .icon, .sidebar .menu .menu-toggle .icon {
+    width: 20px; text-align: center; flex-shrink: 0; font-size: 1rem;
+  }
+  .sidebar .menu .menu-toggle .arrow {
+    margin-left: auto; font-size: .6rem; transition: transform .3s ease;
+    flex-shrink: 0;
+  }
+  .sidebar .menu .menu-toggle .arrow.rotated { transform: rotate(-180deg); }
+  .sidebar.collapsed .menu a span, .sidebar.collapsed .menu .arrow { opacity: 0; }
+
+  /* 底部开关 */
+  .sidebar .sidebar-footer {
+    padding: .8rem; border-top: 1px solid rgba(255,255,255,.06);
+  }
+  .sidebar .sidebar-footer button {
+    width: 100%; display: flex; align-items: center; gap: .7rem;
+    padding: .6rem .8rem; background: var(--nav-hover);
+    border: none; color: #94a3b8; border-radius: 8px;
+    cursor: pointer; font-size: .85rem; transition: all .15s;
+    white-space: nowrap; overflow: hidden;
+  }
+  .sidebar .sidebar-footer button:hover { color: white; background: #475569; }
+  .sidebar.collapsed .sidebar-footer button span { opacity: 0; }
+
+  /* ===== 顶栏 ===== */
+  .topbar {
+    position: sticky; top: 0; z-index: 150;
+    height: 56px; background: white;
+    display: flex; align-items: center; padding: 0 1.5rem;
+    box-shadow: 0 1px 6px rgba(0,0,0,.04);
+    gap: 1rem;
+    margin-left: var(--sidebar-w);
+    transition: margin-left .3s cubic-bezier(.4,0,.2,1);
+  }
+  .sidebar.collapsed ~ .topbar { margin-left: var(--sidebar-collapsed); }
+
+  .topbar .burger-btn {
+    display: none; background: none; border: none; font-size: 1.3rem;
+    cursor: pointer; padding: 8px; min-width: 44px; min-height: 44px;
+    border-radius: 8px; color: #475569;
+  }
+
+  /* ===== 主内容区 ===== */
+  .main-content {
+    margin-left: var(--sidebar-w);
+    transition: margin-left .3s cubic-bezier(.4,0,.2,1);
+    padding: 0 2rem 3rem; min-height: 200vh; /* 足够长以演示滚动 */;
+  }
+  .sidebar.collapsed ~ .main-content { margin-left: var(--sidebar-collapsed); }
+
+  .main-content section {
+    padding: 3rem 0; border-bottom: 1px solid #e2e8f0;
+    scroll-margin-top: 70px; /* 锚点偏移，防被topbar遮挡 */
+  }
+  .main-content section h2 {
+    font-size: 1.5rem; margin-bottom: 1rem; color: #1e293b;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .main-content section .badge {
+    font-size: .65rem; padding: .2rem .6rem; border-radius: 10px;
+    background: #dbeafe; color: #3b82f6; font-weight: 400;
+  }
+  .main-content section .card-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem; margin-top: 1rem;
+  }
+  .main-content section .card {
+    background: white; border-radius: 10px; padding: 1.2rem;
+    box-shadow: 0 1px 6px rgba(0,0,0,.03);
+  }
+  .main-content section .card h4 { font-size: .9rem; margin-bottom: .3rem; }
+  .main-content section .card p { font-size: .8rem; color: #64748b; }
+  .main-content section .feature-list {
+    display: flex; flex-direction: column; gap: .5rem; margin-top: .8rem;
+  }
+  .main-content section .feature-item {
+    display: flex; align-items: flex-start; gap: .6rem;
+    font-size: .88rem; color: #475569;
+  }
+  .main-content section .feature-item .check { color: #22c55e; }
+
+  /* ===== 移动端遮罩 ===== */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 199;
+    opacity: 0; visibility: hidden; transition: all .3s;
+  }
+  .overlay.show { opacity: 1; visibility: visible; }
+
+  /* ===== 响应式 ===== */
+  @media (max-width: 768px) {
+    .sidebar {
+      transform: translateX(-100%);
+      transition: transform .3s ease;
+      width: var(--sidebar-w) !important; /* 移动端始终全宽 */
+    }
+    .sidebar.mobile-open { transform: translateX(0); }
+    .sidebar.collapsed { width: var(--sidebar-w) !important; }
+
+    .topbar { margin-left: 0 !important; }
+    .topbar .burger-btn { display: flex; }
+    .main-content { margin-left: 0 !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 遮罩层 ===== -->
+<div class="overlay" id="overlay"></div>
+
+<!-- ===== 侧边栏 ===== -->
+<nav class="sidebar" id="sidebar" aria-label="侧边导航栏">
+  <div class="sidebar-logo">
+    <div class="logo-icon">⚡</div>
+    <span class="logo-text">Admin Pro</span>
+  </div>
+
+  <div class="menu-wrap">
+    <ul class="menu" id="mainMenu">
+      <!-- 首页 -->
+      <li><a href="#home" data-section="home"><span class="icon">🏠</span><span>首页概览</span></a></li>
+
+      <!-- 一级：数据管理（含二三级子菜单） -->
+      <li>
+        <div class="menu-toggle" onclick="toggleSubmenu(this)">
+          <span class="icon">📊</span><span>数据管理</span><span class="arrow">▾</span>
+        </div>
+        <ul class="submenu">
+          <li><a href="#data-overview" data-section="data-overview"><span>数据概览</span></a></li>
+          <li>
+            <div class="menu-toggle" onclick="toggleSubmenu(this)">
+              <span>报表中心</span><span class="arrow">▾</span>
+            </div>
+            <ul class="submenu">
+              <li><a href="#report-daily" data-section="report-daily"><span>日报表</span></a></li>
+              <li><a href="#report-monthly" data-section="report-monthly"><span>月报表</span></a></li>
+              <li><a href="#report-custom" data-section="report-custom"><span>自定义报表</span></a></li>
+            </ul>
+          </li>
+          <li><a href="#data-export" data-section="data-export"><span>数据导出</span></a></li>
+        </ul>
+      </li>
+
+      <!-- 一级：用户管理 -->
+      <li>
+        <div class="menu-toggle" onclick="toggleSubmenu(this)">
+          <span class="icon">👥</span><span>用户管理</span><span class="arrow">▾</span>
+        </div>
+        <ul class="submenu">
+          <li><a href="#user-list" data-section="user-list"><span>用户列表</span></a></li>
+          <li><a href="#user-roles" data-section="user-roles"><span>角色权限</span></a></li>
+          <li><a href="#user-logs" data-section="user-logs"><span>操作日志</span></a></li>
+        </ul>
+      </li>
+
+      <!-- 系统设置 -->
+      <li>
+        <div class="menu-toggle" onclick="toggleSubmenu(this)">
+          <span class="icon">⚙️</span><span>系统设置</span><span class="arrow">▾</span>
+        </div>
+        <ul class="submenu">
+          <li><a href="#settings-general" data-section="settings-general"><span>基本设置</span></a></li>
+          <li><a href="#settings-security" data-section="settings-security"><span>安全策略</span></a></li>
+          <li><a href="#settings-notify" data-section="settings-notify"><span>通知管理</span></a></li>
+        </ul>
+      </li>
+
+      <!-- 帮助 -->
+      <li><a href="#help" data-section="help"><span class="icon">❓</span><span>帮助文档</span></a></li>
+    </ul>
+  </div>
+
+  <!-- 展开/收起按钮 -->
+  <div class="sidebar-footer">
+    <button id="toggleBtn" onclick="toggleSidebar()" title="展开/收起侧边栏">
+      <span style="font-size:1.1rem">☰</span><span>收起菜单</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== 顶栏 ===== -->
+<div class="topbar">
+  <button class="burger-btn" id="mobileBurger" onclick="toggleMobileSidebar()" aria-label="打开菜单">☰</button>
+  <span style="font-weight:700">📐 侧边导航栏 Demo</span>
+  <span style="margin-left:auto;font-size:.75rem;color:#94a3b8">Scroll Spy 高亮中</span>
+</div>
+
+<!-- ===== 主内容区 ===== -->
+<main class="main-content">
+  <section id="home">
+    <h2>🏠 首页概览 <span class="badge">Scroll Spy 开始</span></h2>
+    <div class="card-row">
+      <div class="card"><h4>📊 总用户数</h4><p style="font-size:1.6rem;font-weight:900;color:#3b82f6">12,846</p></div>
+      <div class="card"><h4>📈 今日活跃</h4><p style="font-size:1.6rem;font-weight:900;color:#22c55e">3,421</p></div>
+      <div class="card"><h4>💰 本月营收</h4><p style="font-size:1.6rem;font-weight:900;color:#f59e0b">¥ 847,200</p></div>
+      <div class="card"><h4>📋 待处理</h4><p style="font-size:1.6rem;font-weight:900;color:#ef4444">23</p></div>
+    </div>
+    <div class="feature-list" style="margin-top:1rem">
+      <div class="feature-item"><span class="check">✅</span> 三个一级菜单含子菜单（数据管理/用户管理/系统设置）</div>
+      <div class="feature-item"><span class="check">✅</span> "数据管理 → 报表中心" 含三级嵌套子菜单</div>
+      <div class="feature-item"><span class="check">✅</span> 顶部开关按钮可展开/收起侧边栏 (260px ↔ 64px)</div>
+      <div class="feature-item"><span class="check">✅</span> 滚动页面 → 侧边栏自动高亮当前章节 (Scroll Spy)</div>
+      <div class="feature-item"><span class="check">✅</span> ≤768px → 侧边栏变抽屉式 (汉堡按钮 + 遮罩层)</div>
+    </div>
+  </section>
+
+  <section id="data-overview">
+    <h2>📊 数据概览</h2>
+    <div class="card-row">
+      <div class="card"><h4>实时流量</h4><p>当前在线：<strong>1,203</strong></p></div>
+      <div class="card"><h4>数据趋势</h4><p>环比增长 <strong style="color:#22c55e">+12.5%</strong></p></div>
+    </div>
+  </section>
+
+  <section id="report-daily">
+    <h2>📅 日报表 <span class="badge">三级菜单</span></h2>
+    <div class="card-row">
+      <div class="card"><h4>2026-06-17</h4><p>访问量 28,400</p></div>
+      <div class="card"><h4>2026-06-16</h4><p>访问量 31,200</p></div>
+    </div>
+    <p style="color:#64748b;font-size:.85rem;margin-top:1rem">
+      👆 这是三级嵌套菜单的终点（数据管理 → 报表中心 → 日报表）
+    </p>
+  </section>
+
+  <section id="report-monthly">
+    <h2>📆 月报表</h2>
+    <div class="card-row">
+      <div class="card"><h4>6月</h4><p>总访问 852,000</p></div>
+      <div class="card"><h4>5月</h4><p>总访问 793,000</p></div>
+    </div>
+  </section>
+
+  <section id="report-custom">
+    <h2>🔧 自定义报表</h2>
+    <div class="card"><p>拖拽组件生成自定义报表视图（演示占位）</p></div>
+  </section>
+
+  <section id="data-export">
+    <h2>📤 数据导出</h2>
+    <div class="card-row">
+      <div class="card"><h4>CSV 导出</h4><p>支持全量/增量</p></div>
+      <div class="card"><h4>API 接口</h4><p>RESTful 数据接口</p></div>
+    </div>
+  </section>
+
+  <section id="user-list">
+    <h2>👥 用户列表</h2>
+    <div class="card"><p>用户管理模块 — 查看、编辑、禁用用户账号</p></div>
+  </section>
+
+  <section id="user-roles">
+    <h2>🔐 角色权限</h2>
+    <div class="card"><p>RBAC 角色权限管理 — 管理员 / 编辑 / 访客</p></div>
+  </section>
+
+  <section id="user-logs">
+    <h2>📝 操作日志</h2>
+    <div class="card"><p>审计日志 — 记录所有关键操作的时间线和责任链</p></div>
+  </section>
+
+  <section id="settings-general">
+    <h2>⚙️ 基本设置</h2>
+    <div class="card"><p>站点名称、Logo、语言、时区等基础配置</p></div>
+  </section>
+
+  <section id="settings-security">
+    <h2>🛡️ 安全策略</h2>
+    <div class="card"><p>密码策略、MFA、IP白名单、会话超时设置</p></div>
+  </section>
+
+  <section id="settings-notify">
+    <h2>🔔 通知管理</h2>
+    <div class="card"><p>邮件/SMS/站内信通知模板与触发规则</p></div>
+  </section>
+
+  <section id="help">
+    <h2>❓ 帮助文档</h2>
+    <div class="card"><p>📖 在线使用手册与常见问题解答</p></div>
+  </section>
+
+  <p style="text-align:center;padding:3rem 0;color:#94a3b8;font-size:.8rem">
+    🏁 滚动到底 — 观察侧边栏高亮跟随 | © 2026 Sidebar Demo
+  </p>
+</main>
+
+<script>
+// ===== 展开/收起 =====
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+// ===== 子菜单展开/收起（手风琴） =====
+function toggleSubmenu(el) {
+  const submenu = el.nextElementSibling;
+  const arrow = el.querySelector('.arrow');
+  if (!submenu || !submenu.classList.contains('submenu')) return;
+  submenu.classList.toggle('open');
+  if (arrow) arrow.classList.toggle('rotated');
+}
+
+// 打开所有含active链接的父级子菜单
+function openAncestors(activeLink) {
+  let parent = activeLink.closest('.submenu');
+  while (parent) {
+    parent.classList.add('open');
+    const toggle = parent.previousElementSibling;
+    if (toggle) {
+      const arrow = toggle.querySelector('.arrow');
+      if (arrow) arrow.classList.add('rotated');
+    }
+    parent = parent.parentElement?.closest('.submenu');
+  }
+}
+
+// ===== 移动端抽屉 =====
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('overlay');
+
+function toggleMobileSidebar() {
+  sidebar.classList.toggle('mobile-open');
+  overlay.classList.toggle('show');
+}
+
+overlay.addEventListener('click', toggleMobileSidebar);
+
+// 移动端点击菜单项后关闭
+sidebar.addEventListener('click', (e) => {
+  if (e.target.closest('a') && window.innerWidth <= 768) {
+    toggleMobileSidebar();
+  }
+});
+
+// ===== Scroll Spy 滚动高亮 =====
+const sections = document.querySelectorAll('.main-content section[id]');
+const navLinks = document.querySelectorAll('.sidebar a[data-section]');
+
+function updateScrollSpy() {
+  const scrollTop = window.scrollY + 80; // 偏移量
+
+  let currentId = '';
+  sections.forEach(section => {
+    const top = section.offsetTop;
+    if (scrollTop >= top) {
+      currentId = section.id;
+    }
+  });
+
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.dataset.section === currentId) {
+      link.classList.add('active');
+    }
+  });
+}
+
+// 使用 rAF 节流
+let spyTicking = false;
+window.addEventListener('scroll', () => {
+  if (!spyTicking) {
+    requestAnimationFrame(() => { updateScrollSpy(); spyTicking = false; });
+    spyTicking = true;
+  }
+});
+
+// ===== 平滑滚动 =====
+document.querySelectorAll('.sidebar a[data-section]').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const id = link.dataset.section;
+    const target = document.getElementById(id);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+// 初始化
+updateScrollSpy();
+</script>
+</body>
+</html>

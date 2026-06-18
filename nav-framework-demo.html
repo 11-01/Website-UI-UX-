@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>导航框架布局演示 | Nav Framework Layout Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: #0f172a; color: #e2e8f0;
+  }
+
+  header {
+    text-align: center; padding: 2.5rem 1rem 1.5rem;
+  }
+  header h1 { font-size: 1.8rem; }
+  header h1 span { background: linear-gradient(135deg, #06b6d4, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  header p { color: #64748b; font-size: .88rem; margin-top: .3rem; }
+
+  .page { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+
+  /* ===== 布局展示卡片 ===== */
+  .layout-card {
+    background: #1e293b; border-radius: 14px; border: 1px solid #334155;
+    margin-bottom: 1.5rem; overflow: hidden;
+  }
+  .layout-card .card-head {
+    background: #0f172a; padding: .65rem 1.2rem; border-bottom: 1px solid #334155;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: .82rem; font-weight: 700;
+  }
+  .badge {
+    font-size: .65rem; padding: .2rem .6rem; border-radius: 10px; font-weight: 600;
+  }
+  .badge-1 { background: rgba(34,197,94,.12); color: #4ade80; }
+  .badge-2 { background: rgba(59,130,246,.12); color: #93c5fd; }
+  .badge-3 { background: rgba(139,92,246,.12); color: #a78bfa; }
+  .badge-4 { background: rgba(245,158,11,.12); color: #fcd34d; }
+  .badge-5 { background: rgba(236,72,153,.12); color: #f9a8d4; }
+
+  .card-body { background: #f8fafc; color: #1e293b; }
+
+  /* ===== 微型网站模拟 ===== */
+  .site-mini {
+    border-radius: 10px; overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,.04);
+    font-size: .72rem;
+  }
+
+  /* 上下布局 */
+  .layout-top-bottom .site-mini {
+    display: flex; flex-direction: column; min-height: 280px;
+  }
+  .ltb-header {
+    background: #1e293b; color: white; padding: .8rem 1.2rem;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .ltb-header .logo { font-weight: 900; font-size: .9rem; }
+  .ltb-header nav { display: flex; gap: .8rem; }
+  .ltb-header nav a { color: #cbd5e1; text-decoration: none; }
+  .ltb-main {
+    flex: 1; padding: 1.5rem; display: flex; flex-direction: column; gap: .5rem;
+  }
+  .ltb-main .bblock {
+    background: white; border-radius: 6px; padding: .8rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.03);
+  }
+  .ltb-footer {
+    background: #f1f5f9; text-align: center; padding: .5rem;
+    color: #94a3b8; border-top: 1px solid #e2e8f0;
+  }
+
+  /* 左右布局 */
+  .layout-left-right .site-mini {
+    display: flex; min-height: 300px;
+  }
+  .llr-sidebar {
+    width: 180px; background: #1e293b; color: #cbd5e1;
+    display: flex; flex-direction: column;
+  }
+  .llr-sidebar .logo { padding: .8rem 1rem; font-weight: 900; border-bottom: 1px solid rgba(255,255,255,.06); }
+  .llr-sidebar .nav-item {
+    padding: .5rem 1rem; font-size: .75rem; cursor: pointer;
+    transition: background .15s; display: flex; align-items: center; gap: .4rem;
+  }
+  .llr-sidebar .nav-item:hover { background: rgba(255,255,255,.06); }
+  .llr-sidebar .nav-item.active { background: rgba(59,130,246,.15); color: #60a5fa; border-left: 3px solid #3b82f6; }
+  .llr-main {
+    flex: 1; padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: .5rem;
+    overflow-y: auto;
+  }
+  .llr-main .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-bottom: .5rem; border-bottom: 1px solid #e2e8f0; margin-bottom: .5rem;
+  }
+  .llr-main .topbar .bc {
+    font-size: .7rem; color: #94a3b8;
+  }
+  .llr-main .topbar .bc a { color: #3b82f6; text-decoration: none; }
+  .llr-main .topbar .bc span { color: #475569; }
+  .llr-main .content-cards {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .5rem;
+  }
+  .llr-main .content-cards .cc {
+    background: white; border-radius: 6px; padding: .7rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.03);
+  }
+
+  /* T字布局 */
+  .layout-t-shape .site-mini {
+    display: flex; flex-direction: column; min-height: 300px;
+  }
+  .lts-top {
+    background: #1e293b; color: white; padding: .6rem 1.2rem;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .lts-top a { color: #cbd5e1; text-decoration: none; font-size: .75rem; }
+  .lts-body { display: flex; flex: 1; }
+  .lts-body .lts-side {
+    width: 160px; background: #f8fafc; border-right: 1px solid #e2e8f0;
+    padding: .8rem;
+  }
+  .lts-body .lts-side .sub-item {
+    padding: .4rem .6rem; border-radius: 6px; margin: .2rem 0;
+    cursor: pointer; font-size: .75rem;
+  }
+  .lts-body .lts-side .sub-item:hover { background: #e2e8f0; }
+  .lts-body .lts-main {
+    flex: 1; padding: 1rem; display: flex; flex-direction: column; gap: .5rem;
+  }
+  .lts-body .lts-main .bc {
+    font-size: .7rem; color: #94a3b8; margin-bottom: .3rem;
+  }
+
+  /* 响应式布局 */
+  .layout-responsive .site-mini {
+    background: white; border-radius: 10px; min-height: 260px;
+  }
+  .lr-nav {
+    background: #1e293b; color: white; padding: .6rem 1rem;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .lr-nav .lr-links { display: flex; gap: .5rem; }
+  .lr-nav .lr-links a { color: #cbd5e1; text-decoration: none; font-size: .75rem; }
+  .lr-nav .burger { display: none; font-size: 1rem; cursor: pointer; }
+  .lr-content {
+    padding: 1rem; display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: .6rem;
+  }
+  .lr-content .rc {
+    background: #f8fafc; border-radius: 8px; padding: .8rem;
+  }
+  @media (max-width: 500px) {
+    .lr-nav .lr-links { display: none; }
+    .lr-nav .burger { display: block; }
+    .lr-content { grid-template-columns: 1fr; }
+  }
+
+  /* 自适应布局 */
+  .layout-adaptive .site-mini {
+    display: flex; min-height: 260px; background: white; border-radius: 10px;
+  }
+  .la-side {
+    width: 180px; background: #1e293b; color: #cbd5e1;
+    padding: .8rem; display: flex; flex-direction: column; gap: .2rem;
+  }
+  .la-side .na { padding: .4rem .6rem; border-radius: 6px; cursor: pointer; font-size: .75rem; }
+  .la-main {
+    flex: 1; padding: 1rem; display: flex; flex-direction: column; gap: .5rem;
+  }
+  /* 自适应断点模拟 */
+  .la-view {
+    display: flex; gap: .5rem; margin-bottom: .8rem;
+  }
+  .la-view button {
+    padding: .25rem .7rem; border: 1px solid #d1d5db; background: white;
+    border-radius: 12px; cursor: pointer; font-size: .68rem; transition: all .15s;
+  }
+  .la-view button.on { background: #3b82f6; color: white; border-color: #3b82f6; }
+
+  /* ===== 五布局总结表 ===== */
+  .summary-table {
+    width: 100%; border-collapse: collapse; font-size: .78rem;
+  }
+  .summary-table th {
+    text-align: left; padding: .6rem .8rem; background: #f1f5f9; color: #475569;
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .3px;
+  }
+  .summary-table td {
+    padding: .6rem .8rem; border-bottom: 1px solid #e2e8f0;
+    vertical-align: top;
+  }
+
+  /* 平台差异 */
+  .platform-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  }
+  @media (max-width: 600px) { .platform-row { grid-template-columns: 1fr; } }
+  .platform-box {
+    background: white; border-radius: 10px; padding: 1rem;
+    box-shadow: 0 1px 6px rgba(0,0,0,.03);
+    text-align: center;
+  }
+  .platform-box h4 { font-size: .85rem; margin-bottom: .5rem; }
+  .platform-box .btn-row {
+    display: flex; justify-content: center; gap: .5rem; margin-top: .5rem;
+  }
+  .platform-box .btn-row button {
+    padding: .3rem 1rem; border-radius: 8px; border: 1px solid #d1d5db;
+    background: white; font-size: .75rem; cursor: pointer;
+  }
+  .platform-box.macos .btn-row button:last-child { background: #3b82f6; color: white; border-color: #3b82f6; }
+  .platform-box.windows .btn-row button:first-child { background: #3b82f6; color: white; border-color: #3b82f6; }
+
+  /* 首屏高度示意 */
+  .fold-demo {
+    position: relative; background: white; border-radius: 10px;
+    height: 220px; overflow: hidden;
+  }
+  .fold-demo .nav-area {
+    background: #1e293b; color: white; padding: .7rem 1rem;
+    display: flex; gap: .8rem; font-size: .75rem;
+  }
+  .fold-demo .fold-line {
+    position: absolute; left: 0; right: 0; top: 140px;
+    border-top: 2px dashed #ef4444; z-index: 5;
+  }
+  .fold-demo .fold-label {
+    position: absolute; right: .5rem; top: 130px;
+    font-size: .6rem; color: #ef4444; font-weight: 700; z-index: 6;
+  }
+  .fold-demo .content-area { padding: 1rem; display: flex; gap: .5rem; flex-wrap: wrap; }
+  .fold-demo .content-area .cb {
+    background: #f1f5f9; border-radius: 6px; padding: .8rem; flex: 1; min-width: 100px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🧭 导航框架布局 <span>五种经典方案</span></h1>
+  <p>上下 · 左右 · T字 · 响应式 · 自适应</p>
+</header>
+
+<div class="page">
+
+  <!-- ===== 布局一：上下布局 ===== -->
+  <div class="layout-card layout-top-bottom">
+    <div class="card-head">
+      <span>1️⃣ 上下布局（Top-Bottom）</span>
+      <span class="badge badge-1">信息展示类</span>
+    </div>
+    <div class="card-body" style="padding:1rem">
+      <p style="font-size:.75rem;color:#64748b;margin-bottom:.8rem">
+        顶部 Header（Logo+导航+搜索） + 下方主体内容 + 底部 Footer。最基础的网页结构。
+      </p>
+      <div class="site-mini">
+        <div class="ltb-header">
+          <div class="logo">🚀 品牌名称</div>
+          <nav><a>首页</a><a>产品</a><a>关于</a><a>联系</a></nav>
+        </div>
+        <div class="ltb-main">
+          <div class="bblock">📰 内容模块A — 自左向右横向浏览，视觉距离短，读屏高效</div>
+          <div class="bblock">📰 内容模块B</div>
+          <div class="bblock">📰 内容模块C</div>
+        </div>
+        <div class="ltb-footer">© 2026 · 关于我们 · 联系方式 · 隐私政策</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 布局二：左右布局 ===== -->
+  <div class="layout-card layout-left-right">
+    <div class="card-head">
+      <span>2️⃣ 左右布局（Left-Right）</span>
+      <span class="badge badge-2">后台管理/文档</span>
+    </div>
+    <div class="card-body" style="padding:1rem">
+      <p style="font-size:.75rem;color:#64748b;margin-bottom:.8rem">
+        侧边固定导航 + 右侧内容区。面包屑在内容区顶部的标准位置。
+      </p>
+      <div class="site-mini">
+        <div class="llr-sidebar">
+          <div class="logo">⚙️ 后台面板</div>
+          <div class="nav-item active"><span>📊</span> 仪表盘</div>
+          <div class="nav-item"><span>👥</span> 用户管理</div>
+          <div class="nav-item"><span>📦</span> 订单管理</div>
+          <div class="nav-item"><span>📈</span> 数据分析</div>
+          <div class="nav-item"><span>⚙️</span> 系统设置</div>
+        </div>
+        <div class="llr-main">
+          <div class="topbar">
+            <div class="bc"><a>首页</a> › <a>后台</a> › <span>仪表盘</span></div>
+            <span style="font-size:.7rem;color:#94a3b8">👤 管理员</span>
+          </div>
+          <div class="content-cards">
+            <div class="cc">📊 总用户数<br><strong style="font-size:1.2rem">12,846</strong></div>
+            <div class="cc">💰 总营收<br><strong style="font-size:1.2rem">¥847K</strong></div>
+            <div class="cc">📈 增长率<br><strong style="font-size:1.2rem;color:#22c55e">+12%</strong></div>
+            <div class="cc">📋 待处理<br><strong style="font-size:1.2rem;color:#ef4444">23</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 布局三：T字布局 ===== -->
+  <div class="layout-card layout-t-shape">
+    <div class="card-head">
+      <span>3️⃣ T字布局（T-Shape）</span>
+      <span class="badge badge-3">全局+子级分类</span>
+    </div>
+    <div class="card-body" style="padding:1rem">
+      <p style="font-size:.75rem;color:#64748b;margin-bottom:.8rem">
+        顶部全局导航 + 左侧子级导航。顶部处理一级分类，左侧处理二级/三级。
+      </p>
+      <div class="site-mini">
+        <div class="lts-top">
+          <span class="logo">🏪 电商平台</span>
+          <div style="display:flex;gap:.8rem">
+            <a>首页</a><a>全部分类</a><a>品牌</a><a>促销</a>
+          </div>
+        </div>
+        <div class="lts-body">
+          <div class="lts-side">
+            <div style="font-weight:700;font-size:.75rem;margin-bottom:.4rem">📱 手机</div>
+            <div class="sub-item">苹果 Apple</div>
+            <div class="sub-item">华为 HUAWEI</div>
+            <div class="sub-item">小米 Xiaomi</div>
+            <div class="sub-item">OPPO</div>
+            <div style="font-weight:700;font-size:.75rem;margin:.6rem 0 .4rem">💻 电脑</div>
+            <div class="sub-item">MacBook</div>
+            <div class="sub-item">ThinkPad</div>
+          </div>
+          <div class="lts-main">
+            <div class="bc"><a>首页</a> › <a>手机</a> › <span>苹果</span></div>
+            <div style="font-size:.75rem;color:#64748b">T字布局 = 顶部横向导航 + 左侧纵向导航</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 布局四：响应式布局 ===== -->
+  <div class="layout-card layout-responsive">
+    <div class="card-head">
+      <span>4️⃣ 响应式布局（Responsive）</span>
+      <span class="badge badge-4">跨端适配</span>
+    </div>
+    <div class="card-body" style="padding:1rem">
+      <p style="font-size:.75rem;color:#64748b;margin-bottom:.5rem">
+        根据屏幕宽度自动调整。缩小浏览器窗口 → 导航链接消失 → ☰ 汉堡按钮出现 → 卡片从3列→2列→1列
+      </p>
+      <div class="site-mini">
+        <div class="lr-nav">
+          <span style="font-weight:900">📱 响应式站点</span>
+          <div class="lr-links"><a>首页</a><a>产品</a><a>文档</a><a>关于</a></div>
+          <div class="burger">☰</div>
+        </div>
+        <div class="lr-content">
+          <div class="rc">🧩 弹性布局<br><span style="font-size:.65rem;color:#94a3b8">Flexbox 一维</span></div>
+          <div class="rc">📐 网格布局<br><span style="font-size:.65rem;color:#94a3b8">Grid 二维</span></div>
+          <div class="rc">📏 媒体查询<br><span style="font-size:.65rem;color:#94a3b8">@media 断点</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 布局五：自适应布局 ===== -->
+  <div class="layout-card layout-adaptive">
+    <div class="card-head">
+      <span>5️⃣ 自适应布局（Adaptive）</span>
+      <span class="badge badge-5">预设多套固定布局</span>
+    </div>
+    <div class="card-body" style="padding:1rem">
+      <p style="font-size:.75rem;color:#64748b;margin-bottom:.5rem">
+        为特定断点预设固定布局，点击下方按钮切换设备视图
+      </p>
+      <div class="la-view">
+        <button class="on" onclick="adaptView('desktop',this)">🖥️ 桌面 1200px</button>
+        <button onclick="adaptView('tablet',this)">📋 平板 768px</button>
+        <button onclick="adaptView('phone',this)">📱 手机 375px</button>
+      </div>
+      <div class="site-mini" id="adaptiveSite" style="transition:all .4s ease">
+        <div class="la-side" id="adaptiveSide">
+          <div style="font-weight:900;font-size:.8rem;margin-bottom:.4rem">⚡ Admin</div>
+          <div class="na">📊 仪表盘</div><div class="na">👥 用户</div><div class="na">⚙️ 设置</div>
+        </div>
+        <div class="la-main">
+          <div style="font-size:.75rem;color:#94a3b8">自适应 = 在不同断点加载不同布局</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 五布局总结 ===== -->
+  <div class="layout-card">
+    <div class="card-head"><span>📊 五种布局选型速查</span></div>
+    <div class="card-body" style="padding:1rem;overflow-x:auto">
+      <table class="summary-table">
+        <thead>
+          <tr><th>布局</th><th>导航位置</th><th>典型场景</th><th>优势</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>上下</strong></td><td>顶部横排</td><td>企业官网、博客、资讯站</td><td>简单直观，浏览视线短</td></tr>
+          <tr><td><strong>左右</strong></td><td>左侧固定</td><td>后台管理、文档平台、论坛</td><td>可容纳大量菜单项，多级嵌套</td></tr>
+          <tr><td><strong>T字</strong></td><td>顶部+左侧</td><td>电商平台、内容管理系统</td><td>全局+子级双重导航，层次清晰</td></tr>
+          <tr><td><strong>响应式</strong></td><td>流动适配</td><td>所有现代网站</td><td>一套代码多端适配，维护成本低</td></tr>
+          <tr><td><strong>自适应</strong></td><td>预设断点</td><td>特定设备优化的网站</td><td>每个断点精确控制，像素级完美</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== 平台差异 + 首屏 ===== -->
+  <div class="layout-card">
+    <div class="card-head"><span>🎯 设计原则展示：平台差异 & 首屏高度</span></div>
+    <div class="card-body" style="padding:1rem">
+      <div class="platform-row">
+        <div class="platform-box macos">
+          <h4>🍎 macOS 风格</h4>
+          <p style="font-size:.7rem;color:#64748b">确认按钮在<strong>右侧</strong></p>
+          <div class="btn-row">
+            <button>取消</button>
+            <button>确认</button>
+          </div>
+        </div>
+        <div class="platform-box windows">
+          <h4>🪟 Windows 风格</h4>
+          <p style="font-size:.7rem;color:#64748b">确认按钮在<strong>左侧</strong></p>
+          <div class="btn-row">
+            <button>确认</button>
+            <button>取消</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:1rem">
+        <h4 style="font-size:.82rem;margin-bottom:.5rem">📐 首屏高度 & 信息透出</h4>
+        <div class="fold-demo">
+          <div class="nav-area">
+            <span>🏪 Logo</span><span>首页</span><span>产品</span><span>关于</span>
+          </div>
+          <div class="fold-line"></div>
+          <div class="fold-label">← 首屏折叠线（约600-700px）</div>
+          <div class="content-area">
+            <div class="cb">✅ 核心内容在折叠线上方，用户无需滚动即可看到</div>
+            <div class="cb">⚠️ 如果导航过高（多层+大Banner），核心内容被折叠</div>
+          </div>
+        </div>
+        <p style="font-size:.7rem;color:#64748b;margin-top:.5rem">
+          💡 导航框架应精简高度，确保核心业务信息在首屏可见，避免导航"喧宾夺主"
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设计原则速查 -->
+  <div class="layout-card">
+    <div class="card-head"><span>📋 导航框架设计四原则</span></div>
+    <div class="card-body" style="background:#1e293b;color:#e2e8f0;padding:1.2rem;font-size:.8rem;line-height:2">
+      <table style="width:100%;border-collapse:collapse">
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.4rem .6rem;font-weight:700;color:#f59e0b;width:30px">1</td>
+          <td style="padding:.4rem .6rem"><strong>辅助不喧宾夺主</strong> — 面包屑尺寸 < 主导航，不替代全局导航，不被首先注意到</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.4rem .6rem;font-weight:700;color:#3b82f6;width:30px">2</td>
+          <td style="padding:.4rem .6rem"><strong>符合平台用户习惯</strong> — macOS确认右/取消左；Windows确认左/取消右；iOS左滑；Android长按</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.4rem .6rem;font-weight:700;color:#22c55e;width:30px">3</td>
+          <td style="padding:.4rem .6rem"><strong>关注首屏高度与信息透出</strong> — 导航不宜过高，不同浏览器头部高度不同，需综合考虑</td>
+        </tr>
+        <tr>
+          <td style="padding:.4rem .6rem;font-weight:700;color:#a855f7;width:30px">4</td>
+          <td style="padding:.4rem .6rem"><strong>保持层级逻辑清晰</strong> — 面包屑通常3层（首页>栏目>内容），各栏目权重均衡</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function adaptView(mode, btn) {
+  document.querySelectorAll('.la-view button').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  const site = document.getElementById('adaptiveSite');
+  const side = document.getElementById('adaptiveSide');
+  switch(mode) {
+    case 'desktop':
+      site.style.width = '100%'; side.style.display = 'flex'; side.style.flexDirection = 'column';
+      break;
+    case 'tablet':
+      site.style.width = '100%'; side.style.width = '140px';
+      break;
+    case 'phone':
+      site.style.width = '375px'; side.style.display = 'none';
+      break;
+  }
+}
+</script>
+</body>
+</html>

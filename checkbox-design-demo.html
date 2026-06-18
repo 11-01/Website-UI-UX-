@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>网站UI复选框设计指南 | Checkbox Design Guide</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f172a;--card-bg:#1e293b;--card-border:#334155;--surface:#f8fafc;--text:#e2e8f0;--text-dim:#94a3b8;--text-dark:#1e293b;--blue:#3b82f6;--green:#22c55e;--red:#ef4444;--purple:#8b5cf6;--radius:10px;--radius-lg:16px}
+body{font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.hero{text-align:center;padding:3rem 1.5rem 2rem;background:linear-gradient(180deg,#0f172a 0%,#1a2332 100%)}
+.hero h1{font-size:clamp(1.8rem,4vw,3rem);font-weight:900;margin-bottom:.6rem}
+.hero h1 span{background:linear-gradient(135deg,#8b5cf6,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .subtitle{font-size:1rem;color:var(--text-dim);max-width:700px;margin:0 auto}
+.hero .meta-tags{display:flex;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
+.hero .meta-tags span{font-size:.75rem;padding:.25rem .75rem;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.2);border-radius:20px;color:#c4b5fd}
+
+.page{max-width:1200px;margin:0 auto;padding:0 1.5rem 4rem}
+.section-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);margin-bottom:2rem;overflow:hidden}
+.section-card .card-header{padding:1.2rem 1.5rem;border-bottom:1px solid var(--card-border);display:flex;align-items:center;gap:.8rem}
+.section-card .card-header .section-num{width:36px;height:36px;background:linear-gradient(135deg,#8b5cf6,#ec4899);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;color:white;flex-shrink:0}
+.section-card .card-header h2{font-size:1.3rem;font-weight:700}
+.section-card .card-header .en-label{font-size:.75rem;color:var(--text-dim);margin-left:auto}
+.section-card .card-body{background:var(--surface);color:var(--text-dark);padding:1.5rem}
+
+.sub-title{font-size:.95rem;font-weight:700;color:#475569;margin-bottom:1rem;margin-top:1.5rem;padding-bottom:.5rem;border-bottom:2px solid #e2e8f0;display:flex;align-items:center;gap:.5rem}
+.sub-title:first-child{margin-top:0}
+.sub-title::before{content:'';width:4px;height:18px;background:var(--purple);border-radius:2px}
+
+.demo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.2rem}
+.code-block{background:#1e293b;color:#e2e8f0;border-radius:8px;padding:.9rem 1.1rem;font-family:'JetBrains Mono','Fira Code','Consolas',monospace;font-size:.76rem;line-height:1.7;overflow-x:auto;margin:.6rem 0}
+.code-block .tag{color:#f472b6}.code-block .attr{color:#67e8f9}.code-block .val{color:#a5d6ff}.code-block .comment{color:#64748b}.code-block .prop{color:#fde68a}
+
+.tip-box{display:flex;align-items:flex-start;gap:.6rem;padding:.8rem 1rem;border-radius:8px;font-size:.8rem;margin:.8rem 0}
+.tip-box.info{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
+.tip-box.success{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.tip-box.warn{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+.tip-box .icon{font-size:1rem;flex-shrink:0}
+
+.plan-card{background:white;border-radius:var(--radius);padding:1.2rem;box-shadow:0 1px 6px rgba(0,0,0,.03);border:1px solid #f1f5f9}
+.plan-card h4{font-size:.9rem;margin-bottom:.5rem}
+
+.compare-table{width:100%;border-collapse:collapse;font-size:.8rem;margin:.8rem 0}
+.compare-table th{background:#f1f5f9;padding:.5rem .8rem;text-align:left;font-weight:600}
+.compare-table td{padding:.5rem .8rem;border-bottom:1px solid #e2e8f0}
+
+/* ===== 复选框组件样式 ===== */
+
+/* 方案1: 原生复选框 */
+.check-row{display:flex;flex-wrap:wrap;gap:1.2rem;align-items:center}
+
+/* 方案2: accent-color 变色 */
+.cb-accent{accent-color:var(--green);width:18px;height:18px}
+
+/* 方案3: 完全自定义复选框 */
+.custom-cb{display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.85rem;color:#475569;user-select:none}
+.custom-cb input{position:absolute;opacity:0;width:0;height:0}
+.custom-cb .checkmark{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border:2px solid #d1d5db;border-radius:6px;
+  transition:all .25s;flex-shrink:0;
+}
+.custom-cb:hover .checkmark{border-color:var(--blue)}
+.custom-cb input:checked + .checkmark{
+  background:var(--blue);border-color:var(--blue);
+}
+.custom-cb input:checked + .checkmark::after{
+  content:'';width:6px;height:11px;
+  border:solid white;border-width:0 2px 2px 0;
+  transform:rotate(45deg)translateY(-1px);
+}
+.custom-cb input:focus-visible + .checkmark{outline:3px solid rgba(59,130,246,.3);outline-offset:2px}
+.custom-cb input:disabled + .checkmark{background:#f1f5f9;border-color:#e2e8f0;cursor:not-allowed}
+.custom-cb input:disabled:checked + .checkmark{background:#94a3b8;border-color:#94a3b8}
+
+/* 圆角自定义 */
+.cb-rounded .checkmark{border-radius:50%;}
+.cb-rounded input:checked + .checkmark{background:var(--green);border-color:var(--green)}
+
+/* 大号自定义 */
+.cb-lg .checkmark{width:28px;height:28px;border-radius:8px}
+.cb-lg input:checked + .checkmark::after{width:7px;height:13px;border-width:0 2.5px 2.5px 0}
+
+/* 带标签卡片的复选框 */
+.cb-card-label{
+  display:flex;align-items:center;gap:.6rem;
+  padding:.7rem 1rem;border:2px solid #e2e8f0;border-radius:10px;
+  cursor:pointer;transition:all .25s;font-size:.82rem;color:#475569;
+}
+.cb-card-label:hover{border-color:#93c5fd}
+.cb-card-label input{display:none}
+.cb-card-label .card-check{
+  width:20px;height:20px;border:2px solid #d1d5db;border-radius:6px;
+  transition:all .25s;display:inline-flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:.65rem;color:transparent;
+}
+.cb-card-label:has(input:checked){
+  border-color:var(--blue);background:#eff6ff;
+}
+.cb-card-label:has(input:checked) .card-check{
+  background:var(--blue);border-color:var(--blue);color:white;
+}
+
+/* 方案4: Toggle开关(变体) */
+.toggle-switch{display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.85rem;color:#475569;user-select:none}
+.toggle-switch input{position:absolute;opacity:0}
+.toggle-switch .toggle-track{
+  width:44px;height:24px;background:#d1d5db;border-radius:12px;
+  position:relative;transition:all .3s;
+}
+.toggle-switch .toggle-track::after{
+  content:'';position:absolute;top:2px;left:2px;
+  width:20px;height:20px;background:white;border-radius:50%;
+  transition:all .3s;box-shadow:0 1px 3px rgba(0,0,0,.15);
+}
+.toggle-switch input:checked + .toggle-track{background:var(--blue)}
+.toggle-switch input:checked + .toggle-track::after{left:22px}
+.toggle-switch input:focus-visible + .toggle-track{outline:3px solid rgba(59,130,246,.3);outline-offset:2px}
+.toggle-switch input:disabled + .toggle-track{opacity:.5;cursor:not-allowed}
+
+@media(max-width:640px){.demo-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1><span>网站UI复选框设计指南</span></h1>
+  <p class="subtitle">从原生实现到完全自定义UI，兼顾美观、可访问性与键盘导航的复选框全方位指南。</p>
+  <div class="meta-tags"><span>原生</span><span>accent-color</span><span>自定义CSS</span><span>卡片式</span><span>Toggle</span><span>无障碍</span></div>
+</header>
+
+<div class="page">
+
+<!-- ===== 方案一：原生 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">1</div><h2>基础原生实现（最推荐，兼顾可访问性）</h2><span class="en-label">Native Checkbox</span></div>
+  <div class="card-body">
+    <p style="font-size:.85rem;color:#475569;margin-bottom:1rem;">使用 <code>&lt;input type="checkbox"&gt;</code> 配合 <code>&lt;label&gt;</code>，确保点击文字也能触发选中，对屏幕阅读器友好。</p>
+
+    <div class="demo-grid">
+      <div class="plan-card"><h4>标准原生复选框</h4>
+        <div class="check-row">
+          <label style="display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem;">
+            <input type="checkbox"> 我同意服务条款
+          </label>
+          <label style="display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem;">
+            <input type="checkbox" checked> 已选中
+          </label>
+          <label style="display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem;color:#94a3b8;">
+            <input type="checkbox" disabled> 禁用
+          </label>
+        </div>
+      </div>
+      <div class="plan-card"><h4>正确 HTML 结构</h4>
+        <div class="code-block"><span class="comment">&lt;!-- 方式1: for + id 关联 --&gt;</span><br><span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="val">"checkbox"</span> <span class="attr">id</span>=<span class="val">"agree"</span><span class="tag">&gt;</span><br><span class="tag">&lt;label</span> <span class="attr">for</span>=<span class="val">"agree"</span><span class="tag">&gt;</span>同意条款<span class="tag">&lt;/label&gt;</span><br><br><span class="comment">&lt;!-- 方式2: label包裹input --&gt;</span><br><span class="tag">&lt;label&gt;</span><br>&nbsp;&nbsp;<span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="val">"checkbox"</span><span class="tag">&gt;</span> 同意条款<br><span class="tag">&lt;/label&gt;</span></div></div>
+    </div>
+  </div>
+</article>
+
+<!-- ===== 方案二：accent-color ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">2</div><h2>快速修改颜色 — CSS accent-color</h2><span class="en-label">Accent Color</span></div>
+  <div class="card-body">
+    <p style="font-size:.85rem;color:#475569;margin-bottom:1rem;">如果不需要改变复选框形状，只想让主色调与品牌色一致，一行 CSS 即可搞定。</p>
+    <div class="demo-grid">
+      <div class="plan-card"><h4>accent-color 演示</h4>
+        <div style="display:flex;flex-direction:column;gap:.6rem;">
+          <label style="display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.82rem;"><input type="checkbox" class="cb-accent" style="accent-color:#22c55e;" checked> <span style="color:#22c55e;">绿色主题</span></label>
+          <label style="display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.82rem;"><input type="checkbox" class="cb-accent" style="accent-color:#3b82f6;" checked> <span style="color:#3b82f6;">蓝色主题</span></label>
+          <label style="display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.82rem;"><input type="checkbox" class="cb-accent" style="accent-color:#f59e0b;" checked> <span style="color:#f59e0b;">橙色主题</span></label>
+          <label style="display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.82rem;"><input type="checkbox" class="cb-accent" style="accent-color:#ef4444;" checked> <span style="color:#ef4444;">红色主题</span></label>
+        </div>
+      </div>
+      <div class="plan-card"><h4>一行 CSS</h4>
+        <div class="code-block"><span class="tag">input[type="checkbox"]</span> {<br>&nbsp;&nbsp;<span class="prop">accent-color</span>: <span class="val">#22c55e</span>;<br>}</div>
+        <p style="font-size:.72rem;color:#64748b;margin-top:.5rem;">✅ 简洁，不改变原生形状。<br>⚠️ 部分旧浏览器不支持（IE全系不支持）。</p></div>
+    </div>
+  </div>
+</article>
+
+<!-- ===== 方案三：完全自定义CSS ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">3</div><h2>完全自定义 UI 样式（纯 CSS 方案）</h2><span class="en-label">Custom CSS Checkbox</span></div>
+  <div class="card-body">
+    <p style="font-size:.85rem;color:#475569;margin-bottom:1rem;">核心步骤：隐藏原生 <code>&lt;input&gt;</code>（用 <code>opacity: 0</code> 保留焦点能力）→ 用 CSS <code>:checked</code> 伪类 + 相邻兄弟选择器 <code>+</code> 控制自定义图标的显示。</p>
+
+    <div class="sub-title">样式变体演示</div>
+    <div class="demo-grid">
+      <div class="plan-card"><h4>标准圆角（默认）</h4>
+        <div style="display:flex;flex-direction:column;gap:.6rem;">
+          <label class="custom-cb"><input type="checkbox"><span class="checkmark"></span>未选中</label>
+          <label class="custom-cb"><input type="checkbox" checked><span class="checkmark"></span>已选中</label>
+          <label class="custom-cb"><input type="checkbox" disabled><span class="checkmark"></span>禁用</label>
+          <label class="custom-cb"><input type="checkbox" checked disabled><span class="checkmark"></span>禁用已选</label>
+        </div>
+      </div>
+      <div class="plan-card"><h4>圆形（Radio风格）</h4>
+        <div style="display:flex;flex-direction:column;gap:.6rem;">
+          <label class="custom-cb cb-rounded"><input type="checkbox"><span class="checkmark"></span>圆形复选框</label>
+          <label class="custom-cb cb-rounded"><input type="checkbox" checked><span class="checkmark"></span>圆形已选</label>
+        </div>
+      </div>
+      <div class="plan-card"><h4>大号复选框</h4>
+        <div style="display:flex;flex-direction:column;gap:.6rem;">
+          <label class="custom-cb cb-lg"><input type="checkbox"><span class="checkmark"></span>大号复选框</label>
+          <label class="custom-cb cb-lg"><input type="checkbox" checked><span class="checkmark"></span>大号已选</label>
+        </div>
+      </div>
+      <div class="plan-card"><h4>卡片式选择</h4>
+        <div style="display:flex;flex-direction:column;gap:.5rem;">
+          <label class="cb-card-label"><input type="checkbox"><span class="card-check">✓</span>基础套餐 - 免费</label>
+          <label class="cb-card-label"><input type="checkbox" checked><span class="card-check">✓</span>专业套餐 - ¥299/月</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-title">核心 CSS 代码</div>
+    <div class="code-block">
+      <span class="comment">/* 1. 隐藏原生input但保留焦点 */</span><br>
+      <span class="tag">.custom-cb input</span> { <span class="prop">position</span>: <span class="val">absolute</span>; <span class="prop">opacity</span>: <span class="val">0</span>; }<br><br>
+      <span class="comment">/* 2. 画自定义复选框 */</span><br>
+      <span class="tag">.checkmark</span> { <span class="prop">width</span>: <span class="val">22px</span>; <span class="prop">height</span>: <span class="val">22px</span>; <span class="prop">border</span>: <span class="val">2px solid #d1d5db</span>; <span class="prop">border-radius</span>: <span class="val">6px</span>; }<br><br>
+      <span class="comment">/* 3. :checked 状态 */</span><br>
+      <span class="tag">input:checked + .checkmark</span> { <span class="prop">background</span>: <span class="val">#3b82f6</span>; <span class="prop">border-color</span>: <span class="val">#3b82f6</span>; }<br><br>
+      <span class="comment">/* 4. ::after 画对勾 */</span><br>
+      <span class="tag">input:checked + .checkmark::after</span> {<br>&nbsp;&nbsp;<span class="prop">content</span>: <span class="val">''</span>; <span class="prop">border</span>: <span class="val">solid white</span>;<br>&nbsp;&nbsp;<span class="prop">border-width</span>: <span class="val">0 2px 2px 0</span>;<br>&nbsp;&nbsp;<span class="prop">transform</span>: <span class="val">rotate(45deg)</span>;<br>}<br><br>
+      <span class="comment">/* 5. 焦点可见（无障碍关键！） */</span><br>
+      <span class="tag">input:focus-visible + .checkmark</span> { <span class="prop">outline</span>: <span class="val">3px solid rgba(59,130,246,.3)</span>; }
+    </div>
+    <div class="tip-box warn"><span class="icon">⚠️</span><span>不要用 <code>display: none</code> 隐藏原生 input，这会使其失去键盘焦点能力！使用 <code>opacity: 0</code> 或绝对定位移出视口。</span></div>
+  </div>
+</article>
+
+<!-- ===== 方案四：Toggle ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">4</div><h2>Toggle 开关（复选框变体）</h2><span class="en-label">Toggle Switch</span></div>
+  <div class="card-body">
+    <div class="demo-grid">
+      <div class="plan-card"><h4>Toggle 开关演示</h4>
+        <div style="display:flex;flex-direction:column;gap:.6rem;">
+          <label class="toggle-switch"><input type="checkbox"><span class="toggle-track"></span>通知推送</label>
+          <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span>暗黑模式</label>
+          <label class="toggle-switch"><input type="checkbox" disabled><span class="toggle-track"></span>禁用状态</label>
+        </div>
+      </div>
+      <div class="plan-card"><h4>Toggle 核心 CSS</h4>
+        <div class="code-block"><span class="tag">.toggle-track</span> {<br>&nbsp;&nbsp;<span class="prop">width</span>: <span class="val">44px</span>; <span class="prop">height</span>: <span class="val">24px</span>;<br>&nbsp;&nbsp;<span class="prop">background</span>: <span class="val">#d1d5db</span>;<br>&nbsp;&nbsp;<span class="prop">border-radius</span>: <span class="val">12px</span>;<br>&nbsp;&nbsp;<span class="prop">position</span>: <span class="val">relative</span>;<br>}<br><span class="tag">.toggle-track::after</span> {<br>&nbsp;&nbsp;<span class="prop">content</span>: <span class="val">''</span>; <span class="prop">width</span>: <span class="val">20px</span>; <span class="prop">height</span>: <span class="val">20px</span>;<br>&nbsp;&nbsp;<span class="prop">background</span>: <span class="val">white</span>;<br>&nbsp;&nbsp;<span class="prop">border-radius</span>: <span class="val">50%</span>;<br>&nbsp;&nbsp;<span class="prop">position</span>: <span class="val">absolute</span>; <span class="prop">top</span>: <span class="val">2px</span>;<br>&nbsp;&nbsp;<span class="prop">transition</span>: <span class="val">all .3s</span>;<br>}<br><span class="tag">input:checked + .toggle-track</span> {<br>&nbsp;&nbsp;<span class="prop">background</span>: <span class="val">#3b82f6</span>;<br>}<br><span class="tag">input:checked + .toggle-track::after</span> {<br>&nbsp;&nbsp;<span class="prop">left</span>: <span class="val">22px</span>;<br>}</div></div>
+    </div>
+  </div>
+</article>
+
+<!-- ===== 五、方案对比 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">5</div><h2>四种方案对比 + 框架推荐</h2><span class="en-label">Comparison & Frameworks</span></div>
+  <div class="card-body">
+    <div style="overflow-x:auto;">
+      <table class="compare-table">
+        <thead><tr><th>方案</th><th>复杂度</th><th>自定义度</th><th>兼容性</th><th>无障碍</th><th>推荐场景</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:600;">原生 input</td><td>⭐ 极低</td><td>❌ 受限</td><td>✅ 最佳</td><td>✅ 原生</td><td>快速开发·后台系统</td></tr>
+          <tr><td style="font-weight:600;">accent-color</td><td>⭐ 极低</td><td>⚠️ 仅颜色</td><td>⚠️ Chrome/Edge/Firefox</td><td>✅ 原生</td><td>仅需调整品牌色</td></tr>
+          <tr><td style="font-weight:600;">自定义CSS</td><td>⭐⭐ 中</td><td>✅ 完全控制</td><td>✅ 良好</td><td>⚠️ 需手动处理</td><td>C端产品·品牌定制</td></tr>
+          <tr><td style="font-weight:600;">UI组件库</td><td>⭐⭐⭐ 高(集成)</td><td>✅ 高</td><td>✅ 组件库保障</td><td>✅ 内置</td><td>企业级项目</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="demo-grid" style="margin-top:1rem;">
+      <div class="plan-card"><h4>🧩 Vue 框架</h4><p style="font-size:.78rem;color:#475569;">Element Plus: <code>&lt;el-checkbox&gt;</code><br>Ant Design Vue: <code>&lt;a-checkbox&gt;</code></p></div>
+      <div class="plan-card"><h4>⚛️ React 框架</h4><p style="font-size:.78rem;color:#475569;">Ant Design: <code>&lt;Checkbox&gt;</code><br>Material-UI: <code>&lt;Checkbox&gt;</code></p></div>
+      <div class="plan-card"><h4>🎨 轻量方案</h4><p style="font-size:.78rem;color:#475569;">Tailwind CSS + Headless UI<br>提供无样式组件 + 自定义外观</p></div>
+    </div>
+    <div class="tip-box success" style="margin-top:1rem;"><span class="icon">✅</span><span><strong>开发建议：</strong>无论采用何种自定义样式，务必确保 <code>input</code> 和 <code>label</code> 正确关联（<code>for + id</code> 或嵌套），保留键盘 Tab 导航和空格键切换功能，保障无障碍访问。</span></div>
+  </div>
+</article>
+
+</div>
+</body>
+</html>

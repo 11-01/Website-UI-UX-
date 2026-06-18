@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>侧边栏文字淡入淡出优化演示 | Text Fade Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: #0f172a; color: #e2e8f0;
+  }
+
+  header {
+    text-align: center; padding: 2rem 1rem 1rem;
+  }
+  header h1 { font-size: 1.7rem; }
+  header h1 span { background: linear-gradient(135deg, #06b6d4, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+  .page { max-width: 1000px; margin: 0 auto; padding: 1rem; }
+
+  /* 卡片 */
+  .card {
+    background: #1e293b; border-radius: 14px; border: 1px solid #334155;
+    margin-bottom: 1.5rem; overflow: hidden;
+  }
+  .card .card-top {
+    background: #0f172a; padding: .6rem 1.2rem; border-bottom: 1px solid #334155;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: .82rem; font-weight: 700;
+  }
+  .badge { font-size: .65rem; padding: .2rem .6rem; border-radius: 10px; font-weight: 600; }
+  .badge-bad { background: rgba(239,68,68,.12); color: #fca5a5; }
+  .badge-ok { background: rgba(245,158,11,.12); color: #fcd34d; }
+  .badge-best { background: rgba(34,197,94,.12); color: #4ade80; }
+
+  .card-body { background: #f8fafc; color: #1e293b; }
+
+  /* 演示框架 */
+  .demo-row {
+    display: flex; gap: 0; align-items: stretch;
+    border-bottom: 1px solid #e2e8f0; overflow: hidden;
+  }
+  .demo-sidebar {
+    height: 300px; background: #1e293b; color: #cbd5e1;
+    flex-shrink: 0; transition: width .4s ease;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .demo-sidebar.wide { width: 200px; }
+  .demo-sidebar.narrow { width: 60px; }
+
+  .demo-sidebar .logo {
+    padding: .8rem 1rem; font-weight: 900; font-size: .9rem;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    white-space: nowrap; display: flex; align-items: center; gap: .5rem;
+  }
+  .demo-sidebar .logo .icon { flex-shrink: 0; font-size: 1.2rem; }
+
+  .demo-sidebar .nav-list { flex: 1; padding: .5rem 0; }
+  .demo-sidebar .nav-list a {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .6rem 1rem; color: #94a3b8; text-decoration: none;
+    font-size: .82rem; white-space: nowrap; transition: background .15s;
+  }
+  .demo-sidebar .nav-list a:hover { background: rgba(255,255,255,.06); }
+  .demo-sidebar .nav-list a .icon { flex-shrink: 0; }
+
+  /* 文字 <span> — 各方案差异在此 */
+  .menu-text {
+    white-space: nowrap;
+  }
+
+  /* 方案A：无处理 — 文字被截断 */
+  .fade-a .menu-text {
+    /* 无过渡，直接消失 */
+  }
+
+  /* 方案B：仅opacity */
+  .fade-b .menu-text {
+    opacity: 1;
+    transition: opacity .4s ease;
+  }
+  .demo-sidebar.narrow .fade-b .menu-text {
+    opacity: 0;
+  }
+
+  /* 方案C：opacity + translateX 滑动 + GPU + 缓动 ✅ */
+  .fade-c .menu-text {
+    opacity: 1;
+    transform: translateX(0) translateZ(0);
+    transition: opacity .35s cubic-bezier(.25,.46,.45,.94),
+                transform .35s cubic-bezier(.25,.46,.45,.94);
+    will-change: opacity, transform;
+  }
+  .demo-sidebar.narrow .fade-c .menu-text {
+    opacity: 0;
+    transform: translateX(-14px) translateZ(0);
+  }
+
+  /* 展开淡入：文字初始透明 */
+  .fade-d .menu-text {
+    opacity: 0;
+    transform: translateX(-10px) translateZ(0);
+    transition: opacity .4s cubic-bezier(.25,.46,.45,.94) .08s,
+                transform .4s cubic-bezier(.25,.46,.45,.94) .08s;
+    will-change: opacity, transform;
+  }
+  .demo-sidebar.wide .fade-d .menu-text {
+    opacity: 1;
+    transform: translateX(0) translateZ(0);
+  }
+
+  /* 主内容 */
+  .demo-main {
+    flex: 1; padding: 1.2rem; background: white; min-width: 0;
+  }
+  .demo-main h4 { font-size: .85rem; margin-bottom: .5rem; }
+  .demo-main .note {
+    font-size: .75rem; color: #64748b; line-height: 1.7;
+  }
+  .demo-main .note .red { color: #ef4444; }
+  .demo-main .note .green { color: #22c55e; }
+  .demo-main .note .code { background: #f1f5f9; padding: .1rem .4rem; border-radius: 4px; font-family: Consolas,monospace; font-size: .73rem; }
+
+  .control-row {
+    display: flex; gap: .5rem; padding: .5rem 1rem;
+    background: #fafafa; border-bottom: 1px solid #e2e8f0;
+    align-items: center;
+  }
+  .control-row button {
+    padding: .35rem 1rem; border: 1px solid #d1d5db; background: white;
+    border-radius: 6px; cursor: pointer; font-size: .78rem;
+    transition: all .15s;
+  }
+  .control-row button:hover { border-color: #3b82f6; color: #3b82f6; }
+  .control-row .lbl { font-size: .7rem; color: #94a3b8; margin-left: auto; }
+
+  /* 对比总结 */
+  .compare-table {
+    width: 100%; border-collapse: collapse; font-size: .8rem;
+  }
+  .compare-table th {
+    text-align: left; padding: .6rem .8rem; background: #f1f5f9;
+    color: #475569; font-size: .7rem; text-transform: uppercase;
+    letter-spacing: .3px;
+  }
+  .compare-table td {
+    padding: .6rem .8rem; border-bottom: 1px solid #e2e8f0;
+    vertical-align: top;
+  }
+  .compare-table .c1 { color: #ef4444; }
+  .compare-table .c2 { color: #f59e0b; }
+  .compare-table .c3 { color: #22c55e; }
+
+  /* 性能指示 */
+  .perf-indicator {
+    display: flex; gap: .4rem; padding: .5rem 1rem; align-items: center;
+    background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: .7rem;
+    color: #64748b;
+  }
+  .perf-indicator .layer {
+    padding: .1rem .5rem; border-radius: 4px;
+    font-family: Consolas,monospace; font-size: .65rem;
+  }
+  .layer-layout { background: #fef2f2; color: #dc2626; }
+  .layer-paint { background: #fefce8; color: #d97706; }
+  .layer-composite { background: #f0fdf4; color: #16a34a; }
+
+  /* 红线警告 */
+  .redline {
+    background: rgba(239,68,68,.06); border: 1px solid rgba(239,68,68,.2);
+    border-radius: 10px; padding: .8rem 1rem; margin: 1rem;
+    font-size: .78rem; color: #fca5a5;
+    display: flex; align-items: center; gap: .5rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>✨ 侧边栏文字 <span>淡入淡出优化</span></h1>
+  <p style="color:#64748b;font-size:.88rem">无处理 → 仅opacity → opacity+滑动+GPU → 展开淡入</p>
+</header>
+
+<div class="page">
+
+  <!-- ===== 方案A：无处理 ===== -->
+  <div class="card">
+    <div class="card-top">
+      <span>A. 无处理 — 文字被瞬间截断</span>
+      <span class="badge badge-bad">❌ 不推荐</span>
+    </div>
+    <div class="card-body">
+      <div class="control-row">
+        <button onclick="toggleSidebar('sbA')">↔ 切换宽度</button>
+        <span class="lbl">无 opacity 过渡 → 文字瞬间消失/出现</span>
+      </div>
+      <div class="demo-row">
+        <aside class="demo-sidebar wide" id="sbA">
+          <div class="logo"><span class="icon">⚡</span><span class="menu-text fade-a">Admin</span></div>
+          <div class="nav-list fade-a">
+            <a><span class="icon">🏠</span><span class="menu-text">首页概览</span></a>
+            <a><span class="icon">📊</span><span class="menu-text">数据分析</span></a>
+            <a><span class="icon">👥</span><span class="menu-text">用户管理</span></a>
+            <a><span class="icon">⚙️</span><span class="menu-text">系统设置</span></a>
+          </div>
+        </aside>
+        <div class="demo-main">
+          <h4>问题</h4>
+          <div class="note">
+            <span class="red">✗</span> 宽度变窄 → <span class="code">overflow:hidden</span> 直接截断<br>
+            <span class="red">✗</span> 文字瞬间消失，无过渡动画<br>
+            <span class="red">✗</span> 展开时文字瞬间出现，很突兀
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 方案B：仅opacity ===== -->
+  <div class="card">
+    <div class="card-top">
+      <span>B. 仅 opacity 淡出</span>
+      <span class="badge badge-ok">基本可用</span>
+    </div>
+    <div class="card-body">
+      <div class="control-row">
+        <button onclick="toggleSidebar('sbB')">↔ 切换宽度</button>
+        <span class="lbl">收起时文字 opacity: 1→0 淡出</span>
+      </div>
+      <div class="demo-row">
+        <aside class="demo-sidebar wide" id="sbB">
+          <div class="logo"><span class="icon">⚡</span><span class="menu-text fade-b">Admin</span></div>
+          <div class="nav-list fade-b">
+            <a><span class="icon">🏠</span><span class="menu-text">首页概览</span></a>
+            <a><span class="icon">📊</span><span class="menu-text">数据分析</span></a>
+            <a><span class="icon">👥</span><span class="menu-text">用户管理</span></a>
+            <a><span class="icon">⚙️</span><span class="menu-text">系统设置</span></a>
+          </div>
+        </aside>
+        <div class="demo-main">
+          <h4>改进</h4>
+          <div class="note">
+            <span class="green">✓</span> 文字有淡出过程<br>
+            <span style="color:#f59e0b">△</span> 但仍触发Repaint<br>
+            <span style="color:#f59e0b">△</span> 低端设备可能掉帧<br>
+            <span style="color:#f59e0b">△</span> 仅淡出略显呆板
+          </div>
+        </div>
+      </div>
+      <div class="perf-indicator">
+        <span class="layer layer-paint">触发 Paint</span> 改变 opacity 仍需重绘
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 方案C：opacity+translateX+GPU+cubic-bezier ✅ ===== -->
+  <div class="card">
+    <div class="card-top">
+      <span>C. opacity + translateX + GPU加速 + cubic-bezier</span>
+      <span class="badge badge-best">✅ 推荐</span>
+    </div>
+    <div class="card-body">
+      <div class="control-row">
+        <button onclick="toggleSidebar('sbC')">↔ 切换宽度</button>
+        <span class="lbl">收起时文字淡出+向左滑入图标，GPU加速，cubic-bezier流畅过渡</span>
+      </div>
+      <div class="demo-row">
+        <aside class="demo-sidebar wide" id="sbC">
+          <div class="logo"><span class="icon">⚡</span><span class="menu-text fade-c">Admin</span></div>
+          <div class="nav-list fade-c">
+            <a><span class="icon">🏠</span><span class="menu-text">首页概览</span></a>
+            <a><span class="icon">📊</span><span class="menu-text">数据分析</span></a>
+            <a><span class="icon">👥</span><span class="menu-text">用户管理</span></a>
+            <a><span class="icon">⚙️</span><span class="menu-text">系统设置</span></a>
+          </div>
+        </aside>
+        <div class="demo-main">
+          <h4>最优效果</h4>
+          <div class="note">
+            <span class="green">✓</span> <span class="code">translateX(-14px)</span> 文字向左滑入图标<br>
+            <span class="green">✓</span> <span class="code">translateZ(0)</span> 触发GPU合成层<br>
+            <span class="green">✓</span> <span class="code">will-change: opacity, transform</span> 提前优化<br>
+            <span class="green">✓</span> <span class="code">cubic-bezier(.25,.46,.45,.94)</span> 自然缓动
+          </div>
+        </div>
+      </div>
+      <div class="perf-indicator">
+        <span class="layer layer-composite">仅 Composite</span> GPU合成层处理，不触发Layout/Paint → 60fps
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 方案D：展开淡入 ===== -->
+  <div class="card">
+    <div class="card-top">
+      <span>D. 展开时文字淡入（收起态文字初始透明）</span>
+      <span class="badge badge-best">对称动画</span>
+    </div>
+    <div class="card-body">
+      <div class="control-row">
+        <button onclick="toggleSidebar('sbD')">↔ 切换宽度</button>
+        <span class="lbl">文字初始 opacity:0，展开时延迟淡入 + 向右滑入</span>
+      </div>
+      <div class="demo-row">
+        <aside class="demo-sidebar narrow" id="sbD">
+          <div class="logo"><span class="icon">⚡</span><span class="menu-text fade-d">Admin</span></div>
+          <div class="nav-list fade-d">
+            <a><span class="icon">🏠</span><span class="menu-text">首页概览</span></a>
+            <a><span class="icon">📊</span><span class="menu-text">数据分析</span></a>
+            <a><span class="icon">👥</span><span class="menu-text">用户管理</span></a>
+            <a><span class="icon">⚙️</span><span class="menu-text">系统设置</span></a>
+          </div>
+        </aside>
+        <div class="demo-main">
+          <h4>展开淡入</h4>
+          <div class="note">
+            <span class="green">✓</span> 初始 <span class="code">opacity:0; translateX(-10px)</span><br>
+            <span class="green">✓</span> 展开后 <span class="code">opacity:1; translateX(0)</span><br>
+            <span class="green">✓</span> 延迟 <span class="code">.08s</span> 等宽度展开后才出现文字<br>
+            <span class="green">✓</span> 与收起动画对称，体验完整
+          </div>
+        </div>
+      </div>
+      <div class="perf-indicator">
+        关键：<span class="code" style="font-size:.7rem">.sidebar:not(.collapsed) .menu-text { opacity:1; }</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 对比表 ===== -->
+  <div class="card">
+    <div class="card-top"><span>📊 方案对比矩阵</span></div>
+    <div class="card-body" style="padding:1rem;overflow-x:auto">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>方案</th><th>视觉</th><th>性能</th><th>触发的渲染阶段</th><th>代码量</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="c1"><strong>A. 无处理</strong></td>
+            <td class="c1">文字截断消失</td><td class="c1">差</td>
+            <td><span class="layer layer-layout">Layout</span> (width变化)</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td class="c2"><strong>B. 仅opacity</strong></td>
+            <td class="c2">淡出，较生硬</td><td class="c2">一般</td>
+            <td><span class="layer layer-layout">Layout</span> + <span class="layer layer-paint">Paint</span></td>
+            <td>3行</td>
+          </tr>
+          <tr>
+            <td class="c3"><strong>C. 完整方案✅</strong></td>
+            <td class="c3">淡出+滑动，丝滑</td><td class="c3">最优</td>
+            <td><span class="layer layer-composite">Composite only</span> (GPU)</td>
+            <td>8行</td>
+          </tr>
+          <tr>
+            <td class="c3"><strong>D. 展开淡入</strong></td>
+            <td class="c3">对称动画，完整</td><td class="c3">最优</td>
+            <td><span class="layer layer-composite">Composite only</span> (GPU)</td>
+            <td>5行</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 红线警告 -->
+  <div class="redline">
+    <span style="font-size:1.3rem">🚫</span>
+    <div>
+      <strong>绝对禁止</strong>：用 <span class="code">width / left / margin</span> 来做滑动动画 —— 这些属性触发 Layout 重排，导致卡顿。<br>
+      <strong>唯一正确</strong>：用 <span class="code">transform: translateX()</span> 实现位移，用 <span class="code">opacity</span> 实现淡入淡出。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-top"><span>📝 HTML 结构 & 核心 CSS</span></div>
+    <div class="card-body">
+      <pre style="background:#0a0f1a;border-radius:0 0 10px 10px;padding:1rem;font-family:Consolas,monospace;font-size:.72rem;line-height:1.7;color:#cbd5e1;margin:0">
+<span class="c" style="color:#64748b">&lt;!-- HTML：文字用 &lt;span class="menu-text"&gt; 包裹 --&gt;</span>
+&lt;<span style="color:#c084fc">a</span> <span style="color:#93c5fd">href</span>=<span style="color:#86efac">"#"</span>&gt;&lt;<span style="color:#c084fc">span</span> <span style="color:#93c5fd">class</span>=<span style="color:#86efac">"icon"</span>&gt;🏠&lt;/<span style="color:#c084fc">span</span>&gt; &lt;<span style="color:#c084fc">span</span> <span style="color:#93c5fd">class</span>=<span style="color:#86efac">"menu-text"</span>&gt;首页&lt;/<span style="color:#c084fc">span</span>&gt;&lt;/<span style="color:#c084fc">a</span>&gt;
+
+<span style="color:#64748b">/* ===== 推荐方案 ===== */</span>
+<span style="color:#c084fc">.menu-text</span> {
+  <span style="color:#93c5fd">opacity</span>: 1;
+  <span style="color:#93c5fd">transform</span>: <span style="color:#fde68a">translateX</span>(0) <span style="color:#fde68a">translateZ</span>(0);   <span style="color:#64748b">/* translateZ(0) → GPU合成层 */</span>
+  <span style="color:#93c5fd">transition</span>: opacity .35s <span style="color:#fde68a">cubic-bezier</span>(.25,.46,.45,.94),
+              transform .35s <span style="color:#fde68a">cubic-bezier</span>(.25,.46,.45,.94);
+  <span style="color:#93c5fd">will-change</span>: opacity, transform;                <span style="color:#64748b">/* 提前通知浏览器 */</span>
+  <span style="color:#93c5fd">white-space</span>: nowrap;
+}
+<span style="color:#c084fc">.sidebar.collapsed .menu-text</span> {
+  <span style="color:#93c5fd">opacity</span>: 0;
+  <span style="color:#93c5fd">transform</span>: <span style="color:#fde68a">translateX</span>(-14px) <span style="color:#fde68a">translateZ</span>(0);
+}
+
+<span style="color:#64748b">/* ===== 展开淡入：文字初始透明 ===== */</span>
+<span style="color:#c084fc">.menu-text</span> {
+  <span style="color:#93c5fd">opacity</span>: 0;
+  <span style="color:#93c5fd">transition</span>: opacity .4s <span style="color:#fde68a">cubic-bezier</span>(.25,.46,.45,.94) .08s; <span style="color:#64748b">/* 延迟.08s */</span>
+}
+<span style="color:#c084fc">.sidebar:not(.collapsed) .menu-text</span> { <span style="color:#93c5fd">opacity</span>: 1; }</pre>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggleSidebar(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('narrow');
+  el.classList.toggle('wide');
+}
+</script>
+</body>
+</html>

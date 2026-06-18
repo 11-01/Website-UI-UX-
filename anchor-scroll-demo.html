@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>网站UI锚点跳转完全指南 | Anchor Scroll Guide</title>
+<style>
+/* ========== Reset & 全局 ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f172a;
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --surface: #f8fafc;
+  --text: #e2e8f0;
+  --text-dim: #94a3b8;
+  --text-dark: #1e293b;
+  --blue: #3b82f6;
+  --blue-hover: #2563eb;
+  --purple: #8b5cf6;
+  --green: #22c55e;
+  --red: #ef4444;
+  --orange: #f59e0b;
+  --cyan: #06b6d4;
+  --radius: 10px;
+  --radius-lg: 16px;
+}
+
+body {
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6;
+}
+
+/* ========== 头部 ========== */
+.hero {
+  text-align: center; padding: 3rem 1.5rem 2rem;
+  background: linear-gradient(180deg, #0f172a 0%, #1a2332 100%);
+}
+.hero h1 { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 900; margin-bottom: .6rem; }
+.hero h1 span {
+  background: linear-gradient(135deg, #3b82f6, #06b6d4);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero .subtitle { font-size: 1rem; color: var(--text-dim); max-width: 700px; margin: 0 auto; }
+.hero .meta-tags {
+  display: flex; justify-content: center; gap: .5rem; flex-wrap: wrap; margin-top: 1rem;
+}
+.hero .meta-tags span {
+  font-size: .75rem; padding: .25rem .75rem;
+  background: rgba(6,182,212,.1); border: 1px solid rgba(6,182,212,.2);
+  border-radius: 20px; color: #67e8f9;
+}
+
+/* ========== 页面布局 ========== */
+.page { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem 4rem; }
+
+.section-card {
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg); margin-bottom: 2rem; overflow: hidden;
+}
+.section-card .card-header {
+  padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--card-border);
+  display: flex; align-items: center; gap: .8rem;
+}
+.section-card .card-header .section-num {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--cyan), var(--blue));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 1rem; color: white; flex-shrink: 0;
+}
+.section-card .card-header h2 { font-size: 1.3rem; font-weight: 700; }
+.section-card .card-header .en-label {
+  font-size: .75rem; color: var(--text-dim); margin-left: auto;
+}
+.section-card .card-body {
+  background: var(--surface); color: var(--text-dark); padding: 1.5rem;
+}
+
+.sub-title {
+  font-size: .95rem; font-weight: 700; color: #475569;
+  margin-bottom: 1rem; margin-top: 1.5rem; padding-bottom: .5rem;
+  border-bottom: 2px solid #e2e8f0;
+  display: flex; align-items: center; gap: .5rem;
+}
+.sub-title:first-child { margin-top: 0; }
+.sub-title::before { content: ''; width: 4px; height: 18px; background: var(--cyan); border-radius: 2px; }
+
+.demo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.2rem; }
+.code-block {
+  background: #1e293b; color: #e2e8f0; border-radius: 8px;
+  padding: 1rem 1.2rem; font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: .78rem; line-height: 1.7; overflow-x: auto;
+  margin: .8rem 0;
+}
+.code-block .tag { color: #f472b6; }
+.code-block .attr { color: #67e8f9; }
+.code-block .val { color: #a5d6ff; }
+.code-block .comment { color: #64748b; }
+.code-block .fn { color: #c4b5fd; }
+.code-block .prop { color: #fde68a; }
+
+/* ========== 模拟固定导航（用于演示scroll-margin） ========== */
+.fixed-nav-demo {
+  position: sticky; top: 0; z-index: 10;
+  background: #1e293b; color: white;
+  padding: .8rem 1.5rem;
+  display: flex; gap: 1.5rem; align-items: center;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 2px 12px rgba(0,0,0,.15);
+}
+.fixed-nav-demo .logo { font-weight: 900; font-size: 1rem; margin-right: auto; }
+.fixed-nav-demo a {
+  color: #cbd5e1; text-decoration: none; font-size: .82rem;
+  transition: color .2s; padding: .3rem .6rem; border-radius: 6px;
+}
+.fixed-nav-demo a:hover, .fixed-nav-demo a:focus { color: white; background: rgba(255,255,255,.08); }
+
+/* 锚点目标区域 */
+.anchor-section {
+  padding: 2rem; border-radius: 10px; margin: 1rem 0;
+  border: 2px dashed #d1d5db;
+}
+.anchor-section h3 { font-size: 1.1rem; color: #1e293b; margin-bottom: .5rem; }
+.anchor-section:nth-child(odd) { background: #eff6ff; }
+.anchor-section:nth-child(even) { background: #f0fdf4; }
+
+/* 解决遮挡 */
+.scroll-margin-demo .anchor-section[id] {
+  scroll-margin-top: 65px; /* nav高度+余量 */
+}
+
+/* ========== 方案对比卡片 ========== */
+.plan-card {
+  background: white; border-radius: var(--radius); padding: 1.2rem;
+  box-shadow: 0 1px 6px rgba(0,0,0,.03); border: 1px solid #f1f5f9;
+}
+.plan-card h4 { font-size: .9rem; margin-bottom: .5rem; }
+.plan-card .pros { font-size: .75rem; color: #16a34a; margin-bottom: .3rem; }
+.plan-card .cons { font-size: .75rem; color: #94a3b8; }
+
+/* ========== 警告提示 ========== */
+.tip-box {
+  display: flex; align-items: flex-start; gap: .6rem;
+  padding: .8rem 1rem; border-radius: 8px; font-size: .8rem; margin: .8rem 0;
+}
+.tip-box.warn { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.tip-box.info { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+.tip-box.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.tip-box .icon { font-size: 1rem; flex-shrink: 0; }
+
+/* 响应式 */
+@media (max-width: 640px) {
+  .demo-grid { grid-template-columns: 1fr; }
+  .fixed-nav-demo { flex-wrap: wrap; gap: .5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== 头部 ==================== -->
+<header class="hero" id="top">
+  <h1><span>网站UI锚点跳转完全指南</span></h1>
+  <p class="subtitle">
+    核心原理：HTML 片段标识符（Fragment Identifier）与 DOM 滚动 API。
+    三种主流方案覆盖从简单到进阶的所有场景。
+  </p>
+  <div class="meta-tags">
+    <span>语义化锚点</span><span>Smooth Scroll</span><span>scrollIntoView</span>
+    <span>scroll-margin</span><span>跨页面跳转</span>
+  </div>
+</header>
+
+<div class="page">
+
+<!-- ==================== 方案一：基础语义化锚点 ==================== -->
+<article class="section-card">
+  <div class="card-header">
+    <div class="section-num">1</div>
+    <h2>基础语义化锚点（推荐首选）</h2>
+    <span class="en-label">Semantic Anchor</span>
+  </div>
+  <div class="card-body">
+    <p style="font-size:.85rem;color:#475569;margin-bottom:1rem;">
+      最简洁、兼容性最好的原生方式，无需 JavaScript，天然支持键盘导航（Tab + Enter），且自动更新 URL 方便分享。
+    </p>
+
+    <div class="sub-title">① 设置目标锚点</div>
+    <p style="font-size:.8rem;color:#64748b;margin-bottom:.5rem;">为需要跳转到的目标元素添加唯一的 <code>id</code> 属性：</p>
+    <div class="code-block">
+      <span class="tag">&lt;section</span> <span class="attr">id</span>=<span class="val">"features"</span><span class="tag">&gt;</span>功能亮点区块<span class="tag">&lt;/section&gt;</span>
+    </div>
+
+    <div class="sub-title">② 创建导航链接</div>
+    <p style="font-size:.8rem;color:#64748b;margin-bottom:.5rem;">使用 <code>&lt;a&gt;</code> 标签，<code>href</code> 指向对应 <code>id</code>（带 <code>#</code> 号）：</p>
+    <div class="code-block">
+      <span class="tag">&lt;nav&gt;</span><br>
+      &nbsp;&nbsp;<span class="tag">&lt;a</span> <span class="attr">href</span>=<span class="val">"#features"</span><span class="tag">&gt;</span>跳转到功能亮点<span class="tag">&lt;/a&gt;</span><br>
+      <span class="tag">&lt;/nav&gt;</span>
+    </div>
+
+    <div class="sub-title">③ 实时演示</div>
+    <p style="font-size:.8rem;color:#64748b;margin-bottom:.5rem;">点击以下链接体验语义化锚点跳转：</p>
+    <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:1rem;">
+      <a href="#demo-target-1" style="padding:.5rem 1.2rem;background:var(--blue);color:white;border-radius:20px;text-decoration:none;font-size:.82rem;font-weight:600;">→ 跳转到目标区域 1</a>
+      <a href="#demo-target-2" style="padding:.5rem 1.2rem;background:var(--green);color:white;border-radius:20px;text-decoration:none;font-size:.82rem;font-weight:600;">→ 跳转到目标区域 2</a>
+      <a href="#top" style="padding:.5rem 1.2rem;background:#64748b;color:white;border-radius:20px;text-decoration:none;font-size:.82rem;font-weight:600;">↑ 返回顶部</a>
+    </div>
+    <div style="background:#f8fafc;border-radius:10px;padding:1rem;border:1px solid #e2e8f0;min-height:60px;">
+      <div id="demo-target-1" class="anchor-section">
+        <h3>📍 目标区域 1</h3>
+        <p style="font-size:.8rem;color:#475569;">这就是通过 <code>&lt;a href="#demo-target-1"&gt;</code> 跳转到达的位置。注意浏览器 URL 已自动追加了 <code>#demo-target-1</code>。</p>
+      </div>
+      <div id="demo-target-2" class="anchor-section" style="margin-top:2rem;">
+        <h3>📍 目标区域 2</h3>
+        <p style="font-size:.8rem;color:#475569;">第二个锚点目标。URL 中的 hash 会随之切换为 <code>#demo-target-2</code>，方便用户复制链接分享。</p>
+      </div>
+    </div>
+  </div>
+</article>
+
+<!-- ==================== 方案二：平滑滚动 ==================== -->
+<article class="section-card">
+  <div class="card-header">
+    <div class="section-num">2</div>
+    <h2>增强体验的平滑滚动（Smooth Scroll）</h2>
+    <span class="en-label">CSS Smooth Scroll</span>
+  </div>
+  <div class="card-body">
+    <p style="font-size:.85rem;color:#475569;margin-bottom:1rem;">
+      默认锚点跳转是瞬时发生的，视觉上略显生硬。只需一行 CSS 即可升级为流畅动画。
+    </p>
+
+    <div class="sub-title">一行 CSS 搞定</div>
+    <div class="code-block">
+      <span class="tag">html</span> {<br>
+      &nbsp;&nbsp;<span class="prop">scroll-behavior</span>: <span class="val">smooth</span>;<br>
+      }
+    </div>
+    <div class="tip-box info">
+      <span class="icon">💡</span>
+      <span>建议作用于 <code>&lt;html&gt;</code> 元素，确保全页面滚动行为一致。滚动速度由浏览器控制，通常约 0.5~1 秒。</span>
+    </div>
+
+    <div class="sub-title">效果对比</div>
+    <div class="demo-grid">
+      <div class="plan-card">
+        <h4>❌ 无 Smooth Scroll</h4>
+        <p style="font-size:.75rem;color:#94a3b8;">瞬间跳转，视觉突兀，用户易丢失上下文</p>
+        <div style="height:60px;background:#fef2f2;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#dc2626;margin-top:.5rem;">
+          A 点 ⚡ 瞬间 → B 点
+        </div>
+      </div>
+      <div class="plan-card" style="border:2px solid #22c55e;">
+        <h4>✅ 开启 Smooth Scroll</h4>
+        <p style="font-size:.75rem;color:#16a34a;">平滑过渡，视觉连贯，用户体验大幅提升</p>
+        <div style="height:60px;background:#f0fdf4;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#16a34a;margin-top:.5rem;">
+          A 点 ~~~~➤ 流畅过渡 ~~~~➤ B 点
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-title">浏览器兼容性</div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;font-size:.75rem;">
+      <span style="background:#dcfce7;color:#166534;padding:.25rem .6rem;border-radius:4px;">✅ Chrome 61+</span>
+      <span style="background:#dcfce7;color:#166534;padding:.25rem .6rem;border-radius:4px;">✅ Firefox 36+</span>
+      <span style="background:#dcfce7;color:#166534;padding:.25rem .6rem;border-radius:4px;">✅ Safari 15.4+</span>
+      <span style="background:#dcfce7;color:#166534;padding:.25rem .6rem;border-radius:4px;">✅ Edge 79+</span>
+      <span style="background:#fef3c7;color:#92400e;padding:.25rem .6rem;border-radius:4px;">⚠️ IE 不支持</span>
+    </div>
+  </div>
+</article>
+
+<!-- ==================== 方案三：JS scrollIntoView ==================== -->
+<article class="section-card">
+  <div class="card-header">
+    <div class="section-num">3</div>
+    <h2>JavaScript 控制滚动（进阶定制）</h2>
+    <span class="en-label">scrollIntoView API</span>
+  </div>
+  <div class="card-body">
+    <p style="font-size:.85rem;color:#475569;margin-bottom:1rem;">
+      适用于 SPA 单页应用（避免 URL 变化）、需要自定义滚动逻辑（修正固定头部遮挡、添加动画回调）的场景。
+    </p>
+
+    <div class="sub-title">基础用法</div>
+    <div class="code-block">
+      <span class="comment">// 获取目标元素并平滑滚动至可视区</span><br>
+      <span class="tag">document</span>.<span class="fn">getElementById</span>(<span class="val">'features'</span>).<span class="fn">scrollIntoView</span>({<br>
+      &nbsp;&nbsp;<span class="prop">behavior</span>: <span class="val">'smooth'</span><br>
+      });
+    </div>
+
+    <div class="sub-title">高级配置</div>
+    <div class="code-block">
+      <span class="comment">// 完整配置项</span><br>
+      element.<span class="fn">scrollIntoView</span>({<br>
+      &nbsp;&nbsp;<span class="prop">behavior</span>: <span class="val">'smooth'</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// 'auto' | 'smooth'</span><br>
+      &nbsp;&nbsp;<span class="prop">block</span>: <span class="val">'start'</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// 'start' | 'center' | 'end' | 'nearest'</span><br>
+      &nbsp;&nbsp;<span class="prop">inline</span>: <span class="val">'nearest'</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// 水平方向对齐</span><br>
+      });
+    </div>
+
+    <div class="sub-title">实时演示 — 点击按钮触发 JS 滚动</div>
+    <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:1rem;">
+      <button onclick="scrollToTarget('js-demo-a')" style="padding:.5rem 1.2rem;background:var(--purple);color:white;border:none;border-radius:20px;font-size:.82rem;font-weight:600;cursor:pointer;">
+        scrollIntoView → 区域 A
+      </button>
+      <button onclick="scrollToTarget('js-demo-b')" style="padding:.5rem 1.2rem;background:#ec4899;color:white;border:none;border-radius:20px;font-size:.82rem;font-weight:600;cursor:pointer;">
+        scrollIntoView → 区域 B
+      </button>
+      <button onclick="document.getElementById('top').scrollIntoView({behavior:'smooth'})" style="padding:.5rem 1.2rem;background:#64748b;color:white;border:none;border-radius:20px;font-size:.82rem;font-weight:600;cursor:pointer;">
+        ↑ 返回顶部
+      </button>
+    </div>
+    <div style="background:#f8fafc;border-radius:10px;padding:1rem;border:1px solid #e2e8f0;">
+      <div id="js-demo-a" class="anchor-section">
+        <h3>🎯 JS 滚动目标 A</h3>
+        <p style="font-size:.8rem;color:#475569;">通过 <code>scrollIntoView({behavior:'smooth'})</code> 平滑滚动至此，URL 不会改变。</p>
+      </div>
+      <div id="js-demo-b" class="anchor-section" style="margin-top:2rem;">
+        <h3>🎯 JS 滚动目标 B</h3>
+        <p style="font-size:.8rem;color:#475569;">适合 SPA 场景 — 无 hash 残留，路由保持干净。</p>
+      </div>
+    </div>
+  </div>
+</article>
+
+<!-- ==================== 避坑与优化 ==================== -->
+<article class="section-card">
+  <div class="card-header">
+    <div class="section-num">⚠</div>
+    <h2>UI 开发避坑与优化建议</h2>
+    <span class="en-label">Best Practices</span>
+  </div>
+  <div class="card-body">
+
+    <!-- 坑1：固定导航遮挡 -->
+    <div class="sub-title">🐛 固定导航栏遮挡问题 → scroll-margin-top 修复</div>
+    <p style="font-size:.8rem;color:#64748b;margin-bottom:.5rem;">
+      当页面顶部有 Fixed/Sticky 导航栏时，直接锚点跳转会导致目标元素被遮挡在导航栏后面。
+    </p>
+    <div class="code-block">
+      <span class="comment">/* 假设固定导航栏高度为 60px，为所有锚点预留偏移 */</span><br>
+      <span class="tag">section[id]</span> {<br>
+      &nbsp;&nbsp;<span class="prop">scroll-margin-top</span>: <span class="val">65px</span>;<br>
+      }
+    </div>
+
+    <div class="sub-title">现场演示 — 对比有/无 scroll-margin-top</div>
+    <!-- 模拟带固定导航的演示区 -->
+    <div class="scroll-margin-demo" style="background:white;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0;max-height:400px;overflow-y:auto;">
+      <div class="fixed-nav-demo">
+        <span class="logo">🔝 固定导航栏 (height≈60px)</span>
+        <a href="#nogap-a" style="background:#fee2e2;color:#dc2626;">无防护跳转</a>
+        <a href="#hasgap-a" style="background:#dcfce7;color:#16a34a;">有防护跳转</a>
+      </div>
+      <div style="padding:1rem;">
+        <div id="nogap-a" class="anchor-section" style="background:#fef2f2;">
+          <h3>❌ 无 scroll-margin-top</h3>
+          <p style="font-size:.78rem;color:#dc2626;">点击"无防护跳转"后，此标题会被导航栏遮挡！</p>
+        </div>
+        <div style="height:80px;"></div>
+        <div id="hasgap-a" class="anchor-section" style="background:#f0fdf4;scroll-margin-top:65px;">
+          <h3>✅ 设置了 scroll-margin-top: 65px</h3>
+          <p style="font-size:.78rem;color:#16a34a;">点击"有防护跳转"后，此标题完整显示在导航栏下方！</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 坑2：跨页面跳转 -->
+    <div class="sub-title">🔗 跨页面锚点跳转</div>
+    <p style="font-size:.8rem;color:#64748b;margin-bottom:.5rem;">
+      从 A 页面直接跳转到 B 页面的指定位置，组合文件路径与锚点即可（中间不加多余斜杠）：
+    </p>
+    <div class="code-block">
+      <span class="tag">&lt;a</span> <span class="attr">href</span>=<span class="val">"page2.html#features"</span><span class="tag">&gt;</span>查看功能亮点<span class="tag">&lt;/a&gt;</span>
+    </div>
+
+    <!-- 坑3：传统 name 属性 -->
+    <div class="sub-title">📜 传统 name 属性（不推荐）</div>
+    <div class="tip-box warn">
+      <span class="icon">⚠️</span>
+      <span>早期 HTML 使用 <code>&lt;a name="top"&gt;&lt;/a&gt;</code> 定义锚点。现代浏览器虽仍兼容，但<strong>强烈建议统一使用元素的 <code>id</code> 属性</strong>，语义更清晰、维护更方便。</span>
+    </div>
+
+    <!-- 快捷键提示 -->
+    <div class="sub-title">⌨️ 无障碍与键盘导航</div>
+    <div class="demo-grid">
+      <div class="plan-card">
+        <h4>Tab 键导航</h4>
+        <p style="font-size:.75rem;color:#475569;">使用 <code>&lt;a href="#"&gt;</code> 语义化链接天然支持 Tab 键聚焦，按 Enter 触发跳转。无需额外 <code>tabindex</code>。</p>
+      </div>
+      <div class="plan-card">
+        <h4>:target 伪类高亮</h4>
+        <p style="font-size:.75rem;color:#475569;">可用 CSS <code>:target</code> 伪类为当前锚点目标添加高亮效果，帮助用户确认位置。</p>
+        <div class="code-block" style="margin-top:.5rem;">
+          <span class="tag">:target</span> {<br>
+          &nbsp;&nbsp;<span class="prop">background</span>: <span class="val">#fef3c7</span>;<br>
+          &nbsp;&nbsp;<span class="prop">outline</span>: <span class="val">3px solid #f59e0b</span>;<br>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+<!-- ==================== 三方案对比 ==================== -->
+<article class="section-card">
+  <div class="card-header">
+    <div class="section-num">📊</div>
+    <h2>三种方案对比总结</h2>
+    <span class="en-label">Comparison</span>
+  </div>
+  <div class="card-body">
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:.8rem;">
+        <thead>
+          <tr style="background:#f1f5f9;">
+            <th style="padding:.6rem .8rem;text-align:left;">维度</th>
+            <th style="padding:.6rem .8rem;text-align:left;">方案一：语义化锚点</th>
+            <th style="padding:.6rem .8rem;text-align:left;">方案二：CSS Smooth Scroll</th>
+            <th style="padding:.6rem .8rem;text-align:left;">方案三：JS scrollIntoView</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #e2e8f0;">
+            <td style="padding:.5rem .8rem;font-weight:600;">代码量</td>
+            <td style="padding:.5rem .8rem;">极简（纯HTML）</td>
+            <td style="padding:.5rem .8rem;">+1行CSS</td>
+            <td style="padding:.5rem .8rem;">需JS逻辑</td>
+          </tr>
+          <tr style="border-bottom:1px solid #e2e8f0;">
+            <td style="padding:.5rem .8rem;font-weight:600;">平滑动画</td>
+            <td style="padding:.5rem .8rem;color:#dc2626;">❌ 无</td>
+            <td style="padding:.5rem .8rem;color:#16a34a;">✅ 浏览器原生</td>
+            <td style="padding:.5rem .8rem;color:#16a34a;">✅ 可自定义</td>
+          </tr>
+          <tr style="border-bottom:1px solid #e2e8f0;">
+            <td style="padding:.5rem .8rem;font-weight:600;">URL更新</td>
+            <td style="padding:.5rem .8rem;color:#16a34a;">✅ 自动</td>
+            <td style="padding:.5rem .8rem;color:#16a34a;">✅ 自动</td>
+            <td style="padding:.5rem .8rem;color:#f59e0b;">⚠️ 需手动处理</td>
+          </tr>
+          <tr style="border-bottom:1px solid #e2e8f0;">
+            <td style="padding:.5rem .8rem;font-weight:600;">键盘无障碍</td>
+            <td style="padding:.5rem .8rem;color:#16a34a;">✅ 原生支持</td>
+            <td style="padding:.5rem .8rem;color:#16a34a;">✅ 原生支持</td>
+            <td style="padding:.5rem .8rem;color:#f59e0b;">⚠️ 需手动实现</td>
+          </tr>
+          <tr style="border-bottom:1px solid #e2e8f0;">
+            <td style="padding:.5rem .8rem;font-weight:600;">自定义逻辑</td>
+            <td style="padding:.5rem .8rem;color:#dc2626;">❌ 受限</td>
+            <td style="padding:.5rem .8rem;color:#f59e0b;">⚠️ 有限</td>
+            <td style="padding:.5rem .8rem;color:#16a34a;">✅ 完全控制</td>
+          </tr>
+          <tr>
+            <td style="padding:.5rem .8rem;font-weight:600;">推荐场景</td>
+            <td style="padding:.5rem .8rem;">绝大多数网站</td>
+            <td style="padding:.5rem .8rem;">搭配方案一</td>
+            <td style="padding:.5rem .8rem;">SPA / 复杂交互</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tip-box success" style="margin-top:1rem;">
+      <span class="icon">🏆</span>
+      <span><strong>最佳实践：</strong>方案一 + 方案二组合使用 — 语义化 <code>&lt;a&gt;</code> 标签 + <code>scroll-behavior: smooth</code> + <code>scroll-margin-top</code>，覆盖 95% 的场景。</span>
+    </div>
+  </div>
+</article>
+
+</div>
+
+<script>
+// JS 滚动演示
+function scrollToTarget(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// 为导航链接添加平滑滚动（覆盖方案二的CSS默认行为）
+document.querySelectorAll('.fixed-nav-demo a').forEach(a => {
+  a.addEventListener('click', function(e) {
+    // 让它自然执行锚点跳转，CSS scroll-behavior:smooth 生效
+  });
+});
+</script>
+
+</body>
+</html>

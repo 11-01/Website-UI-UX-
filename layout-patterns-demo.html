@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12种Web核心布局模式 | Layout Patterns Guide</title>
+<style>
+/* ========== Reset & 全局 ========== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f172a;--card-bg:#1e293b;--card-border:#334155;--surface:#f8fafc;--text:#e2e8f0;--text-dim:#94a3b8;--text-dark:#1e293b;--blue:#3b82f6;--green:#22c55e;--purple:#8b5cf6;--orange:#f59e0b;--pink:#ec4899;--radius:10px;--radius-lg:16px}
+body{font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.hero{text-align:center;padding:3rem 1.5rem 2rem;background:linear-gradient(180deg,#0f172a 0%,#1a2332 100%)}
+.hero h1{font-size:clamp(1.8rem,4vw,3rem);font-weight:900;margin-bottom:.6rem}
+.hero h1 span{background:linear-gradient(135deg,#3b82f6,#06b6d4,#22c55e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .subtitle{font-size:1rem;color:var(--text-dim);max-width:750px;margin:0 auto}
+.hero .meta-tags{display:flex;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
+.hero .meta-tags span{font-size:.72rem;padding:.2rem .7rem;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:20px;color:#93c5fd}
+
+.page{max-width:1200px;margin:0 auto;padding:0 1.5rem 4rem}
+.section-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);margin-bottom:2rem;overflow:hidden}
+.section-card .card-header{padding:1.2rem 1.5rem;border-bottom:1px solid var(--card-border);display:flex;align-items:center;gap:.8rem}
+.section-card .card-header .section-num{width:36px;height:36px;background:linear-gradient(135deg,#3b82f6,#06b6d4);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.9rem;color:white;flex-shrink:0}
+.section-card .card-header h2{font-size:1.2rem;font-weight:700}
+.section-card .card-header .badge{font-size:.65rem;padding:.2rem .6rem;border-radius:10px;font-weight:600;margin-left:auto}
+.badge-grid{background:rgba(34,197,94,.15);color:#4ade80}
+.badge-flex{background:rgba(59,130,246,.15);color:#93c5fd}
+.badge-both{background:rgba(139,92,246,.15);color:#c4b5fd}
+.section-card .card-body{background:var(--surface);color:var(--text-dark);padding:1.5rem}
+
+.code-block{background:#1e293b;color:#e2e8f0;border-radius:8px;padding:.8rem 1rem;font-family:'JetBrains Mono','Fira Code','Consolas',monospace;font-size:.73rem;line-height:1.6;overflow-x:auto;margin:.5rem 0}
+.code-block .tag{color:#f472b6}.code-block .attr{color:#67e8f9}.code-block .val{color:#a5d6ff}.code-block .comment{color:#64748b}.code-block .prop{color:#fde68a}
+
+/* ===== 微型演示组件（缩小版布局） ===== */
+.mini-demo{background:white;border-radius:12px;overflow:hidden;margin-bottom:.8rem;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,.03)}
+.mini-demo .mini-label{font-size:.6rem;padding:.2rem .5rem;background:rgba(0,0,0,.04);color:#94a3b8;display:inline-block;border-radius:0 0 6px 0}
+
+/* 迷你块 */
+.mb{display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:white;border-radius:4px;min-height:24px}
+.mb-blue{background:var(--blue)}.mb-green{background:var(--green)}.mb-purple{background:var(--purple)}.mb-orange{background:var(--orange)}.mb-pink{background:var(--pink)}.mb-gray{background:#94a3b8}.mb-slate{background:#64748b}
+.mb-text{font-size:.6rem;color:#64748b;font-weight:400}
+
+/* 1. 顶部导航栏 */
+.mini-nav{display:flex;justify-content:space-between;align-items:center;padding:.4rem .6rem;background:#f8fafc;border-bottom:1px solid #e2e8f0}
+.mini-nav .logo{font-size:.7rem;font-weight:900;color:#1e293b}
+.mini-nav .links{display:flex;gap:.5rem}
+.mini-nav .links span{font-size:.6rem;color:#94a3b8}
+
+/* 2. 圣杯布局 */
+.mini-holy{display:grid;grid-template-areas:"header header header""left main right""footer footer footer";grid-template-columns:60px 1fr 60px;min-height:100px;gap:2px;background:#d1d5db}
+.mini-holy>*{padding:.3rem;display:flex;align-items:center;justify-content:center;font-size:.55rem;font-weight:700;color:white;border-radius:2px}
+.mini-holy .hdr{grid-area:header;background:var(--blue)}
+.mini-holy .lft{grid-area:left;background:var(--purple)}
+.mini-holy .mn{grid-area:main;background:white;color:#64748b}
+.mini-holy .rgt{grid-area:right;background:var(--green)}
+.mini-holy .ftr{grid-area:footer;background:#64748b}
+
+/* 3. 卡片网格 */
+.mini-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:6px;padding:6px}
+.mini-card{background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:6px;padding:.5rem;text-align:center;font-size:.6rem;color:#64748b;min-height:50px;display:flex;align-items:center;justify-content:center;font-weight:600}
+
+/* 4. 单列堆叠 */
+.mini-stack{display:flex;flex-direction:column;gap:6px;max-width:300px;margin:0 auto;padding:6px}
+.mini-stack>*{padding:.4rem;border-radius:4px;font-size:.6rem;text-align:center;color:white;font-weight:600}
+
+/* 5. 侧边栏 */
+.mini-sidebar{display:flex;min-height:80px}
+.mini-sidebar .sb{width:60px;background:var(--purple);color:white;font-size:.55rem;display:flex;align-items:center;justify-content:center;font-weight:700;border-radius:4px 0 0 4px}
+.mini-sidebar .mc{flex:1;background:#f8fafc;border-radius:0 4px 4px 0;padding:.4rem;font-size:.6rem;color:#64748b}
+
+/* 6. 分栏面板 */
+.mini-split{display:flex;min-height:80px;gap:3px}
+.mini-split .pane{flex:1;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:white;border-radius:4px}
+.mini-split .pane:nth-child(1){background:var(--blue)}.mini-split .pane:nth-child(2){background:var(--green)}
+
+/* 7. 列表-详情 */
+.mini-list-detail{display:flex;min-height:80px;gap:3px}
+.mini-list-detail .lst{width:80px;background:#f1f5f9;border-radius:4px;padding:.3rem;font-size:.55rem;color:#64748b;display:flex;flex-direction:column;gap:2px}
+.mini-list-detail .lst span{background:white;padding:.2rem;border-radius:3px;border:1px solid #e2e8f0}
+.mini-list-detail .dtl{flex:1;background:white;border-radius:4px;padding:.4rem;font-size:.6rem;color:#64748b;border:1px solid #e2e8f0}
+
+/* 8. 仪表盘 */
+.mini-dash{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:4px}
+.mini-dash>*{border-radius:4px;display:flex;align-items:center;justify-content:center;color:white;font-size:.55rem;font-weight:700;min-height:30px}
+.mini-dash .w-lg{grid-column:span 2;grid-row:span 2;background:var(--blue)}
+.mini-dash .w-sm:nth-child(2){background:var(--green)}.mini-dash .w-sm:nth-child(3){background:var(--purple)}.mini-dash .w-sm:nth-child(4){background:var(--orange)}.mini-dash .w-sm:nth-child(5){background:var(--pink)}.mini-dash .w-sm:nth-child(6){background:#06b6d4}
+
+/* 9. 英雄区 */
+.mini-hero{min-height:90px;display:flex;align-items:center;justify-content:center;flex-direction:column;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;font-size:.65rem;font-weight:700;border-radius:4px;text-align:center;padding:1rem}
+
+/* 10. 瀑布流 */
+.mini-masonry{columns:3 60px;column-gap:6px;padding:4px}
+.mini-masonry>*{break-inside:avoid;margin-bottom:6px;border-radius:4px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:.55rem}
+.mini-masonry .m1{height:35px;background:var(--blue)}.mini-masonry .m2{height:50px;background:var(--green)}.mini-masonry .m3{height:30px;background:var(--purple)}.mini-masonry .m4{height:45px;background:var(--orange)}.mini-masonry .m5{height:40px;background:var(--pink)}.mini-masonry .m6{height:55px;background:#06b6d4}
+
+/* 11. 居中容器 */
+.mini-center{max-width:200px;margin:0 auto;background:var(--blue);color:white;padding:.4rem .8rem;border-radius:4px;font-size:.6rem;text-align:center;font-weight:600}
+
+/* 12. 图文左右 */
+.mini-img-text{display:flex;align-items:center;gap:8px;min-height:70px;padding:4px}
+.mini-img-text .img{flex:1;background:linear-gradient(135deg,#c7d2fe,#a5b4fc);border-radius:6px;min-height:50px;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:#64748b;font-weight:600}
+.mini-img-text .txt{flex:1;font-size:.65rem;color:#475569}
+
+/* ===== 响应式适配演示标记 ===== */
+.resp-tag{font-size:.6rem;padding:.15rem .4rem;border-radius:8px;background:#dcfce7;color:#166534;font-weight:600}
+
+@media(max-width:640px){
+  .mini-holy{grid-template-columns:40px 1fr 40px}
+  .mini-masonry{columns:2 50px}
+  .mini-dash{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1><span>12种Web核心布局模式</span></h1>
+  <p class="subtitle">现代前端开发两大核心利器：CSS Grid（二维布局）和 Flexbox（一维布局）。拥抱 fr、minmax、auto-fit，少写 @media。</p>
+  <div class="meta-tags"><span>Flexbox</span><span>CSS Grid</span><span>圣杯</span><span>卡片网格</span><span>仪表盘</span><span>瀑布流</span><span>响应式</span></div>
+</header>
+
+<div class="page">
+
+<!-- ==================== 1-3 Flexbox主导 ==================== -->
+
+<!-- 1. 顶部导航栏 -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">1</div><h2>顶部导航栏 (Top Nav)</h2><span class="badge badge-flex">Flexbox</span></div>
+  <div class="card-body">
+    <div class="mini-demo"><div class="mini-nav"><span class="logo">🏢 Brand</span><div class="links"><span>首页</span><span>产品</span><span>关于</span></div></div></div>
+    <div class="code-block"><span class="tag">nav</span> { <span class="prop">display</span>: <span class="val">flex</span>; <span class="prop">justify-content</span>: <span class="val">space-between</span>; <span class="prop">align-items</span>: <span class="val">center</span>; }</div>
+    <p style="font-size:.72rem;color:#94a3b8;">Logo 靠左 · 菜单靠右 · 一行搞定</p>
+  </div>
+</article>
+
+<!-- 2. 圣杯布局 -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">2</div><h2>圣杯布局 (Holy Grail)</h2><span class="badge badge-grid">CSS Grid</span></div>
+  <div class="card-body">
+    <div class="mini-demo"><div class="mini-holy"><div class="hdr">Header</div><div class="lft">左</div><div class="mn">主内容区 (1fr 自适应)</div><div class="rgt">右</div><div class="ftr">Footer</div></div></div>
+    <div class="code-block"><span class="tag">body</span> { <span class="prop">display</span>: <span class="val">grid</span>; <span class="prop">grid-template-areas</span>: <span class="val">"h h h" "l m r" "f f f"</span>; <span class="prop">grid-template-columns</span>: <span class="val">200px 1fr 200px</span>; }</div>
+    <p style="font-size:.72rem;color:#94a3b8;">Header + Footer + 三栏内容 · 中间 <code>1fr</code> 自动撑满</p>
+  </div>
+</article>
+
+<!-- 3. 卡片网格 -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">3</div><h2>卡片网格 (Card Grid)</h2><span class="badge badge-grid">CSS Grid</span></div>
+  <div class="card-body">
+    <div class="mini-demo"><div class="mini-cards"><span class="mini-card">卡片 1</span><span class="mini-card">卡片 2</span><span class="mini-card">卡片 3</span><span class="mini-card">卡片 4</span><span class="mini-card">卡片 5</span><span class="mini-card">卡片 6</span></div></div>
+    <div class="code-block"><span class="tag">.grid</span> { <span class="prop">display</span>: <span class="val">grid</span>; <span class="prop">grid-template-columns</span>: <span class="val">repeat(auto-fit, minmax(300px, 1fr))</span>; <span class="prop">gap</span>: <span class="val">20px</span>; }</div>
+    <p style="font-size:.72rem;color:#94a3b8;"><code>auto-fit + minmax</code> 是响应式神器：自动计算列数，无需任何 @media 断点。</p>
+  </div>
+</article>
+
+<!-- 4. 单列堆叠 -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">4</div><h2>单列堆叠 (Single Column)</h2><span class="badge badge-flex">Flexbox</span></div>
+  <div class="card-body">
+    <div class="mini-demo"><div class="mini-stack"><div class="mb mb-blue">标题区</div><div class="mb mb-purple">段落内容</div><div class="mb mb-green">图片展示</div><div class="mb mb-orange">底部操作</div></div></div>
+    <div class="code-block"><span class="tag">.stack</span> { <span class="prop">display</span>: <span class="val">flex</span>; <span class="prop">flex-direction</span>: <span class="val">column</span>; <span class="prop">gap</span>: <span class="val">16px</span>; <span class="prop">max-width</span>: <span class="val">800px</span>; <span class="prop">margin</span>: <span class="val">0 auto</span>; }</div>
+    <p style="font-size:.72rem;color:#94a3b8;">适合文章阅读、移动端布局 · <code>max-width</code> 限制宽度防拉伸</p>
+  </div>
+</article>
+
+<!-- 5. 侧边栏布局 -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">5</div><h2>侧边栏布局 (Sidebar)</h2><span class="badge badge-flex">Flexbox</span></div>
+  <div class="card-body">
+    <div class="mini-demo"><div class="mini-sidebar"><div class="sb">侧栏<br>250px</div><div class="mc">主内容区 — flex: 1 占据剩余空间</div></div></div>
+    <div class="code-block"><span class="tag">.layout</span> { <span class="prop">display</span>: <span class="val">flex</span>; }<br><span class="tag">.sidebar</span> { <span class="prop">width</span>: <span class="val">250px</span>; <span class="prop">flex-shrink</span>: <span class="val">0</span>; }<br><span class="tag">.main</span> { <span class="prop">flex</span>: <span class="val">1</span>; }</div>
+    <p style="font-size:.72rem;color:#94a3b8;">左侧固定 + 右侧自适应 · <code>flex-shrink: 0</code> 防止侧栏被压缩</p>
+  </div>
+</article>
+
+<!-- 6. 分栏面板 -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">6</div><h2>分栏面板 (Split Panes)</h2><span class="badge badge-flex">Flexbox</span></div>
+  <div class="card-body">
+    <div class="mini-demo"><div class="mini-split"><div class="pane">面板 A (50%)</div><div class="pane">面板 B (50%)</div></div></div>
+    <div class="code-block"><span class="tag">.split</span> { <span class="prop">display</span>: <span class="val">flex</span>; <span class="prop">height</span>: <span class="val">100vh</span>; }<br><span class="tag">.pane</span> { <span class="prop">flex</span>: <span class="val">1</span>; <span class="prop">overflow-y</span>: <span class="val">auto</span>; }</div>
+    <p style="font-size:.72rem;color:#94a3b8;">编辑器/对比视图 · 各占 50%，可滚动 · 中间可加拖拽分隔条</p>
+  </div>
+</article>
+
+<!-- 7. 列表-详情 -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">7</div><h2>列表-详情 (List-Detail)</h2><span class="badge badge-flex">Flexbox</span></div>
+  <div class="card-body">
+    <div class="mini-demo"><div class="mini-list-detail"><div class="lst"><span>条目 1</span><span>条目 2</span><span>条目 3</span></div><div class="dtl">📋 详情内容区域<br>点击左侧列表项切换</div></div></div>
+    <div class="code-block"><span class="tag">.list-detail</span> { <span class="prop">display</span>: <span class="val">flex</span>; }<br><span class="tag">.list</span> { <span class="prop">width</span>: <span class="val">300px</span>; <span class="prop">border-right</span>: <span class="val">1px solid #ccc</span>; }<br><span class="tag">.detail</span> { <span class="prop">flex</span>: <span class="val">1</span>; }</div>
+    <p style="font-size:.72rem;color:#94a3b8;">邮件客户端、管理后台常用 · 移动端通常做单页切换</p>
+  </div>
+</article>
+
+<!-- 8. 仪表盘网格 -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">8</div><h2>仪表盘网格 (Dashboard)</h2><span class="badge badge-grid">CSS Grid</span></div>
+  <div class="card-body">
+    <div class="mini-demo"><div class="mini-dash"><div class="w-lg">KPI<br>2×2</div><div class="w-sm">图表</div><div class="w-sm">数据</div><div class="w-sm">统计</div><div class="w-sm">列表</div><div class="w-sm">通知</div></div></div>
+    <div class="code-block"><span class="tag">.dashboard</span> { <span class="prop">display</span>: <span class="val">grid</span>; <span class="prop">grid-template-columns</span>: <span class="val">repeat(4, 1fr)</span>; }<br><span class="tag">.widget-large</span> { <span class="prop">grid-column</span>: <span class="val">span 2</span>; <span class="prop">grid-row</span>: <span class="val">span 2</span>; }</div>
+    <p style="font-size:.72rem;color:#94a3b8;">Bento UI 风格 · 大小不一的卡片组合 · <code>span</code> 控制跨行跨列</p>
+  </div>
+</article>
+
+<!-- 9. 英雄区 -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">9</div><h2>英雄区 (Hero Section)</h2><span class="badge badge-flex">Flexbox</span></div>
+  <div class="card-body">
+    <div class="mini-demo"><div class="mini-hero"><div style="font-size:.8rem;">🚀 让世界看到你的产品</div><div style="opacity:.8;font-weight:400;font-size:.55rem;">一句话描述 · CTA 按钮</div></div></div>
+    <div class="code-block"><span class="tag">.hero</span> { <span class="prop">height</span>: <span class="val">80vh</span>; <span class="prop">display</span>: <span class="val">flex</span>; <span class="prop">align-items</span>: <span class="val">center</span>; <span class="prop">justify-content</span>: <span class="val">center</span>; <span class="prop">background</span>: <span class="val">url('bg.jpg') center/cover</span>; <span class="prop">flex-direction</span>: <span class="val">column</span>; }</div>
+    <p style="font-size:.72rem;color:#94a3b8;">全屏或大高度 · 图文居中 · CTA 突出 · 品牌第一印象</p>
+  </div>
+</article>
+
+<!-- 10. 瀑布流 -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">10</div><h2>瀑布流 (Masonry)</h2><span class="badge badge-both">CSS Columns</span></div>
+  <div class="card-body">
+    <div class="mini-demo"><div class="mini-masonry"><div class="m1">A</div><div class="m2">B</div><div class="m3">C</div><div class="m4">D</div><div class="m5">E</div><div class="m6">F</div></div></div>
+    <div class="code-block"><span class="comment">/* 纯CSS简易版（Pinterest 风格） */</span><br><span class="tag">.masonry</span> { <span class="prop">columns</span>: <span class="val">3 250px</span>; <span class="prop">column-gap</span>: <span class="val">16px</span>; }<br><span class="tag">.item</span> { <span class="prop">break-inside</span>: <span class="val">avoid</span>; }<br><br><span class="comment">/* ⚠️ CSS 原生 masonry 仅 Firefox 实验性支持 */</span></div>
+    <p style="font-size:.72rem;color:#94a3b8;">等高不等宽的卡片流 · 复杂布局建议用 Masonry.js 库</p>
+  </div>
+</article>
+
+<!-- 11. 居中容器 -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">11</div><h2>居中容器 (Centered Container)</h2><span class="badge badge-flex">Flexbox</span></div>
+  <div class="card-body">
+    <div class="mini-demo"><div style="padding:.5rem;background:white;border-radius:4px;"><div class="mini-center">内容区 max-width:1200px</div></div></div>
+    <div class="code-block"><span class="comment">/* 方式1：水平居中（最常用） */</span><br><span class="tag">.container</span> { <span class="prop">max-width</span>: <span class="val">1200px</span>; <span class="prop">margin</span>: <span class="val">0 auto</span>; <span class="prop">padding</span>: <span class="val">0 20px</span>; }<br><br><span class="comment">/* 方式2：绝对居中 */</span><br><span class="tag">.center-box</span> { <span class="prop">position</span>: <span class="val">absolute</span>; <span class="prop">top</span>: <span class="val">50%</span>; <span class="prop">left</span>: <span class="val">50%</span>; <span class="prop">transform</span>: <span class="val">translate(-50%,-50%)</span>; }</div>
+    <p style="font-size:.72rem;color:#94a3b8;">最常用的页面版心方案 · 四周留白，内容居中</p>
+  </div>
+</article>
+
+<!-- 12. 图文左右 -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">12</div><h2>图文左右 (Image-Text)</h2><span class="badge badge-flex">Flexbox</span></div>
+  <div class="card-body">
+    <div class="mini-demo"><div class="mini-img-text"><div class="img">🖼️ 图片区</div><div class="txt"><strong>功能标题</strong><br>描述文字，介绍产品特性与优势。垂直居中对齐。</div></div></div>
+    <div class="code-block"><span class="tag">.feature</span> { <span class="prop">display</span>: <span class="val">flex</span>; <span class="prop">align-items</span>: <span class="val">center</span>; <span class="prop">gap</span>: <span class="val">40px</span>; }<br><span class="tag">.feature img</span> { <span class="prop">flex</span>: <span class="val">1</span>; }<br><span class="tag">.feature .text</span> { <span class="prop">flex</span>: <span class="val">1</span>; }</div>
+    <p style="font-size:.72rem;color:#94a3b8;">图片和文字各占一半 · 垂直居中 · 常用于功能介绍区</p>
+  </div>
+</article>
+
+<!-- ==================== 总结 ==================== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">📊</div><h2>Grid vs Flexbox 选型指南</h2><span class="en-label" style="font-size:.7rem;color:var(--text-dim);">Decision Guide</span></div>
+  <div class="card-body">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;">
+      <div style="background:white;border-radius:10px;padding:1rem;border-left:4px solid var(--green);">
+        <h4 style="font-size:.85rem;margin-bottom:.5rem;">🟢 首选 CSS Grid</h4>
+        <p style="font-size:.75rem;color:#475569;">二维布局（行列同时控制）<br>→ 圣杯 · 仪表盘 · 卡片网格 · 瀑布流</p>
+        <p style="font-size:.7rem;color:#94a3b8;margin-top:.5rem;">核心：<code>1fr</code> · <code>minmax()</code> · <code>auto-fit</code> · <code>span</code></p>
+      </div>
+      <div style="background:white;border-radius:10px;padding:1rem;border-left:4px solid var(--blue);">
+        <h4 style="font-size:.85rem;margin-bottom:.5rem;">🔵 首选 Flexbox</h4>
+        <p style="font-size:.75rem;color:#475569;">一维布局（单行/单列对齐）<br>→ 导航栏 · 侧边栏 · 分栏 · 图文左右 · 居中</p>
+        <p style="font-size:.7rem;color:#94a3b8;margin-top:.5rem;">核心：<code>flex: 1</code> · <code>space-between</code> · <code>align-items</code></p>
+      </div>
+    </div>
+    <div style="margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.6rem;">
+      <div style="background:#f0fdf4;border-radius:8px;padding:.6rem .8rem;font-size:.73rem;color:#166534;">📐 <strong>拥抱相对单位</strong><br>多用 <code>fr</code>、<code>%</code>、<code>vw/vh</code>、<code>rem</code>，少用死像素 <code>px</code></div>
+      <div style="background:#eff6ff;border-radius:8px;padding:.6rem .8rem;font-size:.73rem;color:#1e40af;">🪄 <strong>响应式神器</strong><br><code>minmax()</code> + <code>auto-fit</code> + <code>auto-fill</code> 让你少写 @media</div>
+      <div style="background:#fefce8;border-radius:8px;padding:.6rem .8rem;font-size:.73rem;color:#92400e;">⚠️ <strong>Firefox 独占</strong><br>CSS 原生 <code>grid-template-rows: masonry</code> 仅 Firefox 实验性支持</div>
+    </div>
+  </div>
+</article>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>14种UI风格 × 卡片设计 | Styles & Cards Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #0a0a0f; color: #e2e8f0;
+  }
+
+  header {
+    text-align: center; padding: 2.5rem 1rem 1.5rem;
+  }
+  header h1 { font-size: 1.8rem; }
+  header h1 span { background: linear-gradient(135deg, #f59e0b, #ec4899, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+  .tabs {
+    display: flex; justify-content: center; gap: .3rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+  }
+  .tabs button {
+    padding: .5rem 1.2rem; border: 1px solid #334155; background: #1e293b;
+    color: #94a3b8; border-radius: 20px; cursor: pointer; font-size: .8rem;
+    transition: all .2s;
+  }
+  .tabs button:hover { border-color: #3b82f6; color: #e2e8f0; }
+  .tabs button.on { background: #3b82f6; border-color: #3b82f6; color: white; }
+
+  .page { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+  .section { display: none; }
+  .section.on { display: block; }
+
+  /* 风格网格 */
+  .style-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+
+  /* 通用风格卡片 */
+  .style-card {
+    min-height: 170px; border-radius: 12px; padding: 1.2rem;
+    position: relative; overflow: hidden;
+  }
+  .style-card .sc-name {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: 1px;
+    opacity: .6; margin-bottom: .5rem;
+  }
+  .style-card .sc-title { font-size: 1.1rem; font-weight: 700; margin-bottom: .3rem; }
+  .style-card .sc-desc { font-size: .75rem; opacity: .7; line-height: 1.5; }
+  .style-card .sc-btn {
+    display: inline-block; margin-top: .8rem; padding: .35rem 1rem;
+    border-radius: 20px; font-size: .72rem; cursor: pointer;
+    transition: all .2s;
+  }
+
+  /* ============ 1. 拟物化 Skeuomorphism ============ */
+  .st-skeuo {
+    background: linear-gradient(180deg, #d4c5b2 0%, #c4b5a0 30%, #b8a890 100%);
+    color: #3d2c0a; box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 4px 12px rgba(0,0,0,.3);
+    border: 1px solid rgba(0,0,0,.1);
+  }
+  .st-skeuo .sc-btn {
+    background: linear-gradient(180deg, #8b7355 0%, #6b5a3e 100%);
+    color: #fff; box-shadow: 0 3px 0 #4a3d2a, 0 2px 8px rgba(0,0,0,.3);
+  }
+  .st-skeuo .sc-btn:active { box-shadow: 0 1px 0 #4a3d2a; transform: translateY(2px); }
+
+  /* ============ 2. 扁平化 Flat ============ */
+  .st-flat {
+    background: #3b82f6; color: white; border-radius: 4px;
+    box-shadow: none;
+  }
+  .st-flat .sc-btn { background: white; color: #3b82f6; border-radius: 4px; box-shadow: none; }
+  .st-flat .sc-btn:hover { background: #eff6ff; }
+
+  /* ============ 3. Material Design ============ */
+  .st-material {
+    background: white; color: #1e293b;
+    box-shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+    transition: box-shadow .3s;
+  }
+  .st-material:hover { box-shadow: 0 8px 20px rgba(0,0,0,.12), 0 3px 6px rgba(0,0,0,.08); }
+  .st-material .sc-btn { background: #3b82f6; color: white; box-shadow: 0 2px 4px rgba(59,130,246,.3); }
+  .st-material .sc-btn:hover { box-shadow: 0 4px 10px rgba(59,130,246,.4); }
+
+  /* ============ 4. 新拟态 Neumorphism ============ */
+  .st-neumo {
+    background: #e8eaed; color: #5f6368;
+    box-shadow:
+      8px 8px 16px rgba(0,0,0,.08),
+      -8px -8px 16px rgba(255,255,255,.9);
+  }
+  .st-neumo .sc-btn {
+    background: #e8eaed; color: #5f6368;
+    box-shadow: 4px 4px 8px rgba(0,0,0,.08), -4px -4px 8px rgba(255,255,255,.9);
+  }
+  .st-neumo .sc-btn:active {
+    box-shadow: inset 3px 3px 6px rgba(0,0,0,.08), inset -3px -3px 6px rgba(255,255,255,.9);
+  }
+
+  /* ============ 5. 玻璃拟态 Glassmorphism ============ */
+  .st-glass {
+    background: rgba(255,255,255,.08);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,.15);
+    color: white;
+  }
+  .st-glass .sc-btn {
+    background: rgba(255,255,255,.15); color: white;
+    border: 1px solid rgba(255,255,255,.2);
+  }
+  .st-glass-wrap {
+    background: linear-gradient(135deg, #7c3aed, #06b6d4, #ec4899);
+    border-radius: 12px; padding: .3rem;
+  }
+
+  /* ============ 6. 粘土拟态 Claymorphism ============ */
+  .st-clay {
+    background: #fef3c7; color: #92400e;
+    border-radius: 24px;
+    border: 3px solid #1e293b;
+    box-shadow: 6px 6px 0 #1e293b;
+  }
+  .st-clay .sc-btn {
+    background: #f59e0b; color: #1e293b; font-weight: 700;
+    border: 2px solid #1e293b; border-radius: 20px;
+    box-shadow: 3px 3px 0 #1e293b;
+  }
+
+  /* ============ 7. 液态玻璃 Liquid Glass ============ */
+  .st-liquid {
+    background: rgba(255,255,255,.05); color: #e2e8f0;
+    border: 1px solid rgba(255,255,255,.08);
+    backdrop-filter: blur(20px); position: relative; overflow: hidden;
+  }
+  .st-liquid::before {
+    content: ''; position: absolute; top: -40px; right: -40px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(255,255,255,.08), transparent);
+    border-radius: 50%; pointer-events: none;
+  }
+  .st-liquid-wrap {
+    background: linear-gradient(135deg, #1e1b4b, #0f172a, #1a1030);
+    border-radius: 12px; padding: .3rem;
+  }
+
+  /* ============ 8. 新粗野主义 Neo-Brutalism ============ */
+  .st-neobrut {
+    background: #facc15; color: #000;
+    border: 4px solid #000; border-radius: 0;
+    box-shadow: 6px 6px 0 #000;
+    font-family: 'Arial Black', sans-serif;
+  }
+  .st-neobrut .sc-btn {
+    background: #ff4d4d; color: white; font-weight: 900;
+    border: 3px solid #000; border-radius: 0;
+    box-shadow: 3px 3px 0 #000;
+  }
+
+  /* ============ 9. 极简 Minimalism ============ */
+  .st-minimal {
+    background: #fafafa; color: #1a1a1a; border: none;
+    box-shadow: none; padding: 2rem; text-align: center;
+  }
+  .st-minimal .sc-btn { background: #1a1a1a; color: white; border-radius: 2px; }
+
+  /* ============ 10. 包豪斯 Bauhaus ============ */
+  .st-bauhaus {
+    background: #fff; color: #1a1a1a; position: relative; overflow: hidden;
+  }
+  .st-bauhaus::before {
+    content: ''; position: absolute; top: 0; right: 0;
+    width: 50px; height: 50px; background: #e31e24;
+  }
+  .st-bauhaus::after {
+    content: ''; position: absolute; bottom: 0; left: 0;
+    width: 30px; height: 30px; background: #fcee09; border-radius: 50%;
+  }
+  .st-bauhaus .sc-btn {
+    position: relative; z-index: 1;
+    background: #0051a8; color: white; border-radius: 0;
+  }
+
+  /* ============ 11. 复古未来 Retrofuturism ============ */
+  .st-retro {
+    background: linear-gradient(135deg, #0a0020 0%, #1a0040 50%, #0a0020 100%);
+    color: #ff69b4; border: 1px solid rgba(255,105,180,.3);
+    text-shadow: 0 0 8px rgba(255,105,180,.4);
+    font-family: 'Courier New', monospace;
+  }
+  .st-retro::before {
+    content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,.02) 2px, rgba(255,255,255,.02) 4px);
+    pointer-events: none;
+  }
+  .st-retro .sc-btn {
+    background: transparent; color: #0ff;
+    border: 1px solid #0ff; box-shadow: 0 0 10px rgba(0,255,255,.3);
+  }
+
+  /* ============ 12. 粗野主义 Brutalism ============ */
+  .st-brutal {
+    background: #787878; color: #000; border: none;
+    font-family: 'Courier New', monospace; border-radius: 0;
+    text-transform: uppercase;
+  }
+  .st-brutal .sc-btn {
+    background: #000; color: #787878; border-radius: 0;
+    font-family: 'Courier New', monospace;
+  }
+
+  /* ============ 13. 反设计 Anti-Design ============ */
+  .st-anti {
+    background: #ff0; color: #f0f; border: none;
+    transform: rotate(-1.5deg);
+    font-family: 'Comic Sans MS', cursive;
+  }
+  .st-anti .sc-name { color: #f0f; }
+  .st-anti .sc-btn {
+    background: #0ff; color: #f0f; border: 2px dashed #f0f;
+    border-radius: 30px 0 30px 0; font-weight: 900;
+  }
+
+  /* ============ 14. 酸性设计 Acid Graphics ============ */
+  .st-acid {
+    background: #0a0a0a; color: #0f0;
+    background-image:
+      repeating-conic-gradient(rgba(0,255,0,.03) 0% 2%, transparent 2% 4%);
+    background-size: 20px 20px;
+    font-family: 'Arial Black', sans-serif;
+    border: 1px solid rgba(0,255,0,.2);
+  }
+  .st-acid .sc-btn {
+    background: #0f0; color: #000; font-weight: 900;
+    text-shadow: none;
+  }
+
+  /* ===== 卡片类型 Section ===== */
+  .card-type-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  .ct-card {
+    background: #1e293b; border-radius: 14px; border: 1px solid #334155;
+    overflow: hidden;
+  }
+  .ct-card .ct-body { background: #f8fafc; color: #1e293b; padding: 1rem; }
+  .ct-card .ct-label {
+    background: #0f172a; padding: .5rem 1rem; font-size: .75rem;
+    color: #94a3b8; border-bottom: 1px solid #334155;
+  }
+
+  /* 交通票 */
+  .ticket {
+    background: #fff; border-radius: 10px; overflow: hidden;
+    border-left: 4px dashed #3b82f6;
+  }
+  .ticket .t-route {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.2rem;
+  }
+  .ticket .t-station { text-align: center; }
+  .ticket .t-station .time { font-size: 1.4rem; font-weight: 900; }
+  .ticket .t-station .name { font-size: .75rem; color: #64748b; }
+  .ticket .t-arrow { color: #3b82f6; font-size: 1.2rem; }
+  .ticket .t-meta {
+    display: flex; justify-content: space-between; padding: .6rem 1.2rem;
+    background: #f8fafc; font-size: .72rem; color: #64748b;
+  }
+
+  /* 会员卡 */
+  .member-card {
+    background: linear-gradient(135deg, #1e1b4b, #312e81);
+    color: #e2e8f0; border-radius: 12px; padding: 1.2rem;
+    position: relative; overflow: hidden;
+  }
+  .member-card::before {
+    content: ''; position: absolute; top: -20px; right: -20px;
+    width: 100px; height: 100px;
+    background: radial-gradient(circle, rgba(245,158,11,.3), transparent);
+    border-radius: 50%;
+  }
+  .member-card .mc-tier {
+    position: relative; font-size: .7rem; text-transform: uppercase;
+    letter-spacing: 2px; color: #fcd34d;
+  }
+  .member-card .mc-name {
+    position: relative; font-size: 1.1rem; font-weight: 700; margin: .3rem 0;
+  }
+  .member-card .mc-id {
+    position: relative; font-size: .7rem; opacity: .6; font-family: monospace;
+  }
+
+  /* 播放卡片 — Tinder-style */
+  .player-card {
+    background: #1e293b; color: white; border-radius: 16px;
+    padding: 1.5rem; text-align: center;
+    cursor: grab; transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+    user-select: none;
+  }
+  .player-card:active { cursor: grabbing; }
+  .player-card.swipe-left {
+    transform: translateX(-120%) rotate(-20deg); opacity: 0;
+    transition: transform .4s ease, opacity .4s ease;
+  }
+  .player-card.swipe-right {
+    transform: translateX(120%) rotate(20deg); opacity: 0;
+    transition: transform .4s ease, opacity .4s ease;
+  }
+  .player-card .pc-cover {
+    width: 80px; height: 80px; background: linear-gradient(135deg, #7c3aed, #ec4899);
+    border-radius: 12px; margin: 0 auto .8rem; display: flex;
+    align-items: center; justify-content: center; font-size: 2rem;
+  }
+  .player-card .pc-hint {
+    font-size: .65rem; color: #94a3b8; margin-top: .8rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎨 UI设计风格 × <span>卡片类型</span></h1>
+  <p style="color:#64748b;font-size:.88rem;margin-top:.3rem">14种视觉风格 · 9类业务卡片</p>
+</header>
+
+<div class="tabs">
+  <button class="on" onclick="switchTab('styles')">🎨 14种设计风格</button>
+  <button onclick="switchTab('cards')">🃏 卡片类型</button>
+</div>
+
+<div class="page">
+
+  <!-- ===== 14种设计风格 ===== -->
+  <div class="section on" id="sec-styles">
+    <div class="style-grid">
+      <!-- 1. 拟物化 -->
+      <div class="style-card st-skeuo">
+        <div class="sc-name">01 · Skeuomorphism</div>
+        <div class="sc-title">拟物化</div>
+        <div class="sc-desc">木纹皮革金属，模仿现实质感纹理</div>
+        <button class="sc-btn">木质按钮</button>
+      </div>
+      <!-- 2. 扁平化 -->
+      <div class="style-card st-flat">
+        <div class="sc-name">02 · Flat Design</div>
+        <div class="sc-title">扁平化</div>
+        <div class="sc-desc">纯色无阴影，强调内容本身</div>
+        <button class="sc-btn">扁平按钮</button>
+      </div>
+      <!-- 3. Material Design -->
+      <div class="style-card st-material">
+        <div class="sc-name">03 · Material Design</div>
+        <div class="sc-title">材质设计</div>
+        <div class="sc-desc">层级阴影+动画，模拟纸张墨水</div>
+        <button class="sc-btn">Material 按钮</button>
+      </div>
+      <!-- 4. 新拟态 -->
+      <div class="style-card st-neumo">
+        <div class="sc-name">04 · Neumorphism</div>
+        <div class="sc-title">新拟态</div>
+        <div class="sc-desc">同色底+内外阴影，浮雕嵌入感</div>
+        <button class="sc-btn">浮雕按钮</button>
+      </div>
+      <!-- 5. 玻璃拟态 -->
+      <div class="st-glass-wrap">
+        <div class="style-card st-glass" style="min-height:170px">
+          <div class="sc-name">05 · Glassmorphism</div>
+          <div class="sc-title">玻璃拟态</div>
+          <div class="sc-desc">透明度+背景模糊，磨砂层次感</div>
+          <button class="sc-btn">毛玻璃按钮</button>
+        </div>
+      </div>
+      <!-- 6. 粘土拟态 -->
+      <div class="style-card st-clay">
+        <div class="sc-name">06 · Claymorphism</div>
+        <div class="sc-title">粘土拟态</div>
+        <div class="sc-desc">明亮色彩+圆润边角+厚实阴影</div>
+        <button class="sc-btn">Q版按钮</button>
+      </div>
+      <!-- 7. 液态玻璃 -->
+      <div class="st-liquid-wrap">
+        <div class="style-card st-liquid" style="min-height:170px">
+          <div class="sc-name">07 · Liquid Glass</div>
+          <div class="sc-title">液态玻璃</div>
+          <div class="sc-desc">动态玻璃，光斑跟随，光线折射</div>
+          <button class="sc-btn">液态按钮</button>
+        </div>
+      </div>
+      <!-- 8. 新粗野主义 -->
+      <div class="style-card st-neobrut">
+        <div class="sc-name">08 · Neo-Brutalism</div>
+        <div class="sc-title">新粗野主义</div>
+        <div class="sc-desc">粗重边框+强烈对比+大胆排版</div>
+        <button class="sc-btn">粗野按钮</button>
+      </div>
+      <!-- 9. 极简 -->
+      <div class="style-card st-minimal">
+        <div class="sc-name">09 · Minimalism</div>
+        <div class="sc-title">极简主义</div>
+        <div class="sc-desc">大量留白，去装饰，限配色</div>
+        <button class="sc-btn">极简按钮</button>
+      </div>
+      <!-- 10. 包豪斯 -->
+      <div class="style-card st-bauhaus">
+        <div class="sc-name">10 · Bauhaus</div>
+        <div class="sc-title">包豪斯风格</div>
+        <div class="sc-desc">基础几何形+红黄蓝三原色</div>
+        <button class="sc-btn">包豪斯按钮</button>
+      </div>
+      <!-- 11. 复古未来 -->
+      <div class="style-card st-retro">
+        <div class="sc-name">11 · Retrofuturism</div>
+        <div class="sc-title">复古未来主义</div>
+        <div class="sc-desc">霓虹+故障艺术+扫描线，赛博朋克</div>
+        <button class="sc-btn">霓虹按钮</button>
+      </div>
+      <!-- 12. 粗野主义 -->
+      <div class="style-card st-brutal">
+        <div class="sc-name">12 · Brutalism</div>
+        <div class="sc-title">粗野主义</div>
+        <div class="sc-desc">完全放弃装饰，结构外露，极致原始</div>
+        <button class="sc-btn">原始按钮</button>
+      </div>
+      <!-- 13. 反设计 -->
+      <div class="style-card st-anti">
+        <div class="sc-name">13 · Anti-Design</div>
+        <div class="sc-title">反设计</div>
+        <div class="sc-desc">混乱不和谐，朋克风挑战规则</div>
+        <button class="sc-btn">反叛按钮</button>
+      </div>
+      <!-- 14. 酸性设计 -->
+      <div class="style-card st-acid">
+        <div class="sc-name">14 · Acid Graphics</div>
+        <div class="sc-title">酸性设计</div>
+        <div class="sc-desc">高饱和+液态金属+混乱排版</div>
+        <button class="sc-btn">酸性按钮</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 卡片类型 ===== -->
+  <div class="section" id="sec-cards">
+    <div class="card-type-grid">
+
+      <!-- 列表卡片 -->
+      <div class="ct-card">
+        <div class="ct-label">📋 列表卡片 List Card</div>
+        <div class="ct-body">
+          <div style="display:flex;gap:.8rem;align-items:center">
+            <div style="width:60px;height:60px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:8px;flex-shrink:0"></div>
+            <div>
+              <div style="font-weight:600;font-size:.9rem">Vue3 组合式 API 实战</div>
+              <div style="font-size:.75rem;color:#64748b">12,846 阅读 · 4.8 ⭐</div>
+            </div>
+            <span style="background:#fcd34d;color:#92400e;padding:2px 6px;border-radius:4px;font-size:.65rem;font-weight:700">🔥 热</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 交通票 -->
+      <div class="ct-card">
+        <div class="ct-label">🎫 交通票 Ticket Card</div>
+        <div class="ct-body" style="background:#f1f5f9">
+          <div class="ticket">
+            <div class="t-route">
+              <div class="t-station"><div class="time">08:30</div><div class="name">北京南</div></div>
+              <div class="t-arrow">→</div>
+              <div class="t-station"><div class="time">12:45</div><div class="name">上海虹桥</div></div>
+            </div>
+            <div class="t-meta">
+              <span>G7 · 4h15m</span><span>二等座 ¥553</span><span>余票 23张</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 弹窗 -->
+      <div class="ct-card">
+        <div class="ct-label">🪟 弹窗 Dialog</div>
+        <div class="ct-body" style="text-align:center">
+          <div style="background:white;border-radius:10px;padding:1.2rem;box-shadow:0 8px 30px rgba(0,0,0,.1)">
+            <h4 style="font-size:.9rem;margin-bottom:.5rem">⚠️ 确认删除</h4>
+            <p style="font-size:.75rem;color:#64748b;margin-bottom:.8rem">此操作不可恢复</p>
+            <div style="display:flex;gap:.5rem;justify-content:center">
+              <button style="padding:.3rem 1.2rem;border:1px solid #d1d5db;border-radius:6px;background:white;font-size:.78rem">取消</button>
+              <button style="padding:.3rem 1.2rem;border:none;border-radius:6px;background:#ef4444;color:white;font-size:.78rem">确认</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 会员卡 -->
+      <div class="ct-card">
+        <div class="ct-label">💎 会员卡 Membership Card</div>
+        <div class="ct-body" style="padding:0">
+          <div class="member-card">
+            <div class="mc-tier">✦ 铂金会员</div>
+            <div class="mc-name">吴子易</div>
+            <div class="mc-id">NO. 8842 0031 6671 9204</div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:.8rem;position:relative">
+              <span style="font-size:.65rem;opacity:.6">积分 128,460</span>
+              <span style="font-size:.6rem;opacity:.4">2026.06</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 个人头部 -->
+      <div class="ct-card">
+        <div class="ct-label">👤 个人头部 Profile Card</div>
+        <div class="ct-body">
+          <div style="display:flex;gap:.8rem;align-items:center;margin-bottom:.8rem">
+            <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem;border:3px solid #bfdbfe">吴</div>
+            <div>
+              <div style="font-weight:600;font-size:.9rem">吴子易</div>
+              <div style="font-size:.72rem;color:#64748b">产品经理 · AI 探索者 · 深圳</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:.3rem;flex-wrap:wrap">
+            <span style="padding:2px 8px;background:#eff6ff;color:#3b82f6;border-radius:10px;font-size:.68rem">产品设计</span>
+            <span style="padding:2px 8px;background:#f0fdf4;color:#16a34a;border-radius:10px;font-size:.68rem">前端开发</span>
+            <span style="padding:2px 8px;background:#fefce8;color:#d97706;border-radius:10px;font-size:.68rem">AI应用</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 动态卡片 -->
+      <div class="ct-card">
+        <div class="ct-label">📝 动态卡片 Post Card</div>
+        <div class="ct-body">
+          <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem">
+            <div style="width:28px;height:28px;border-radius:50%;background:#e2e8f0"></div>
+            <span style="font-size:.8rem;font-weight:600">用户名称</span>
+            <span style="font-size:.7rem;color:#94a3b8">· 3分钟前</span>
+          </div>
+          <p style="font-size:.8rem;line-height:1.5;margin-bottom:.5rem">分享了关于Vue3响应式原理的深度文章 📖</p>
+          <div style="display:flex;gap:.5rem">
+            <span style="color:#ef4444;font-size:.78rem">❤️ 128</span>
+            <span style="color:#94a3b8;font-size:.78rem">💬 36</span>
+            <span style="color:#94a3b8;font-size:.78rem">↗ 分享</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 商品卡片 -->
+      <div class="ct-card">
+        <div class="ct-label">🛒 商品卡片 Product Card</div>
+        <div class="ct-body">
+          <div style="height:100px;background:linear-gradient(135deg,#f1f5f9,#e2e8f0);border-radius:8px;margin-bottom:.5rem;display:flex;align-items:center;justify-content:center;font-size:2rem">📦</div>
+          <div style="font-weight:600;font-size:.82rem">iPhone 16 Pro Max</div>
+          <div style="display:flex;align-items:baseline;gap:.5rem;margin-top:.2rem">
+            <span style="color:#ef4444;font-weight:700;font-size:.95rem">¥8,999</span>
+            <span style="color:#94a3b8;text-decoration:line-through;font-size:.72rem">¥9,999</span>
+            <span style="background:#fef2f2;color:#dc2626;padding:1px 6px;border-radius:4px;font-size:.65rem">-10%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 播放卡片 Tinder-style -->
+      <div class="ct-card">
+        <div class="ct-label">🎵 播放卡片 × Tinder交互</div>
+        <div class="ct-body" style="overflow:hidden">
+          <div class="player-card" id="playerCard"
+               onmousedown="startSwipe(event)" onmousemove="moveSwipe(event)" onmouseup="endSwipe(event)"
+               ontouchstart="startSwipe(event)" ontouchmove="moveSwipe(event)" ontouchend="endSwipe(event)">
+            <div class="pc-cover">🎵</div>
+            <div style="font-weight:700;font-size:.9rem">Bohemian Rhapsody</div>
+            <div style="font-size:.75rem;color:#94a3b8">Queen · 1975</div>
+            <div class="pc-hint">← 拖动左滑拒绝 / 右滑喜欢 →</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('on'));
+  document.querySelector(`.tabs button:nth-child(${name === 'styles' ? '1' : '2'})`).classList.add('on');
+  document.getElementById('sec-' + name).classList.add('on');
+}
+
+// Tinder-style 拖拽
+let startX = 0, currentX = 0, dragging = false;
+const card = document.getElementById('playerCard');
+
+function startSwipe(e) {
+  dragging = true; startX = e.touches ? e.touches[0].clientX : e.clientX;
+  card.style.transition = 'none';
+}
+function moveSwipe(e) {
+  if (!dragging) return;
+  currentX = (e.touches ? e.touches[0].clientX : e.clientX) - startX;
+  card.style.transform = `translateX(${currentX}px) rotate(${currentX * 0.05}deg)`;
+}
+function endSwipe() {
+  if (!dragging) return; dragging = false;
+  card.style.transition = 'transform .4s ease, opacity .4s ease';
+  if (Math.abs(currentX) > 80) {
+    card.classList.add(currentX > 0 ? 'swipe-right' : 'swipe-left');
+    setTimeout(() => { card.classList.remove('swipe-right','swipe-left'); card.style.transform = ''; }, 500);
+  } else { card.style.transform = ''; }
+  currentX = 0;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>网站UI视觉风格演示 | Visual Styles Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  /* ============================================
+     全局导航
+     ============================================ */
+  .global-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    background: rgba(15,23,42,.95); backdrop-filter: blur(12px);
+    display: flex; justify-content: center; gap: .3rem;
+    padding: .5rem 1rem; border-bottom: 1px solid rgba(255,255,255,.06);
+    flex-wrap: wrap;
+  }
+  .global-nav a {
+    color: #94a3b8; text-decoration: none; font-size: .78rem;
+    padding: .35rem .7rem; border-radius: 6px; transition: all .2s;
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+  .global-nav a:hover { color: white; background: rgba(255,255,255,.06); }
+
+  body { padding-top: 48px; background: #0a0a0a; }
+
+  /* ============================================
+     每个风格Section
+     ============================================ */
+  .style-section {
+    min-height: 100vh; display: flex; flex-direction: column;
+    padding: 3rem 1.5rem; position: relative; overflow: hidden;
+  }
+  .style-section .section-tag {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: 2px;
+    margin-bottom: .5rem; opacity: .7;
+  }
+  .style-section h2 { font-size: 2.2rem; margin-bottom: .5rem; font-weight: 900; }
+  .style-section .desc {
+    max-width: 600px; line-height: 1.8; margin-bottom: 2rem;
+  }
+  .style-section .showcase {
+    display: flex; gap: 1rem; flex-wrap: wrap;
+  }
+  .style-section .showcase .item {
+    flex: 1; min-width: 180px; max-width: 320px;
+    padding: 2rem 1.5rem; border-radius: 16px;
+    transition: transform .3s ease, box-shadow .3s ease;
+  }
+  .style-section .showcase .item:hover { transform: translateY(-4px); }
+  .style-section .showcase .item .item-icon { font-size: 2rem; margin-bottom: .8rem; }
+  .style-section .showcase .item h4 { font-size: 1rem; margin-bottom: .3rem; }
+  .style-section .showcase .item p { font-size: .8rem; line-height: 1.6; opacity: .7; }
+
+  .btn-demo {
+    display: inline-block; padding: .7rem 1.8rem; border-radius: 30px;
+    font-size: .85rem; font-weight: 600; cursor: pointer; border: none;
+    transition: all .3s cubic-bezier(.34,1.56,.64,1);
+    text-decoration: none;
+  }
+  .btn-demo:hover { transform: scale(1.05); }
+  .btn-demo:active { transform: scale(.95); }
+
+  /* ============================================
+     1. 极简主义 Minimalism
+     ============================================ */
+  .style-minimal {
+    background: #fafafa; color: #1a1a1a;
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+  .style-minimal h2 { font-size: 3rem; font-weight: 300; letter-spacing: -1px; }
+  .style-minimal .desc { color: #666; }
+  .style-minimal .showcase .item {
+    background: white; border: 1px solid #e5e5e5; box-shadow: none;
+  }
+  .style-minimal .showcase .item:hover { border-color: #aaa; }
+  .style-minimal .btn-demo { background: #1a1a1a; color: white; }
+  /* 留白呼吸 — 大量padding */
+  .style-minimal .breathing-space { padding: 4rem 0; text-align: center; }
+
+  /* ============================================
+     2. 扁平化 Flat Design
+     ============================================ */
+  .style-flat {
+    background: #fff; color: #1e293b;
+  }
+  .style-flat .showcase .item {
+    border-radius: 4px; box-shadow: none; /* 无阴影 = 扁平核心 */
+  }
+  .style-flat .showcase .item:nth-child(1) { background: #3b82f6; color: white; }
+  .style-flat .showcase .item:nth-child(2) { background: #22c55e; color: white; }
+  .style-flat .showcase .item:nth-child(3) { background: #f59e0b; color: #1e293b; }
+  .style-flat .btn-demo {
+    background: #3b82f6; color: white; border-radius: 4px;
+    box-shadow: none;
+  }
+  .style-flat .btn-demo:hover { background: #2563eb; transform: none; }
+
+  /* ============================================
+     3. 暗黑 Cyberpunk / Dark Mode
+     ============================================ */
+  .style-dark {
+    background: #0a0a0f; color: #e0e0e0;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(59,130,246,.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(168,85,247,.06) 0%, transparent 50%);
+  }
+  .style-dark h2 {
+    background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .style-dark .showcase .item {
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.06);
+    backdrop-filter: blur(10px);
+  }
+  .style-dark .showcase .item:hover {
+    border-color: rgba(168,85,247,.3);
+    box-shadow: 0 0 40px rgba(139,92,246,.1);
+  }
+  .style-dark .showcase .item:nth-child(2):hover {
+    border-color: rgba(6,182,212,.3); box-shadow: 0 0 40px rgba(6,182,212,.1);
+  }
+  .style-dark .btn-demo {
+    background: linear-gradient(135deg, #7c3aed, #db2777);
+    color: white; box-shadow: 0 0 20px rgba(168,85,247,.3);
+  }
+  .style-dark .btn-demo:hover { box-shadow: 0 0 40px rgba(168,85,247,.5); }
+  /* 光效粒子 */
+  .style-dark .glow-orb {
+    position: absolute; border-radius: 50%; filter: blur(80px); opacity: .15;
+  }
+
+  /* ============================================
+     4. 玻璃拟态 Glassmorphism
+     ============================================ */
+  .style-glass {
+    background: linear-gradient(135deg, #e0e7ff 0%, #f0e6ff 30%, #ffe4e6 70%, #e0f2fe 100%);
+    color: #1e293b;
+  }
+  .style-glass .showcase .item {
+    background: rgba(255,255,255,.45);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,.6);
+    box-shadow: 0 8px 32px rgba(0,0,0,.04);
+    border-radius: 20px;
+  }
+  .style-glass .btn-demo {
+    background: rgba(255,255,255,.5);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,.6);
+    color: #475569;
+  }
+  .style-glass .btn-demo:hover { background: rgba(255,255,255,.7); }
+
+  /* ============================================
+     5. 多彩插画风 Illustration
+     ============================================ */
+  .style-illustration {
+    background: #fffbf0; color: #3d2c0a;
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+  .style-illustration h2 { color: #f59e0b; }
+  .style-illustration .showcase .item {
+    border-radius: 20px; border: 3px solid;
+  }
+  .style-illustration .showcase .item:nth-child(1) { background: #fef3c7; border-color: #fcd34d; }
+  .style-illustration .showcase .item:nth-child(2) { background: #dbeafe; border-color: #93c5fd; }
+  .style-illustration .showcase .item:nth-child(3) { background: #fce7f3; border-color: #f9a8d4; }
+  .style-illustration .btn-demo {
+    background: #f59e0b; color: white; border-radius: 40px;
+    box-shadow: 0 6px 0 #d97706; /* 卡通立体阴影 */
+  }
+  .style-illustration .btn-demo:hover { box-shadow: 0 3px 0 #d97706; transform: translateY(3px); }
+  .style-illustration .btn-demo:active { box-shadow: none; transform: translateY(6px); }
+
+  /* ============================================
+     6. 杂志排版风 Editorial
+     ============================================ */
+  .style-magazine {
+    background: #faf8f5; color: #1a1a1a;
+    font-family: 'Georgia', 'Noto Serif SC', serif;
+  }
+  .style-magazine h2 {
+    font-size: 3.5rem; line-height: 1.1; letter-spacing: -1px;
+    font-style: italic;
+  }
+  .style-magazine h2 .dropcap {
+    float: left; font-size: 6rem; line-height: .8;
+    padding-right: .5rem; font-weight: 700; color: #c2410c;
+  }
+  .style-magazine .desc { font-size: 1.1rem; font-style: italic; color: #78716c; }
+  .style-magazine .showcase { gap: 2rem; }
+  .style-magazine .showcase .item {
+    background: white; border-left: 4px solid #1a1a1a; border-radius: 0;
+    box-shadow: none; padding-left: 2rem;
+  }
+  .style-magazine .showcase .item .item-icon { font-family: 'Georgia',serif; font-size: 3rem; }
+
+  /* ============================================
+     7. 动态交互风 Motion UI
+     ============================================ */
+  .style-motion {
+    background: #0f172a; color: white; perspective: 1000px;
+  }
+  .style-motion .showcase .item {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    transition: all .5s cubic-bezier(.34,1.56,.64,1);
+    position: relative; overflow: hidden;
+  }
+  .style-motion .showcase .item:hover {
+    transform: translateY(-8px) rotateY(3deg);
+    box-shadow: 0 20px 60px rgba(59,130,246,.15);
+  }
+  .style-motion .showcase .item::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(59,130,246,.1), transparent);
+    opacity: 0; transition: opacity .4s;
+  }
+  .style-motion .showcase .item:hover::after { opacity: 1; }
+  .style-motion .btn-demo {
+    background: white; color: #0f172a;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  /* ============================================
+     色彩策略 + 微交互展示
+     ============================================ */
+  .palette-row {
+    display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0;
+  }
+  .palette-swatch {
+    width: 80px; height: 80px; border-radius: 16px;
+    display: flex; align-items: flex-end; justify-content: center;
+    padding-bottom: .4rem; font-size: .6rem; color: white; font-weight: 600;
+  }
+  .micro-btn-row { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
+  .micro-btn {
+    padding: .7rem 1.5rem; border-radius: 10px; cursor: pointer;
+    border: none; font-size: .82rem; font-weight: 600;
+    transition: all .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .micro-btn.scale { background: #3b82f6; color: white; }
+  .micro-btn.scale:hover { transform: scale(1.08); }
+  .micro-btn.scale:active { transform: scale(.93); }
+  .micro-btn.shadow { background: white; color: #1e293b; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .micro-btn.shadow:hover { box-shadow: 0 8px 30px rgba(0,0,0,.12); transform: translateY(-2px); }
+  .micro-btn.shadow:active { transform: translateY(1px); box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .micro-btn.glow { background: #7c3aed; color: white; }
+  .micro-btn.glow:hover { box-shadow: 0 0 25px rgba(124,58,237,.5); }
+  .micro-btn.glow:active { box-shadow: 0 0 8px rgba(124,58,237,.3); }
+</style>
+</head>
+<body>
+
+<!-- 全局导航 -->
+<nav class="global-nav" aria-label="风格导航">
+  <a href="#minimal">极简</a>
+  <a href="#flat">扁平</a>
+  <a href="#dark">暗黑</a>
+  <a href="#glass">玻璃拟态</a>
+  <a href="#illustration">插画</a>
+  <a href="#magazine">杂志</a>
+  <a href="#motion">动态</a>
+</nav>
+
+<!-- ===== 1. 极简主义 ===== -->
+<section class="style-section style-minimal" id="minimal">
+  <div class="section-tag">Style 01</div>
+  <h2>少即是多。</h2>
+  <p class="desc">
+    极简主义以"Less is More"为核心理念。大量留白、精简元素、清晰的排版层级——让用户快速聚焦核心内容。常用于科技、设计类企业及高端时尚品牌。主色调≤3种，低饱和度凸显质感。
+  </p>
+  <div class="showcase">
+    <div class="item">
+      <div class="item-icon">◻</div>
+      <h4>大量留白</h4>
+      <p>负空间让内容拥有"呼吸感"，引导视觉焦点。</p>
+    </div>
+    <div class="item">
+      <div class="item-icon">▬</div>
+      <h4>精简元素</h4>
+      <p>去除一切非必要装饰，只保留核心功能。</p>
+    </div>
+    <div class="item">
+      <div class="item-icon">Aa</div>
+      <h4>字体排印</h4>
+      <p>通过字号/字重/行高的严格层级建立信息优先级。</p>
+    </div>
+  </div>
+  <a class="btn-demo" style="margin-top:1.5rem">探索极简 →</a>
+  <div class="breathing-space">
+    <p style="color:#aaa;font-size:.9rem">—— 留白是最高级的装饰 ——</p>
+  </div>
+</section>
+
+<!-- ===== 2. 扁平化 ===== -->
+<section class="style-section style-flat" id="flat">
+  <div class="section-tag">Style 02</div>
+  <h2>纯粹。高效。</h2>
+  <p class="desc" style="color:#64748b">
+    扁平化设计摒弃阴影、渐变、纹理等立体效果，用纯色块与清晰线条实现信息的高效传达。具有强烈的现代感和秩序感，广泛应用于工具类产品、SaaS后台和B端系统。
+  </p>
+  <div class="showcase">
+    <div class="item"><div class="item-icon">▣</div><h4>纯色块</h4><p>无渐变无阴影，色彩明确有力</p></div>
+    <div class="item"><div class="item-icon">☰</div><h4>清晰线条</h4><p>图标和边框简洁利落</p></div>
+    <div class="item"><div class="item-icon">✓</div><h4>高效传达</h4><p>信息层级分明，认知负荷最低</p></div>
+  </div>
+  <a class="btn-demo" style="margin-top:1.5rem">了解更多</a>
+</section>
+
+<!-- ===== 3. 暗黑 / Cyberpunk ===== -->
+<section class="style-section style-dark" id="dark">
+  <div class="glow-orb" style="width:300px;height:300px;background:#7c3aed;top:10%;left:-5%"></div>
+  <div class="glow-orb" style="width:250px;height:250px;background:#06b6d4;top:50%;right:-8%"></div>
+  <div class="glow-orb" style="width:200px;height:200px;background:#ec4899;bottom:10%;left:40%"></div>
+  <div class="section-tag" style="position:relative;z-index:1">Style 03</div>
+  <h2 style="position:relative;z-index:1">暗黑 · 未来。</h2>
+  <p class="desc" style="position:relative;z-index:1;color:#94a3b8">
+    深色背景搭配高对比度霓虹亮色（紫、蓝、青绿），结合光效和3D元素，营造神秘未来感。适合科技、金融、游戏及潮流品牌。低亮度环境友好，减少视觉疲劳。
+  </p>
+  <div class="showcase" style="position:relative;z-index:1">
+    <div class="item"><div class="item-icon">◆</div><h4>霓虹光效</h4><p>高饱和亮色在暗底上制造强烈对比</p></div>
+    <div class="item"><div class="item-icon">◈</div><h4>毛玻璃叠加</h4><p>半透明面板层叠，营造深度感</p></div>
+    <div class="item"><div class="item-icon">⬡</div><h4>渐变辉光</h4><p>元素边缘的柔和光晕增加科技质感</p></div>
+  </div>
+  <a class="btn-demo" style="margin-top:1.5rem;position:relative;z-index:1">进入暗黑 →</a>
+</section>
+
+<!-- ===== 4. 玻璃拟态 ===== -->
+<section class="style-section style-glass" id="glass">
+  <div class="section-tag">Style 04</div>
+  <h2>通透。轻盈。</h2>
+  <p class="desc" style="color:#475569">
+    玻璃拟态（Glassmorphism）结合毛玻璃效果、半透明背景与柔和色彩，呈现出清透、轻盈的现代感。背景需有丰富色彩或图案才能体现玻璃的通透质感。
+  </p>
+  <div class="showcase">
+    <div class="item"><div class="item-icon">🔮</div><h4>毛玻璃模糊</h4><p>backdrop-filter: blur() 实现背景虚化</p></div>
+    <div class="item"><div class="item-icon">🫧</div><h4>半透明边框</h4><p>白色半透边框增强玻璃质感</p></div>
+    <div class="item"><div class="item-icon">✨</div><h4>柔和圆角</h4><p>大圆角+细腻阴影，亲和感十足</p></div>
+  </div>
+  <a class="btn-demo" style="margin-top:1.5rem">体验通透 →</a>
+</section>
+
+<!-- ===== 5. 多彩插画风 ===== -->
+<section class="style-section style-illustration" id="illustration">
+  <div class="section-tag">Style 05</div>
+  <h2>活泼。亲和。</h2>
+  <p class="desc">
+    大量运用原创手绘或卡通元素，配色明快活泼。这种风格亲和力强，能有效降低理解门槛。多用于儿童教育、旅游平台及轻松活泼的品牌。
+  </p>
+  <div class="showcase">
+    <div class="item"><div class="item-icon">🎨</div><h4>手绘插图</h4><p>原创卡通角色和场景，独一无二的个性</p></div>
+    <div class="item"><div class="item-icon">🌈</div><h4>明快配色</h4><p>高饱和暖色系，传递快乐和温暖</p></div>
+    <div class="item"><div class="item-icon">🧸</div><h4>圆润造型</h4><p>大面积圆角+粗边框，降低距离感</p></div>
+  </div>
+  <a class="btn-demo" style="margin-top:1.5rem">开始探索 →</a>
+</section>
+
+<!-- ===== 6. 杂志排版 ===== -->
+<section class="style-section style-magazine" id="magazine">
+  <div class="section-tag">Style 06</div>
+  <h2><span class="dropcap">编</span>辑排版<br>即是艺术。</h2>
+  <p class="desc">
+    杂志排版风强调字体设计和排版艺术，类似传统印刷杂志的布局。衬线字体、大标题、非对称网格——具有强烈的高级感和视觉冲击力，非常适合内容型网站和品牌故事页。
+  </p>
+  <div class="showcase">
+    <div class="item"><div class="item-icon">T</div><h4>字体即设计</h4><p>衬线体+大字号标题，传递权威与优雅。</p></div>
+    <div class="item"><div class="item-icon">¶</div><h4>印刷网格</h4><p>非对称栏位布局，模拟纸媒阅读体验。</p></div>
+    <div class="item"><div class="item-icon">§</div><h4>留白节奏</h4><p>段落留白营造呼吸感，视线自然流动。</p></div>
+  </div>
+</section>
+
+<!-- ===== 7. 动态交互 ===== -->
+<section class="style-section style-motion" id="motion">
+  <div class="section-tag">Style 07</div>
+  <h2>界面<br>有了生命。</h2>
+  <p class="desc" style="color:#94a3b8">
+    动态交互风（Motion UI）通过丰富的动效、滚动视差和流畅的过渡动画，让静态页面变得生动。每个元素都有"生命力"——悬停、点击、加载都有细腻反馈。
+  </p>
+  <div class="showcase">
+    <div class="item"><div class="item-icon">🌀</div><h4>弹性动画</h4><p>cubic-bezier缓动 + 回弹，自然不机械</p></div>
+    <div class="item"><div class="item-icon">🔄</div><h4>3D变换</h4><p>perspective + rotateY，立体空间感</p></div>
+    <div class="item"><div class="item-icon">✨</div><h4>渐变光晕</h4><p>hover时光晕渐现，过渡柔和细腻</p></div>
+  </div>
+  <a class="btn-demo" style="margin-top:1.5rem">感受动效 →</a>
+</section>
+
+<!-- ===== 色彩策略 + 微交互展示 ===== -->
+<section style="background:#1e293b;color:#e2e8f0;padding:3rem 1.5rem;text-align:center">
+  <div class="section-tag">Core Elements</div>
+  <h2 style="font-size:1.8rem;margin-bottom:1rem;font-family:'Noto Sans SC',sans-serif">色彩策略 & 微交互质感</h2>
+
+  <div style="max-width:800px;margin:0 auto">
+    <h4 style="margin:2rem 0 .8rem;font-size:.9rem;color:#94a3b8">🎨 情感色彩策略（主色调 ≤ 3种）</h4>
+    <div class="palette-row" style="justify-content:center">
+      <div class="palette-swatch" style="background:#1e40af">信任蓝</div>
+      <div class="palette-swatch" style="background:#166534">自然绿</div>
+      <div class="palette-swatch" style="background:#c2410c">活力橙</div>
+      <div class="palette-swatch" style="background:#7c3aed">创造紫</div>
+      <div class="palette-swatch" style="background:#be185d">热情粉</div>
+    </div>
+
+    <h4 style="margin:2rem 0 .8rem;font-size:.9rem;color:#94a3b8">🖱️ 微交互反馈（悬停/点击试试）</h4>
+    <div class="micro-btn-row" style="justify-content:center">
+      <button class="micro-btn scale">弹性放大</button>
+      <button class="micro-btn shadow">阴影抬升</button>
+      <button class="micro-btn glow">辉光扩散</button>
+    </div>
+    <p style="font-size:.75rem;color:#64748b;margin-top:.8rem">
+      ↑ 点击/悬停感受三种不同的微交互反馈 — 细节决定质感的"生命力"
+    </p>
+  </div>
+</section>
+
+</body>
+</html>

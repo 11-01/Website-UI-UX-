@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>滚动叙事 Scrollytelling 演示</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: #0a0a0f; color: #e2e8f0;
+    overflow-x: hidden;
+  }
+
+  /* ===== 全局导航指示器 ===== */
+  .scroll-indicator {
+    position: fixed; right: 1.5rem; top: 50%; transform: translateY(-50%);
+    z-index: 100; display: flex; flex-direction: column; gap: .8rem;
+  }
+  .scroll-indicator .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: rgba(255,255,255,.2); cursor: pointer;
+    transition: all .35s ease;
+  }
+  .scroll-indicator .dot.active { background: #3b82f6; box-shadow: 0 0 12px rgba(59,130,246,.6); }
+  .scroll-indicator .dot:hover { background: rgba(255,255,255,.5); }
+
+  /* ===== 章节通用 ===== */
+  .chapter {
+    min-height: 100vh; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; text-align: center;
+    padding: 4rem 2rem; position: relative; overflow: hidden;
+    transition: background-color .8s ease;
+  }
+  .chapter .ch-num {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: 3px;
+    opacity: .5; margin-bottom: .8rem;
+  }
+  .chapter h2 { font-size: clamp(1.8rem, 4vw, 3.5rem); font-weight: 900; margin-bottom: 1rem; }
+  .chapter .ch-desc {
+    max-width: 600px; line-height: 1.8; font-size: 1rem; opacity: .8;
+  }
+
+  /* ===== 入场动画 — Intersection Observer ===== */
+  .fade-in {
+    opacity: 0; transform: translateY(40px);
+    transition: opacity .8s cubic-bezier(.25,.46,.45,.94),
+                transform .8s cubic-bezier(.25,.46,.45,.94);
+  }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+  .slide-left {
+    opacity: 0; transform: translateX(60px);
+    transition: opacity .8s cubic-bezier(.25,.46,.45,.94) .2s,
+                transform .8s cubic-bezier(.25,.46,.45,.94) .2s;
+  }
+  .slide-left.visible { opacity: 1; transform: translateX(0); }
+
+  .slide-right {
+    opacity: 0; transform: translateX(-60px);
+    transition: opacity .8s cubic-bezier(.25,.46,.45,.94) .2s,
+                transform .8s cubic-bezier(.25,.46,.45,.94) .2s;
+  }
+  .slide-right.visible { opacity: 1; transform: translateX(0); }
+
+  .scale-in {
+    opacity: 0; transform: scale(.85);
+    transition: opacity .7s cubic-bezier(.34,1.56,.64,1) .3s,
+                transform .7s cubic-bezier(.34,1.56,.64,1) .3s;
+  }
+  .scale-in.visible { opacity: 1; transform: scale(1); }
+
+  /* ===== Ch1: 开篇 — 极暗 ===== */
+  .ch1 {
+    background: #0a0a0f;
+    background-image: radial-gradient(ellipse at 50% 30%, rgba(59,130,246,.06), transparent 60%);
+  }
+  .ch1 h2 { font-size: clamp(2rem, 5vw, 4rem); }
+  .ch1 h2 .highlight {
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .ch1 .scroll-hint {
+    position: absolute; bottom: 2rem; animation: bounce 2s infinite;
+    font-size: .8rem; color: #64748b;
+  }
+  @keyframes bounce {
+    0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); }
+  }
+
+  /* ===== Ch2: 起源故事 — 深蓝 ===== */
+  .ch2 {
+    background: #0c1324;
+    background-image:
+      radial-gradient(ellipse at 20% 80%, rgba(59,130,246,.06), transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(139,92,246,.04), transparent 50%);
+  }
+  .ch2 .timeline {
+    display: flex; gap: 2rem; margin-top: 2rem; flex-wrap: wrap;
+    justify-content: center;
+  }
+  .ch2 .timeline .tl-node {
+    text-align: center; width: 140px;
+  }
+  .ch2 .timeline .tl-node .year {
+    font-size: 2rem; font-weight: 900; color: #3b82f6; margin-bottom: .3rem;
+  }
+  .ch2 .timeline .tl-node .event {
+    font-size: .8rem; color: #94a3b8; line-height: 1.5;
+  }
+
+  /* ===== Ch3: 成长 — 紫色渐变 ===== */
+  .ch3 {
+    background: linear-gradient(180deg, #0f0b1e 0%, #1a1030 50%, #0f0b1e 100%);
+  }
+  .ch3 .stats {
+    display: flex; gap: 2rem; margin-top: 2rem; flex-wrap: wrap;
+    justify-content: center;
+  }
+  .ch3 .stats .stat {
+    text-align: center; min-width: 140px;
+  }
+  .ch3 .stats .stat .val {
+    font-size: 2.5rem; font-weight: 900;
+    background: linear-gradient(135deg, #a78bfa, #f472b6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .ch3 .stats .stat .lbl { font-size: .8rem; color: #94a3b8; margin-top: .3rem; }
+  .ch3 .data-bar {
+    width: 300px; height: 6px; background: rgba(255,255,255,.06);
+    border-radius: 3px; margin: .5rem auto; overflow: hidden;
+  }
+  .ch3 .data-bar .fill {
+    height: 100%; border-radius: 3px;
+    background: linear-gradient(90deg, #a78bfa, #f472b6);
+    width: 0%; transition: width 1s cubic-bezier(.25,.46,.45,.94) .4s;
+  }
+  .ch3 .data-bar .fill.visible { width: 87%; }
+
+  /* ===== Ch4: 转折 — 暖色黎明 ===== */
+  .ch4 {
+    background: linear-gradient(180deg, #1a1015 0%, #2d1810 50%, #1a1015 100%);
+  }
+  .ch4 .insight-cards {
+    display: flex; gap: 1.2rem; margin-top: 2rem; flex-wrap: wrap;
+    justify-content: center;
+  }
+  .ch4 .insight-cards .ic {
+    background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
+    border-radius: 16px; padding: 1.5rem; max-width: 250px; text-align: left;
+    backdrop-filter: blur(8px);
+  }
+  .ch4 .insight-cards .ic h4 { font-size: .9rem; margin-bottom: .4rem; color: #fcd34d; }
+  .ch4 .insight-cards .ic p { font-size: .8rem; color: #94a3b8; line-height: 1.6; }
+
+  /* ===== Ch5: 未来 — 明亮 ===== */
+  .ch5 {
+    background: #0f172a;
+    background-image:
+      radial-gradient(ellipse at 50% 50%, rgba(6,182,212,.08), transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(34,197,94,.05), transparent 50%);
+  }
+  .ch5 .cta-btn {
+    display: inline-block; margin-top: 2rem;
+    padding: .9rem 2.5rem; background: white; color: #0f172a;
+    border-radius: 40px; font-weight: 700; font-size: 1rem;
+    text-decoration: none; cursor: pointer;
+    transition: all .4s cubic-bezier(.34,1.56,.64,1);
+    box-shadow: 0 0 0 0 rgba(255,255,255,.2);
+  }
+  .ch5 .cta-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 12px rgba(255,255,255,0);
+  }
+
+  /* ===== 缓动曲线展示条 ===== */
+  .easing-showcase {
+    display: flex; gap: .3rem; margin-top: 2rem; flex-wrap: wrap;
+    justify-content: center;
+  }
+  .easing-bar-wrap {
+    width: 60px; text-align: center;
+  }
+  .easing-bar-wrap .bubble {
+    width: 40px; height: 40px; background: #3b82f6; border-radius: 50%;
+    margin: 0 auto .3rem;
+    animation: easeDemo 2s infinite alternate;
+  }
+  .easing-bar-wrap .bubble.eb1 { animation-timing-function: ease-out; }
+  .easing-bar-wrap .bubble.eb2 { animation-timing-function: ease-in; }
+  .easing-bar-wrap .bubble.eb3 { animation-timing-function: ease-in-out; }
+  .easing-bar-wrap .bubble.eb4 { animation-timing-function: cubic-bezier(.34,1.56,.64,1); }
+  .easing-bar-wrap .name { font-size: .6rem; color: #64748b; }
+
+  @keyframes easeDemo {
+    from { transform: translateY(0); } to { transform: translateY(30px); }
+  }
+
+  /* 响应式 */
+  @media (max-width: 600px) {
+    .scroll-indicator { display: none; }
+    .chapter { padding: 3rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 导航点 -->
+<div class="scroll-indicator" id="scrollDots">
+  <div class="dot active" data-target="0"></div>
+  <div class="dot" data-target="1"></div>
+  <div class="dot" data-target="2"></div>
+  <div class="dot" data-target="3"></div>
+  <div class="dot" data-target="4"></div>
+  <div class="dot" data-target="5"></div>
+</div>
+
+<!-- ===== Ch1: 开篇 ===== -->
+<section class="chapter ch1" data-index="0">
+  <div class="ch-num fade-in">Chapter 01</div>
+  <h2 class="fade-in">一段关于<span class="highlight">探索</span>的旅程</h2>
+  <p class="ch-desc fade-in">
+    2018年，一个简单的想法诞生了。<br>
+    让数据变得触手可及，让每一次点击都有回响。
+  </p>
+  <div class="scroll-hint">↓ 向下滚动，展开故事 ↓</div>
+</section>
+
+<!-- ===== Ch2: 起源 ===== -->
+<section class="chapter ch2" data-index="1">
+  <div class="ch-num slide-left">Chapter 02</div>
+  <h2 class="slide-left">从三人小团队起步</h2>
+  <p class="ch-desc slide-left">
+    一间车库，三台电脑，和无数个不眠的夜晚。<br>
+    我们相信：好产品不是"设计出来"的，是"对话出来"的。
+  </p>
+  <div class="timeline">
+    <div class="tl-node scale-in"><div class="year">3</div><div class="event">初始团队人数</div></div>
+    <div class="tl-node scale-in"><div class="year">0</div><div class="event">第一年用户<br>（内部测试）</div></div>
+    <div class="tl-node scale-in"><div class="year">∞</div><div class="event">对未来的<br>无限想象</div></div>
+  </div>
+</section>
+
+<!-- ===== Ch3: 成长 ===== -->
+<section class="chapter ch3" data-index="2">
+  <div class="ch-num slide-right">Chapter 03</div>
+  <h2 class="slide-right">指数级成长</h2>
+  <p class="ch-desc slide-right">
+    第三年，产品迎来了爆发。用户从 100 到 100,000，<br>
+    只用了不到 120 天。
+  </p>
+  <div class="stats">
+    <div class="stat scale-in">
+      <div class="val">12,846</div>
+      <div class="lbl">活跃用户</div>
+    </div>
+    <div class="stat scale-in">
+      <div class="val">99.7%</div>
+      <div class="lbl">服务可用率</div>
+      <div class="data-bar"><div class="fill" id="dataBar"></div></div>
+    </div>
+    <div class="stat scale-in">
+      <div class="val">47</div>
+      <div class="lbl">覆盖国家</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Ch4: 转折与洞察 ===== -->
+<section class="chapter ch4" data-index="3">
+  <div class="ch-num slide-left">Chapter 04</div>
+  <h2 class="slide-left">用户教会我们的事</h2>
+  <p class="ch-desc slide-left">
+    真正的洞察不在会议室里，而在用户的每一次"抱怨"中。<br>
+    我们花了两年时间，学会"倾听"。
+  </p>
+  <div class="insight-cards">
+    <div class="ic scale-in">
+      <h4>💡 洞察 01</h4>
+      <p>用户不是要更多功能，而是要"更少但更好"的功能。</p>
+    </div>
+    <div class="ic scale-in">
+      <h4>💡 洞察 02</h4>
+      <p>70%的用户在移动端完成首次体验，移动优先不是口号。</p>
+    </div>
+    <div class="ic scale-in">
+      <h4>💡 洞察 03</h4>
+      <p>动效不是为了"好看"，是为了"看得懂"。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Ch5: 未来 ===== -->
+<section class="chapter ch5" data-index="4">
+  <div class="ch-num fade-in">Chapter 05</div>
+  <h2 class="fade-in">这只是一个开始</h2>
+  <p class="ch-desc fade-in">
+    6年，从3人到200+人的团队。<br>
+    从一行代码到数千万用户。从"能做什么"到"应该做什么"。
+  </p>
+  <a class="cta-btn scale-in">加入这段旅程 →</a>
+</section>
+
+<!-- ===== 缓动曲线实验室 ===== -->
+<section class="chapter" style="background:#0a0a0f; min-height:80vh" data-index="5">
+  <div class="ch-num">Bonus</div>
+  <h2 style="font-size:1.6rem">🎛️ 缓动曲线的叙事语言</h2>
+  <p class="ch-desc">
+    相同的位移距离，不同的缓动曲线<br>传达出完全不同的"性格特征"和"故事节奏"
+  </p>
+  <div class="easing-showcase">
+    <div class="easing-bar-wrap"><div class="bubble eb1"></div><div class="name">ease-out<br>匆忙闯入</div></div>
+    <div class="easing-bar-wrap"><div class="bubble eb2"></div><div class="name">ease-in<br>老者踱步</div></div>
+    <div class="easing-bar-wrap"><div class="bubble eb3"></div><div class="name">ease-in-out<br>优雅从容</div></div>
+    <div class="easing-bar-wrap"><div class="bubble eb4"></div><div class="name">弹性回弹<br>活力充沛</div></div>
+  </div>
+
+  <!-- 营销 vs 后台对比 -->
+  <div style="display:flex;gap:1.5rem;margin-top:3rem;flex-wrap:wrap;justify-content:center;max-width:800px">
+    <div style="flex:1;min-width:240px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);border-radius:12px;padding:1.2rem;text-align:left;font-size:.82rem">
+      <h4 style="color:#4ade80;margin-bottom:.5rem">✅ 营销页 (Landing Page)</h4>
+      <p style="color:#94a3b8;line-height:1.6">动效叙事大放异彩<br>吸引注意力 → 建立信任 → 引导转化<br>品牌故事 + 情感共鸣</p>
+    </div>
+    <div style="flex:1;min-width:240px;background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.12);border-radius:12px;padding:1.2rem;text-align:left;font-size:.82rem">
+      <h4 style="color:#fca5a5;margin-bottom:.5rem">❌ 后台系统 (Dashboard)</h4>
+      <p style="color:#94a3b8;line-height:1.6">叙事动画 = 干扰<br>用户核心诉求：高效完成任务<br>回归稳定、明确的状态反馈即可</p>
+    </div>
+  </div>
+
+  <p style="margin-top:3rem;font-size:.8rem;color:#64748b;text-align:center;max-width:600px">
+    "最高级的设计，是让技术隐于无形，<br>让用户在不知不觉中完成一次愉悦的探索。"
+  </p>
+</section>
+
+<script>
+// ===== Intersection Observer — 滚动触发入场动画 =====
+const observer = new IntersectionObserver(
+  (entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  },
+  { threshold: 0.25 }
+);
+
+document.querySelectorAll('.fade-in, .slide-left, .slide-right, .scale-in').forEach(el => {
+  observer.observe(el);
+});
+
+// 进度条独立触发
+const dataBarObserver = new IntersectionObserver(
+  ([entry]) => { if (entry.isIntersecting) entry.target.classList.add('visible'); },
+  { threshold: 0.5 }
+);
+dataBarObserver.observe(document.getElementById('dataBar'));
+
+// ===== 导航点高亮 =====
+const dots = document.querySelectorAll('.scroll-indicator .dot');
+const chapters = document.querySelectorAll('.chapter[data-index]');
+
+window.addEventListener('scroll', () => {
+  const scrollCenter = window.scrollY + window.innerHeight / 2;
+  chapters.forEach((ch, i) => {
+    if (scrollCenter >= ch.offsetTop - 100) {
+      dots.forEach(d => d.classList.remove('active'));
+      dots[i]?.classList.add('active');
+    }
+  });
+});
+
+// 点击导航点跳转
+dots.forEach(dot => {
+  dot.addEventListener('click', () => {
+    const idx = parseInt(dot.dataset.target);
+    chapters[idx]?.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+</script>
+</body>
+</html>

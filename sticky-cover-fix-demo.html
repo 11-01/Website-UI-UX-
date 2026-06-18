@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>吸顶导航遮挡修复演示 | Sticky Cover Fix Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --nav-height: 56px;
+  }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: #0f172a; color: #e2e8f0;
+  }
+
+  header {
+    text-align: center; padding: 2rem 1rem 1rem;
+  }
+  header h1 { font-size: 1.7rem; }
+  header h1 span { background: linear-gradient(135deg, #ef4444, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  header p { color: #64748b; font-size: .88rem; }
+
+  .page { max-width: 1000px; margin: 0 auto; padding: 1.5rem; }
+
+  /* ===== Demo Card ===== */
+  .demo-block {
+    background: #1e293b; border-radius: 14px; border: 1px solid #334155;
+    margin-bottom: 2rem; overflow: hidden;
+  }
+  .demo-block .block-head {
+    background: #0f172a; padding: .7rem 1.2rem; border-bottom: 1px solid #334155;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: .85rem; font-weight: 700;
+  }
+  .demo-block .block-head .tag {
+    font-size: .65rem; padding: .2rem .6rem; border-radius: 10px;
+    font-weight: 600;
+  }
+  .tag-bug { background: rgba(239,68,68,.12); color: #fca5a5; }
+  .tag-fix { background: rgba(34,197,94,.12); color: #4ade80; }
+  .tag-css { background: rgba(59,130,246,.12); color: #93c5fd; }
+  .tag-js { background: rgba(245,158,11,.12); color: #fcd34d; }
+
+  .demo-block .block-body {
+    background: #f8fafc; color: #1e293b;
+  }
+
+  /* ===== 模拟手机 ===== */
+  .phone-mockup {
+    width: 375px; margin: 0 auto; border-radius: 16px;
+    overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,.2);
+    background: white;
+  }
+  .phone-mockup .status-bar {
+    background: #1a1a1a; color: white; padding: .3rem 1rem;
+    display: flex; justify-content: space-between; font-size: .6rem;
+  }
+
+  /* ===== 导航栏 ===== */
+  .phone-nav {
+    background: #1e293b; color: white;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 1rem; height: var(--nav-height);
+    position: sticky; top: 0; z-index: 100;
+    font-size: .85rem;
+  }
+  .phone-nav .logo { font-weight: 900; }
+  .phone-nav .links { display: flex; gap: .8rem; }
+  .phone-nav .links a {
+    color: #cbd5e1; text-decoration: none; font-size: .78rem;
+    padding: .3rem .5rem; border-radius: 6px;
+  }
+  .phone-nav .links a:hover { color: #60a5fa; }
+
+  .phone-body {
+    max-height: 380px; overflow-y: auto; font-size: .85rem;
+  }
+
+  /* 内容样式 */
+  section[id] {
+    padding: .3rem 0;
+  }
+  section h3 {
+    font-size: 1rem; padding: .8rem 1rem .4rem;
+    border-top: 1px solid #f1f5f9;
+  }
+  section p {
+    padding: .2rem 1rem; color: #64748b; font-size: .78rem;
+  }
+  section .card-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .5rem;
+    padding: .5rem 1rem;
+  }
+  section .card-grid .mini-card {
+    background: #f1f5f9; border-radius: 8px; padding: .6rem;
+    font-size: .75rem;
+  }
+
+  /* ===== 修复版本样式 ===== */
+  .fixed-body { padding-top: 0; }     /* ❌ 问题 */
+  .fixed-body-fix { padding-top: var(--nav-height); } /* ✅ */
+  section[id].fixed-anchor { scroll-margin-top: 0; }   /* ❌ 问题 */
+  section[id].fixed-anchor-fix { scroll-margin-top: calc(var(--nav-height) + 8px); } /* ✅ */
+
+  /* 场景三：下拉裁切 */
+  .phone-nav.has-dropdown { overflow: visible; }
+  .phone-nav.has-dropdown .dropdown-btn { position: relative; }
+  .phone-nav.has-dropdown .dropdown-btn .drop-menu {
+    position: absolute; top: 100%; right: 0; min-width: 140px;
+    background: white; border-radius: 8px; box-shadow: 0 8px 30px rgba(0,0,0,.15);
+    padding: .4rem; z-index: 50; /* ❌ 低于导航栏的100，被裁切 */
+    opacity: 0; visibility: hidden; transition: all .2s;
+  }
+  .phone-nav.has-dropdown .dropdown-btn:hover .drop-menu {
+    opacity: 1; visibility: visible;
+  }
+  .phone-nav.has-dropdown .drop-menu a {
+    display: block; padding: .5rem .8rem; color: #475569;
+    text-decoration: none; font-size: .8rem; border-radius: 6px;
+  }
+  .phone-nav.has-dropdown .drop-menu a:hover { background: #f1f5f9; }
+
+  /* 修复版本 */
+  .phone-nav.has-dropdown.fix-z .drop-menu { z-index: 150; } /* ✅ 高于导航栏 */
+
+  /* 文字标注 */
+  .annotation {
+    position: relative; padding: 1rem; margin: .5rem 1rem;
+    background: #fef2f2; border: 1px solid #fecaca;
+    border-radius: 8px; font-size: .75rem; color: #dc2626;
+  }
+  .annotation.fix {
+    background: #f0fdf4; border-color: #bbf7d0; color: #16a34a;
+  }
+  .annotation .arrow-up {
+    position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+    font-size: 1.2rem; color: #ef4444;
+  }
+  .annotation.fix .arrow-up { color: #22c55e; }
+
+  /* 比较容器 */
+  .compare-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  }
+  @media (max-width: 800px) { .compare-row { grid-template-columns: 1fr; } }
+
+  /* 代码 */
+  pre {
+    background: #0a0f1a; border-radius: 10px; padding: 1rem;
+    font-family: 'Consolas', monospace; font-size: .75rem;
+    line-height: 1.7; color: #cbd5e1; overflow-x: auto;
+    border: 1px solid #1e293b; margin: 1rem;
+  }
+  pre .k { color: #93c5fd; }
+  pre .s { color: #86efac; }
+  pre .c { color: #64748b; font-style: italic; }
+  pre .t { color: #c084fc; }
+  pre .f { color: #fde68a; }
+
+  .action-links {
+    display: flex; gap: .8rem; padding: .5rem 1rem; flex-wrap: wrap;
+  }
+  .action-links a {
+    padding: .35rem .7rem; background: #eff6ff; color: #3b82f6;
+    text-decoration: none; border-radius: 15px; font-size: .75rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🩹 吸顶导航遮挡问题 <span>修复演示</span></h1>
+  <p>三个常见场景 × 问题→修复对比</p>
+</header>
+
+<div class="page">
+
+  <!-- ===== 场景一：内容被遮挡 ===== -->
+  <div class="demo-block">
+    <div class="block-head">
+      <span>场景一：首屏内容被导航栏遮挡</span>
+    </div>
+    <div class="block-body">
+      <div class="compare-row" style="padding:1rem">
+        <!-- 问题版 -->
+        <div>
+          <p style="font-size:.75rem;color:#94a3b8;margin-bottom:.5rem;text-align:center">
+            ❌ <strong>问题</strong>：无 padding-top  → 内容从导航底下透出
+          </p>
+          <div class="phone-mockup">
+            <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+            <div class="phone-nav"><span class="logo">App</span></div>
+            <div class="phone-body fixed-body">
+              <div class="annotation">
+                <span class="arrow-up">⬆</span>
+                ⚠️ 这段文字从导航栏下面透出来了！用户看不到。
+              </div>
+              <p style="padding:.5rem 1rem">后续内容正常显示...</p>
+            </div>
+          </div>
+        </div>
+        <!-- 修复版 -->
+        <div>
+          <p style="font-size:.75rem;color:#94a3b8;margin-bottom:.5rem;text-align:center">
+            ✅ <strong>修复</strong>：padding-top: var(--nav-height)
+          </p>
+          <div class="phone-mockup">
+            <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+            <div class="phone-nav"><span class="logo">App</span></div>
+            <div class="phone-body fixed-body-fix">
+              <div class="annotation fix">
+                ✅ 导航下方内容完整可见，不被遮挡。
+              </div>
+              <p style="padding:.5rem 1rem">后续内容正常显示...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <pre><span class="c">/* ✅ 修复：CSS变量统一管理 */</span>
+<span class="t">:root</span> { <span class="k">--nav-height</span>: 56px; }
+<span class="t">.main-content</span> {
+  <span class="k">padding-top</span>: <span class="f">var</span>(--nav-height);   <span class="c">/* 优先padding而非margin */</span>
+  <span class="k">box-sizing</span>: border-box;
+}
+<span class="c">/* 响应式：移动端导航变高时 */</span>
+<span class="k">@media</span> (<span class="k">max-width</span>: 768px) {
+  <span class="t">:root</span> { <span class="k">--nav-height</span>: 64px; }
+}</pre>
+    </div>
+  </div>
+
+  <!-- ===== 场景二：锚点跳转被遮挡 ===== -->
+  <div class="demo-block">
+    <div class="block-head">
+      <span>场景二：点击锚点链接 → 标题被导航栏盖住一半</span>
+    </div>
+    <div class="block-body">
+      <div class="compare-row" style="padding:1rem">
+        <!-- 问题版 -->
+        <div>
+          <p style="font-size:.75rem;color:#94a3b8;margin-bottom:.5rem;text-align:center">
+            ❌ <strong>问题</strong>：浏览器默认将目标顶部对齐到viewport顶部
+          </p>
+          <div class="phone-mockup">
+            <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+            <div class="phone-nav">
+              <span class="logo">Docs</span>
+              <div class="links"><a href="#sec2a">§2</a><a href="#sec3a">§3</a></div>
+            </div>
+            <div class="phone-body fixed-body">
+              <section id="sec1a"><h3>§1 概述</h3><p>简介内容...</p></section>
+              <section id="sec2a" class="fixed-anchor">
+                <h3>§2 安装指南</h3>
+                <div class="annotation"><span class="arrow-up">⬆</span>⚠️ 跳转后标题被导航栏遮盖！</div>
+                <div class="card-grid"><div class="mini-card">步骤1</div><div class="mini-card">步骤2</div></div>
+              </section>
+              <section id="sec3a" class="fixed-anchor"><h3>§3 配置</h3><p>配置说明...</p></section>
+            </div>
+          </div>
+        </div>
+        <!-- 修复版 -->
+        <div>
+          <p style="font-size:.75rem;color:#94a3b8;margin-bottom:.5rem;text-align:center">
+            ✅ <strong>修复</strong>：scroll-margin-top: var(--nav-height)
+          </p>
+          <div class="phone-mockup">
+            <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+            <div class="phone-nav">
+              <span class="logo">Docs</span>
+              <div class="links"><a href="#sec2b">§2</a><a href="#sec3b">§3</a></div>
+            </div>
+            <div class="phone-body fixed-body">
+              <section id="sec1b"><h3>§1 概述</h3><p>简介内容...</p></section>
+              <section id="sec2b" class="fixed-anchor-fix">
+                <h3>§2 安装指南</h3>
+                <div class="annotation fix">✅ 标题完美展示在导航栏下方！</div>
+                <div class="card-grid"><div class="mini-card">步骤1</div><div class="mini-card">步骤2</div></div>
+              </section>
+              <section id="sec3b" class="fixed-anchor-fix"><h3>§3 配置</h3><p>配置说明...</p></section>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <pre><span class="c">/* ✅ CSS方案（推荐，现代浏览器均支持） */</span>
+<span class="t">section[id], h2[id], h3[id]</span> {
+  <span class="k">scroll-margin-top</span>: <span class="f">var</span>(--nav-height);
+}
+
+<span class="c">/* 备选：JS方案（兼容旧浏览器） */</span>
+<span class="t">document</span>.<span class="f">querySelectorAll</span>(<span class="s">'a[href^="#"]'</span>).forEach(link => {
+  link.addEventListener(<span class="s">'click'</span>, e => {
+    e.preventDefault();
+    <span class="k">const</span> el = <span class="t">document</span>.<span class="f">getElementById</span>(link.getAttribute(<span class="s">'href'</span>).<span class="f">slice</span>(1));
+    el.<span class="f">scrollIntoView</span>({ behavior: <span class="s">'smooth'</span> });
+    <span class="k">const</span> navH = <span class="t">document</span>.<span class="f">querySelector</span>(<span class="s">'.navbar'</span>).offsetHeight;
+    <span class="t">window</span>.<span class="f">scrollBy</span>(0, -navH);
+  });
+});</pre>
+    </div>
+  </div>
+
+  <!-- ===== 场景三：下拉裁切 ===== -->
+  <div class="demo-block">
+    <div class="block-head">
+      <span>场景三：下拉菜单被导航栏底部裁切</span>
+    </div>
+    <div class="block-body">
+      <div class="compare-row" style="padding:1rem">
+        <!-- 问题版 -->
+        <div>
+          <p style="font-size:.75rem;color:#94a3b8;margin-bottom:.5rem;text-align:center">
+            ❌ <strong>问题</strong>：下拉菜单 z-index 低于导航栏，被裁切
+          </p>
+          <div class="phone-mockup">
+            <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+            <div class="phone-nav has-dropdown">
+              <span class="logo">Shop</span>
+              <div class="links">
+                <div class="dropdown-btn">
+                  <a>更多 ▾</a>
+                  <div class="drop-menu">
+                    <a>个人中心</a><a>订单管理</a><a>设置</a><a>退出</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="phone-body fixed-body-fix">
+              <p style="padding:.5rem 1rem">👆 悬停"更多"，下拉菜单只露出一半</p>
+              <div class="annotation">
+                下拉菜单 z-index:50 ＜ 导航栏 z-index:100 → 被导航栏裁切
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 修复版 -->
+        <div>
+          <p style="font-size:.75rem;color:#94a3b8;margin-bottom:.5rem;text-align:center">
+            ✅ <strong>修复</strong>：下拉菜单 z-index:150 ↑
+          </p>
+          <div class="phone-mockup">
+            <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+            <div class="phone-nav has-dropdown fix-z">
+              <span class="logo">Shop</span>
+              <div class="links">
+                <div class="dropdown-btn">
+                  <a>更多 ▾</a>
+                  <div class="drop-menu">
+                    <a>个人中心</a><a>订单管理</a><a>设置</a><a>退出</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="phone-body fixed-body-fix">
+              <p style="padding:.5rem 1rem">👆 悬停"更多"，下拉菜单完整显示</p>
+              <div class="annotation fix">
+                下拉菜单 z-index:150 ＞ 导航栏 z-index:100 → 完整可见 ✅
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <pre><span class="c">/* ✅ 修复：下拉菜单 z-index 必须 &gt; 导航栏 z-index */</span>
+<span class="t">.navbar</span> { <span class="k">position</span>: sticky; <span class="k">z-index</span>: 100; }
+<span class="t">.navbar .dropdown-menu</span> {
+  <span class="k">z-index</span>: 150;  <span class="c">/* &gt; 100，确保不被裁切 */</span>
+}
+
+<span class="c">/* 同时确保父容器没有 overflow:hidden */</span>
+<span class="t">.navbar</span> { <span class="k">overflow</span>: visible; }</pre>
+    </div>
+  </div>
+
+  <!-- 总结 -->
+  <div class="demo-block">
+    <div class="block-head"><span>📋 三场景修复速查</span></div>
+    <div class="block-body" style="padding:1.5rem;background:#1e293b;color:#e2e8f0">
+      <table style="width:100%;font-size:.85rem;border-collapse:collapse">
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem;font-weight:700;color:#fca5a5">场景一</td>
+          <td style="padding:.5rem">首屏内容被遮挡</td>
+          <td style="padding:.5rem;color:#4ade80">padding-top: var(--nav-height)</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem;font-weight:700;color:#fca5a5">场景二</td>
+          <td style="padding:.5rem">锚点跳转标题被盖</td>
+          <td style="padding:.5rem;color:#4ade80">scroll-margin-top: var(--nav-height)</td>
+        </tr>
+        <tr>
+          <td style="padding:.5rem;font-weight:700;color:#fca5a5">场景三</td>
+          <td style="padding:.5rem">下拉菜单被裁切</td>
+          <td style="padding:.5rem;color:#4ade80">下拉z-index &gt; 导航栏z-index</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>

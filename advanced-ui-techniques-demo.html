@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026前沿UI技法演示 | Advanced UI Techniques</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #0a0a0f; color: #e2e8f0;
+  }
+
+  header {
+    text-align: center; padding: 3rem 1rem 2rem; position: relative; overflow: hidden;
+  }
+  /* 极光弥散背景 */
+  header::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 30%, rgba(139,92,246,.15), transparent),
+      radial-gradient(ellipse 60% 80% at 70% 50%, rgba(6,182,212,.1), transparent),
+      radial-gradient(ellipse 50% 50% at 50% 80%, rgba(236,72,153,.08), transparent);
+    filter: blur(40px); z-index: 0;
+  }
+  header h1, header p { position: relative; z-index: 1; }
+  header h1 { font-size: 1.8rem; }
+  header h1 span { background: linear-gradient(135deg, #a78bfa, #06b6d4, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+  .page { max-width: 1080px; margin: 0 auto; padding: 1rem; }
+
+  .card {
+    background: #1e293b; border-radius: 16px; border: 1px solid #334155;
+    margin-bottom: 2rem; overflow: hidden;
+  }
+  .card .card-top {
+    background: #0f172a; padding: .7rem 1.2rem; border-bottom: 1px solid #334155;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: .85rem; font-weight: 700;
+  }
+  .badge { font-size:.65rem;padding:.2rem .6rem;border-radius:10px;font-weight:600; }
+  .card-body { background: #121820; }
+
+  /* ============================================
+     1. 极光弥散 Aurora UI
+     ============================================ */
+  .aurora-demo {
+    position: relative; min-height: 280px; display: flex;
+    align-items: center; justify-content: center; overflow: hidden;
+  }
+  .aurora-demo .aurora-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 70% 70% at 30% 50%, rgba(124,58,237,.2), transparent),
+      radial-gradient(ellipse 60% 80% at 70% 30%, rgba(6,182,212,.15), transparent),
+      radial-gradient(ellipse 80% 60% at 50% 70%, rgba(244,114,182,.1), transparent);
+    filter: blur(60px);
+    animation: auroraShift 8s ease-in-out infinite alternate;
+  }
+  @keyframes auroraShift {
+    0% { opacity: .8; transform: scale(1) rotate(0deg); }
+    100% { opacity: 1; transform: scale(1.1) rotate(5deg); }
+  }
+  .aurora-demo .aurora-content {
+    position: relative; z-index: 1; text-align: center;
+  }
+  .aurora-demo .aurora-content h3 {
+    font-size: 2rem; font-weight: 900;
+    background: linear-gradient(135deg, #c4b5fd, #67e8f9, #fbcfe8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  /* ============================================
+     2. 液态玻璃卡片
+     ============================================ */
+  .glass-cards { display: flex; gap: 1rem; padding: 1.5rem; flex-wrap: wrap; }
+  .glass-card {
+    flex: 1; min-width: 200px; padding: 2rem 1.5rem; border-radius: 20px;
+    position: relative; overflow: hidden; cursor: pointer; text-align: center;
+    background: rgba(255,255,255,.02);
+    border: 1px solid rgba(255,255,255,.06);
+    backdrop-filter: blur(16px);
+    transition: all .4s ease;
+  }
+  .glass-card::before {
+    content: ''; position: absolute;
+    top: var(--my, 50%); left: var(--mx, 50%);
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,.06), transparent 70%);
+    transform: translate(-50%, -50%);
+    pointer-events: none; transition: opacity .3s;
+  }
+  .glass-card:hover { border-color: rgba(255,255,255,.15); transform: translateY(-4px); }
+  .glass-card:active { transform: translateY(0) scale(.98); }
+  .glass-card .gc-icon { font-size: 2.5rem; margin-bottom: .8rem; }
+  .glass-card h4 { font-size: .95rem; margin-bottom: .3rem; color: white; }
+  .glass-card p { font-size: .78rem; color: #94a3b8; }
+
+  /* ============================================
+     3. 特殊圆角 corner-shape（用 clip-path/mask 模拟）
+     ============================================ */
+  .corner-shapes { display: flex; gap: 1rem; padding: 1.5rem; flex-wrap: wrap; }
+  .corner-card {
+    width: 140px; height: 120px; display: flex; align-items: center;
+    justify-content: center; font-size: .78rem; font-weight: 600;
+    color: white; text-align: center;
+  }
+  .cs-bevel { background: #3b82f6; clip-path: polygon(10% 0,100% 0,100% 80%,90% 100%,0 100%,0 20%); }
+  .cs-scoop { background: #8b5cf6;
+    clip-path: polygon(0 15%,15% 0,100% 0,100% 85%,85% 100%,0 100%);
+  }
+  .cs-notch { background: #ec4899;
+    clip-path: polygon(20% 0,100% 0,100% 100%,80% 100%,0 100%,0 20%);
+  }
+  .cs-squircle { background: #06b6d4;
+    clip-path: url(#squircle);
+  }
+  .cs-cut { background: #f59e0b; border-radius: 16px;
+    clip-path: polygon(0 0,75% 0,100% 25%,100% 100%,0 100%);
+  }
+
+  /* ============================================
+     4. 边缘折角 Folded Corner
+     ============================================ */
+  .folded-cards { display: flex; gap: 1rem; padding: 1.5rem; flex-wrap: wrap; }
+  .fold-card {
+    flex: 1; min-width: 200px; min-height: 160px; padding: 1.5rem;
+    position: relative; border-radius: 12px;
+  }
+  .fold-card h4 { font-size: .95rem; margin-bottom: .5rem; }
+  .fold-card p { font-size: .78rem; opacity: .8; line-height: 1.5; }
+
+  /* 折角效果 — CSS linear-gradient */
+  .fold-right-bottom {
+    background: linear-gradient(135deg,
+      transparent 0%, transparent 30px,
+      #1e293b 30px, #1e293b 100%
+    );
+    border: 1px solid #334155;
+  }
+  /* 模拟翻折阴影 */
+  .fold-right-bottom::after {
+    content: ''; position: absolute; bottom: 0; right: 0;
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 0 0 30px 30px;
+    border-color: transparent transparent #0f172a transparent;
+    border-radius: 0 0 8px 0;
+  }
+  .fold-right-bottom::before {
+    content: ''; position: absolute; bottom: 0; right: 30px;
+    width: 8px; height: 8px;
+    background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,.3) 50%);
+    border-radius: 0 0 0 4px;
+  }
+
+  .fold-left-top {
+    background: linear-gradient(-45deg,
+      transparent 0%, transparent 30px,
+      #1e293b 30px, #1e293b 100%
+    );
+    border: 1px solid #334155;
+  }
+  .fold-left-top::after {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 30px 30px 0 0;
+    border-color: #0f172a transparent transparent transparent;
+    border-radius: 8px 0 0 0;
+  }
+
+  /* ============================================
+     5. 内容渐隐 Fading Edge
+     ============================================ */
+  .fading-edge-demo { padding: 1.5rem; }
+  .fading-scroll {
+    position: relative; overflow-x: auto; overflow-y: hidden;
+    padding-bottom: .5rem;
+  }
+  /* 左侧渐隐遮罩 */
+  .fading-scroll::before {
+    content: ''; position: sticky; left: 0; z-index: 2;
+    width: 40px; height: 100%; flex-shrink: 0; float: left;
+    background: linear-gradient(90deg, #121820 20%, transparent);
+    pointer-events: none;
+  }
+  /* 右侧渐隐遮罩 */
+  .fading-scroll::after {
+    content: ''; position: sticky; right: 0; z-index: 2;
+    width: 40px; height: 100%; flex-shrink: 0; float: right;
+    background: linear-gradient(270deg, #121820 20%, transparent);
+    pointer-events: none;
+  }
+  .fading-scroll .scroll-inner {
+    display: flex; gap: .8rem; white-space: nowrap;
+  }
+  .fading-tag {
+    padding: .5rem 1.2rem; background: #1e293b; border: 1px solid #334155;
+    border-radius: 20px; font-size: .8rem; color: #94a3b8;
+    flex-shrink: 0;
+  }
+  .fading-tag.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+
+  /* ============================================
+     6. 面积图 Sparkline
+     ============================================ */
+  .area-chart-demo { padding: 1.5rem; }
+  .area-canvas { width: 100%; height: 180px; display: block; }
+
+  /* ============================================
+     7. 触感拟态 — 多层阴影叠加
+     ============================================ */
+  .neuo-cards { display: flex; gap: 1rem; padding: 1.5rem; flex-wrap: wrap; }
+  .neuo-card {
+    flex: 1; min-width: 180px; padding: 1.5rem; border-radius: 20px;
+    text-align: center; transition: all .3s ease;
+    background: #1a1f2e;
+    /* 多层阴影模拟厚度 */
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.04),
+      0 1px 2px rgba(0,0,0,.3),
+      0 4px 8px rgba(0,0,0,.2),
+      0 8px 16px rgba(0,0,0,.15);
+  }
+  .neuo-card:hover {
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.06),
+      0 2px 4px rgba(0,0,0,.4),
+      0 8px 16px rgba(0,0,0,.3),
+      0 16px 32px rgba(0,0,0,.2),
+      0 0 0 1px rgba(255,255,255,.03);
+    transform: translateY(-4px);
+  }
+  .neuo-card .nc-val {
+    font-size: 2rem; font-weight: 900;
+    background: linear-gradient(135deg, #a78bfa, #06b6d4);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .neuo-card .nc-label { font-size: .78rem; color: #94a3b8; margin-top: .3rem; }
+
+  /* 凸起标签按钮 */
+  .protruding-demo {
+    display: flex; justify-content: center; padding: 1.5rem 1.5rem 3rem;
+    position: relative;
+  }
+  .protruding-tabs {
+    display: flex; background: #1a1f2e; border-radius: 20px;
+    padding: 6px; position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  }
+  .protruding-tabs .pt-item {
+    padding: .7rem 1.8rem; border-radius: 16px; cursor: pointer;
+    font-size: .82rem; color: #94a3b8; position: relative;
+    transition: all .3s cubic-bezier(.34,1.56,.64,1);
+    z-index: 1;
+  }
+  .protruding-tabs .pt-item.center {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white; font-weight: 600;
+    transform: translateY(-12px);
+    box-shadow: 0 8px 25px rgba(59,130,246,.35);
+  }
+  .protruding-tabs .pt-item.center:active {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(59,130,246,.25);
+  }
+
+  /* 响应式 */
+  @media (max-width: 640px) {
+    .glass-cards, .corner-shapes, .folded-cards, .neuo-cards { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔮 2026 前沿UI技法 <span>视觉演示</span></h1>
+  <p style="color:#94a3b8;font-size:.88rem;margin-top:.3rem;position:relative;z-index:1">
+    极光弥散 · 液态玻璃 · 特殊圆角 · 边缘折角 · 内容渐隐 · 触感拟态
+  </p>
+</header>
+
+<div class="page">
+
+  <!-- ===== 1. 极光弥散 ===== -->
+  <div class="card">
+    <div class="card-top"><span>🌌 彩色弥散（Aurora UI / 极光风）</span><span class="badge" style="background:rgba(139,92,247,.12);color:#a78bfa">暗黑背景</span></div>
+    <div class="card-body">
+      <div class="aurora-demo">
+        <div class="aurora-bg"></div>
+        <div class="aurora-content">
+          <h3>极光之下</h3>
+          <p style="color:#94a3b8;font-size:.9rem;margin-top:.5rem">多色叠加 + 柔和过渡 + 模糊处理</p>
+          <p style="color:#64748b;font-size:.72rem;margin-top:.3rem">background径向渐变 × 3层 + filter:blur(60px) + 8s循环位移动画</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 2. 液态玻璃 ===== -->
+  <div class="card">
+    <div class="card-top"><span>💎 液态玻璃卡片（鼠标跟随光斑）</span><span class="badge" style="background:rgba(6,182,212,.12);color:#22d3ee">触感拟态</span></div>
+    <div class="card-body">
+      <div class="glass-cards" id="glassContainer">
+        <div class="glass-card">
+          <div class="gc-icon">🧩</div>
+          <h4>模块化</h4>
+          <p>可拆卸 · 可重组</p>
+        </div>
+        <div class="glass-card">
+          <div class="gc-icon">⚡</div>
+          <h4>高性能</h4>
+          <p>GPU硬件加速</p>
+        </div>
+        <div class="glass-card">
+          <div class="gc-icon">🔒</div>
+          <h4>安全可靠</h4>
+          <p>端到端加密</p>
+        </div>
+      </div>
+      <p style="font-size:.72rem;color:#64748b;padding:0 1.5rem .5rem">👆 移动鼠标到卡片上 → 光斑跟随鼠标位置移动（CSS变量 + JS mousemove）</p>
+    </div>
+  </div>
+
+  <!-- ===== 3. 特殊圆角 ===== -->
+  <div class="card">
+    <div class="card-top"><span>📐 CSS Corner-Shape（6种角形）</span><span class="badge" style="background:rgba(236,72,153,.12);color:#f472b6">2026新特性</span></div>
+    <div class="card-body">
+      <div class="corner-shapes">
+        <div class="corner-card cs-bevel">bevel<br>平切角</div>
+        <div class="corner-card cs-scoop">scoop<br>内凹角</div>
+        <div class="corner-card cs-notch">notch<br>尖刻角</div>
+        <div class="corner-card cs-squircle" style="border-radius:30px">squircle<br>超椭圆</div>
+        <div class="corner-card cs-cut">corner<br>裁切角</div>
+      </div>
+      <p style="font-size:.72rem;color:#64748b;padding:0 1.5rem .5rem">用 clip-path 模拟 corner-shape 效果，打破15年来只有 border-radius 的限制</p>
+    </div>
+  </div>
+
+  <!-- ===== 4. 边缘折角 ===== -->
+  <div class="card">
+    <div class="card-top"><span>📄 边缘折角（Folded Corner）</span><span class="badge" style="background:rgba(245,158,11,.12);color:#fcd34d">linear-gradient</span></div>
+    <div class="card-body">
+      <div class="folded-cards">
+        <div class="fold-card fold-right-bottom" style="color:white">
+          <h4>🎫 优惠券</h4>
+          <p>右下折角效果<br>翻折纸张的立体感<br>linear-gradient实现</p>
+        </div>
+        <div class="fold-card fold-left-top" style="color:white">
+          <h4>📋 便签卡片</h4>
+          <p>左上折角效果<br>伪元素::after模拟<br>暗面+交界线</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 5. 内容渐隐 + 面积图 ===== -->
+  <div class="card">
+    <div class="card-top"><span>📜 内容渐隐（Fading Edge）— 滚动提示</span></div>
+    <div class="card-body">
+      <div class="fading-edge-demo">
+        <div class="fading-scroll">
+          <div class="scroll-inner">
+            <span class="fading-tag active">全部</span>
+            <span class="fading-tag">UI设计</span>
+            <span class="fading-tag">前端开发</span>
+            <span class="fading-tag">交互设计</span>
+            <span class="fading-tag">视觉规范</span>
+            <span class="fading-tag">动效设计</span>
+            <span class="fading-tag">用户体验</span>
+            <span class="fading-tag">产品策略</span>
+            <span class="fading-tag">数据可视化</span>
+            <span class="fading-tag">设计系统</span>
+            <span class="fading-tag">AI设计</span>
+            <span class="fading-tag">B端规范</span>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:.72rem;color:#64748b;padding:0 1.5rem .5rem">
+        ← 左右边缘渐变遮罩暗示"还有更多" → 消除锐利裁剪的认知不适，平均滚动提升约37%
+      </p>
+    </div>
+  </div>
+
+  <!-- ===== 5b. 面积图 ===== -->
+  <div class="card">
+    <div class="card-top"><span>📊 面积折线图 — 透明叠加 + 标签直放</span></div>
+    <div class="card-body">
+      <div class="area-chart-demo">
+        <canvas id="areaChart" class="area-canvas"></canvas>
+      </div>
+      <p style="font-size:.72rem;color:#64748b;padding:0 1.5rem .5rem">
+        单色调渐变填充 + 透明叠加防遮挡 + 限制类别≤5 → 数据故事清晰讲述
+      </p>
+    </div>
+  </div>
+
+  <!-- ===== 6. 触感拟态 + 凸起按钮 ===== -->
+  <div class="card">
+    <div class="card-top"><span>🖐️ 触感拟态 + 元素突出</span></div>
+    <div class="card-body">
+      <div class="neuo-cards">
+        <div class="neuo-card">
+          <div class="nc-val">12,846</div>
+          <div class="nc-label">活跃用户</div>
+        </div>
+        <div class="neuo-card">
+          <div class="nc-val">99.7%</div>
+          <div class="nc-label">服务可用率</div>
+        </div>
+        <div class="neuo-card">
+          <div class="nc-val">47</div>
+          <div class="nc-label">覆盖国家</div>
+        </div>
+      </div>
+      <p style="font-size:.72rem;color:#94a3b8;padding:.5rem 1.5rem 0">多层阴影叠加模拟厚度 — inset高光 + 3层投影</p>
+
+      <div class="protruding-demo">
+        <div class="protruding-tabs">
+          <div class="pt-item">首页</div>
+          <div class="pt-item center">发布</div>
+          <div class="pt-item">我的</div>
+        </div>
+      </div>
+      <p style="font-size:.72rem;color:#94a3b8;padding:0 1.5rem .5rem;text-align:center">
+        中间按钮凸起（translateY(-12px)）— 点击时缩回 → 动态视觉反差强化关注
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// 液态玻璃 — 鼠标跟随光斑
+document.getElementById('glassContainer').addEventListener('mousemove', (e) => {
+  const cards = e.currentTarget.querySelectorAll('.glass-card');
+  cards.forEach(card => {
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    card.style.setProperty('--mx', x + 'px');
+    card.style.setProperty('--my', y + 'px');
+  });
+});
+
+// 面积图
+const ctx = document.getElementById('areaChart');
+const dpr = window.devicePixelRatio || 1;
+ctx.width = ctx.offsetWidth * dpr;
+ctx.height = 180 * dpr;
+ctx.style.width = ctx.offsetWidth + 'px';
+ctx.style.height = '180px';
+const c = ctx.getContext('2d');
+c.scale(dpr, dpr);
+
+const data = [20, 45, 30, 70, 55, 90, 65, 85, 95, 75, 88, 92];
+const w = ctx.offsetWidth; const h = 180;
+const pad = { top: 30, right: 20, bottom: 30, left: 40 };
+const chartW = w - pad.left - pad.right;
+const chartH = h - pad.top - pad.bottom;
+
+// 网格
+c.strokeStyle = 'rgba(255,255,255,.04)'; c.lineWidth = 1;
+for (let i = 0; i <= 4; i++) {
+  const y = pad.top + (chartH / 4) * i;
+  c.beginPath(); c.moveTo(pad.left, y); c.lineTo(w - pad.right, y); c.stroke();
+}
+
+// 面积渐变
+const grad = c.createLinearGradient(0, pad.top, 0, h - pad.bottom);
+grad.addColorStop(0, 'rgba(59,130,246,.3)'); grad.addColorStop(1, 'rgba(59,130,246,.02)');
+
+// 面积路径
+c.beginPath();
+c.moveTo(pad.left, h - pad.bottom);
+data.forEach((v, i) => {
+  const x = pad.left + (chartW / (data.length - 1)) * i;
+  const y = pad.top + chartH - (v / 100) * chartH;
+  c.lineTo(x, y);
+});
+c.lineTo(pad.left + chartW, h - pad.bottom);
+c.closePath(); c.fillStyle = grad; c.fill();
+
+// 折线
+c.beginPath(); c.strokeStyle = '#60a5fa'; c.lineWidth = 2;
+data.forEach((v, i) => {
+  const x = pad.left + (chartW / (data.length - 1)) * i;
+  const y = pad.top + chartH - (v / 100) * chartH;
+  if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
+});
+c.stroke();
+
+// 数据点 + 标签
+data.forEach((v, i) => {
+  const x = pad.left + (chartW / (data.length - 1)) * i;
+  const y = pad.top + chartH - (v / 100) * chartH;
+  c.beginPath(); c.arc(x, y, 4, 0, Math.PI*2);
+  c.fillStyle = '#3b82f6'; c.fill();
+  // 标签
+  c.fillStyle = '#e2e8f0'; c.font = '10px sans-serif'; c.textAlign = 'center';
+  c.fillText(v, x, y - 10);
+});
+
+// 底部标签
+const months = ['1月','2月','3月','4月','5月','6月'];
+months.forEach((m, i) => {
+  const x = pad.left + (chartW / (data.length - 1)) * (i * 2 + 1);
+  c.fillStyle = '#64748b'; c.font = '10px sans-serif'; c.textAlign = 'center';
+  c.fillText(m, x, h - 6);
+});
+</script>
+
+<svg style="position:absolute;width:0;height:0">
+  <clipPath id="squircle" clipPathUnits="objectBoundingBox">
+    <path d="M0.5,0 C0.8,0 1,0.2 1,0.5 C1,0.8 0.8,1 0.5,1 C0.2,1 0,0.8 0,0.5 C0,0.2 0.2,0 0.5,0 Z"/>
+  </clipPath>
+</svg>
+</body>
+</html>

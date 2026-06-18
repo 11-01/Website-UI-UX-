@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>交互与反馈实战演示 | Interaction & Feedback Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: #0f172a; color: #e2e8f0;
+  }
+
+  header {
+    text-align: center; padding: 2.5rem 1rem 1.5rem;
+  }
+  header h1 { font-size: 1.8rem; }
+  header h1 span { background: linear-gradient(135deg, #22c55e, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+  .page { max-width: 960px; margin: 0 auto; padding: 1rem; }
+
+  .card {
+    background: #1e293b; border-radius: 14px; border: 1px solid #334155;
+    margin-bottom: 1.5rem; overflow: hidden;
+  }
+  .card .card-top {
+    background: #0f172a; padding: .65rem 1.2rem; border-bottom: 1px solid #334155;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: .82rem; font-weight: 700;
+  }
+  .badge {
+    font-size: .65rem; padding: .2rem .6rem; border-radius: 10px; font-weight: 600;
+  }
+  .card-body { background: #f8fafc; color: #1e293b; padding: 1.2rem; }
+
+  /* ===== 四场景面板 ===== */
+  .scenario-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  }
+  @media (max-width: 600px) { .scenario-grid { grid-template-columns: 1fr; } }
+
+  .scenario-box {
+    background: white; border-radius: 10px; padding: 1rem;
+    box-shadow: 0 1px 6px rgba(0,0,0,.03);
+  }
+  .scenario-box h4 { font-size: .85rem; margin-bottom: .8rem; display: flex; align-items: center; gap: .4rem; }
+
+  /* ===== 1. 加载状态展示区 ===== */
+  .loading-showcase { display: flex; flex-direction: column; gap: .8rem; }
+  .loading-showcase .ls-row { display: flex; gap: .8rem; align-items: center; flex-wrap: wrap; }
+
+  /* 骨架屏 */
+  .skeleton-demo { display: flex; gap: .8rem; padding: .8rem; background: #f8fafc; border-radius: 8px; }
+  .sk-avatar { width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; }
+  .sk-lines { flex:1; display: flex; flex-direction: column; gap: .5rem; }
+  .sk-line { height: 12px; border-radius: 4px; }
+  .sk-shimmer {
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite;
+  }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  /* 品牌Logo呼吸 */
+  .brand-loader {
+    display: flex; align-items: center; gap: .6rem; padding: .6rem 1rem;
+    background: #1e293b; border-radius: 8px; color: white; font-size: .8rem;
+  }
+  .brand-loader .bl-logo {
+    width: 32px; height: 32px; background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: .9rem; animation: breathe 2s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%,100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.08); opacity: .7; }
+  }
+
+  /* 非模态加载条 */
+  .non-modal-bar {
+    height: 3px; background: #e2e8f0; border-radius: 2px; overflow: hidden;
+  }
+  .non-modal-bar .fill {
+    height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    border-radius: 2px; animation: indeterminate 2s ease-in-out infinite;
+    width: 30%;
+  }
+  @keyframes indeterminate {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(400%); }
+  }
+
+  /* ===== 2. Toast 提示 ===== */
+  .toast-container {
+    position: fixed; top: 1rem; right: 1rem; z-index: 9999;
+    display: flex; flex-direction: column; gap: .5rem;
+  }
+  .toast {
+    padding: .8rem 1.2rem; border-radius: 10px; font-size: .85rem; color: white;
+    box-shadow: 0 8px 30px rgba(0,0,0,.15);
+    display: flex; align-items: center; gap: .5rem;
+    animation: toastIn .35s cubic-bezier(.34,1.56,.64,1), toastOut .3s ease 2.5s forwards;
+    max-width: 360px;
+  }
+  .toast-success { background: #16a34a; }
+  .toast-error { background: #dc2626; }
+  .toast-warning { background: #d97706; }
+  .toast-info { background: #2563eb; }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(60px) scale(.9); }
+    to { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  @keyframes toastOut {
+    to { opacity: 0; transform: translateX(60px) scale(.9); }
+  }
+
+  /* ===== 3. 表单实时校验 ===== */
+  .form-row { margin-bottom: .8rem; position: relative; }
+  .form-row input, .form-row textarea {
+    width: 100%; padding: .7rem .8rem; border: 2px solid #e2e8f0;
+    border-radius: 8px; font-size: .85rem; outline: none; transition: border .25s, box-shadow .25s;
+    font-family: inherit;
+  }
+  .form-row input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
+  .form-row input.valid { border-color: #22c55e; }
+  .form-row input.invalid { border-color: #ef4444; animation: shake .4s ease; }
+  .form-row .hint {
+    font-size: .7rem; margin-top: .2rem; min-height: 1rem;
+  }
+  .form-row .hint.ok { color: #16a34a; }
+  .form-row .hint.err { color: #dc2626; }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)} 20%{transform:translateX(-5px)} 40%{transform:translateX(5px)} 60%{transform:translateX(-3px)} 80%{transform:translateX(3px)}
+  }
+
+  /* ===== 4. 进度条（确定/不确定） ===== */
+  .progress-demo { display: flex; flex-direction: column; gap: .8rem; }
+  .pg-bar {
+    height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;
+  }
+  .pg-bar .fill {
+    height: 100%; border-radius: 4px; transition: width .4s ease;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  }
+  .pg-label { font-size: .75rem; color: #64748b; display: flex; justify-content: space-between; }
+
+  /* 按钮 */
+  .btn-sm {
+    padding: .4rem 1rem; border: none; border-radius: 6px; cursor: pointer;
+    font-size: .78rem; font-weight: 600; transition: all .25s ease;
+  }
+  .btn-blue { background: #3b82f6; color: white; }
+  .btn-blue:hover { background: #2563eb; }
+  .btn-red { background: #ef4444; color: white; }
+  .btn-green { background: #22c55e; color: white; }
+  .btn-outline { background: white; border: 1px solid #d1d5db; color: #475569; }
+
+  /* 成功动画 */
+  .success-check {
+    display: flex; flex-direction: column; align-items: center; padding: 1.5rem;
+  }
+  .check-circle {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: #dcfce7; display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; color: #22c55e;
+    animation: popIn .5s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes popIn {
+    0% { transform: scale(0); opacity: 0; }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* 警告确认弹窗 */
+  .confirm-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden; transition: all .25s ease;
+  }
+  .confirm-overlay.show { opacity: 1; visibility: visible; }
+  .confirm-box {
+    background: white; border-radius: 16px; padding: 2rem; max-width: 380px;
+    text-align: center; color: #1e293b;
+    transform: scale(.9); transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .confirm-overlay.show .confirm-box { transform: scale(1); }
+  .confirm-box h4 { margin-bottom: .5rem; }
+
+  /* 非模态 vs 模态对比 */
+  .modal-vs-nonmodal {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .8rem;
+  }
+  @media (max-width: 500px) { .modal-vs-nonmodal { grid-template-columns: 1fr; } }
+  .mv-box {
+    background: white; border-radius: 10px; padding: 1rem; text-align: center;
+    box-shadow: 0 1px 6px rgba(0,0,0,.03);
+  }
+
+  /* 偏好设置 */
+  .pref-toggle {
+    display: flex; align-items: center; gap: .5rem; font-size: .78rem;
+  }
+  .pref-toggle input { accent-color: #3b82f6; }
+
+  /* 对比行 */
+  .contrast-row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+  @media (max-width: 500px) { .contrast-row { grid-template-columns: 1fr; } }
+  .good { border-left: 3px solid #22c55e; padding-left: .8rem; }
+  .bad { border-left: 3px solid #ef4444; padding-left: .8rem; }
+  .good h4 { color: #16a34a; font-size: .82rem; }
+  .bad h4 { color: #dc2626; font-size: .82rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ 交互与反馈 <span>实战演示</span></h1>
+  <p style="color:#64748b;font-size:.88rem;margin-top:.3rem">加载·录入·成功·错误 · 骨架屏·Toast·非模态·确认弹窗</p>
+</header>
+
+<div class="page">
+
+  <!-- ===== 一、加载状态 ===== -->
+  <div class="card">
+    <div class="card-top">
+      <span>⏳ 加载状态 — 骨架屏 · 品牌动效 · 非模态 · 进度条</span>
+      <span class="badge" style="background:rgba(34,197,94,.12);color:#4ade80">高级感加载</span>
+    </div>
+    <div class="card-body">
+      <div class="scenario-grid">
+        <!-- 骨架屏 -->
+        <div class="scenario-box">
+          <h4>🦴 骨架屏（Skeleton）</h4>
+          <div class="skeleton-demo">
+            <div class="sk-avatar sk-shimmer"></div>
+            <div class="sk-lines">
+              <div class="sk-line sk-shimmer" style="width:60%"></div>
+              <div class="sk-line sk-shimmer" style="width:90%"></div>
+              <div class="sk-line sk-shimmer" style="width:40%"></div>
+            </div>
+          </div>
+          <p style="font-size:.7rem;color:#94a3b8;margin-top:.5rem">灰色占位块勾勒内容布局 → 缩短感知等待</p>
+        </div>
+        <!-- 品牌Logo呼吸 -->
+        <div class="scenario-box">
+          <h4>🫁 品牌微动效（Logo呼吸）</h4>
+          <div class="brand-loader">
+            <div class="bl-logo">⚡</div>
+            <span>正在加载您的数据...</span>
+          </div>
+          <p style="font-size:.7rem;color:#94a3b8;margin-top:.5rem">品牌符号融入加载动画 → 强化品牌识别</p>
+        </div>
+        <!-- 非模态加载条 -->
+        <div class="scenario-box">
+          <h4>📊 非模态加载（不阻断操作）</h4>
+          <div class="non-modal-bar"><div class="fill"></div></div>
+          <p style="font-size:.7rem;color:#94a3b8;margin-top:.5rem">顶部细条加载中，下方内容仍可浏览和操作 ← 用户有控制权</p>
+        </div>
+        <!-- 确定进度条 -->
+        <div class="scenario-box">
+          <h4>📈 明确进度（透明即信任）</h4>
+          <div class="pg-label"><span>正在优化图像...</span><span id="pgPct">0%</span></div>
+          <div class="pg-bar"><div class="fill" id="pgFill" style="width:0%"></div></div>
+          <button class="btn-sm btn-blue" style="margin-top:.5rem" onclick="startProgress()">模拟上传</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 二、Toast vs 弹窗 ===== -->
+  <div class="card">
+    <div class="card-top">
+      <span>🔔 反馈方式 — Toast轻提示 vs 模态弹窗</span>
+    </div>
+    <div class="card-body">
+      <div class="modal-vs-nonmodal">
+        <div class="mv-box good">
+          <h4>✅ Toast 轻提示（推荐）</h4>
+          <p style="font-size:.75rem;color:#64748b;margin-bottom:.8rem">非阻断式，自动消失2.5s</p>
+          <button class="btn-sm btn-green" onclick="showToast('success','操作成功！数据已保存')">✓ 成功</button>
+          <button class="btn-sm btn-red" style="margin-left:.3rem" onclick="showToast('error','网络错误，请重试')">✗ 错误</button>
+          <button class="btn-sm btn-blue" style="margin-left:.3rem" onclick="showToast('info','新版本 v3.0 已发布')">ℹ 通知</button>
+        </div>
+        <div class="mv-box bad">
+          <h4>⚠️ 模态确认弹窗</h4>
+          <p style="font-size:.75rem;color:#64748b;margin-bottom:.8rem">仅用于危险操作的二次确认</p>
+          <button class="btn-sm btn-red" onclick="showConfirm()">🗑️ 删除（需确认）</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 三、表单实时校验 ===== -->
+  <div class="card">
+    <div class="card-top"><span>📝 录入反馈 — 聚焦高亮 + 实时校验</span></div>
+    <div class="card-body">
+      <div style="max-width:400px">
+        <div class="form-row">
+          <input type="text" placeholder="输入用户名（≥2字符）" id="uname" oninput="liveValidate()">
+          <div class="hint" id="unameHint"></div>
+        </div>
+        <div class="form-row">
+          <input type="text" placeholder="输入邮箱" id="uemail" oninput="liveValidate()">
+          <div class="hint" id="uemailHint"></div>
+        </div>
+        <p style="font-size:.72rem;color:#94a3b8">
+          👆 随着输入实时校验 → 聚焦边框高亮 → ✓绿色通过 / ✗红色摇晃+提示
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 四、成功/错误对比 ===== -->
+  <div class="card">
+    <div class="card-top"><span>🎯 成功与错误反馈的正确姿势</span></div>
+    <div class="card-body">
+      <div class="contrast-row">
+        <div class="good">
+          <h4>✅ 提交成功 — 正向确认</h4>
+          <div class="success-check">
+            <div class="check-circle">✓</div>
+            <p style="font-size:.8rem;color:#64748b;margin-top:.5rem">表单已成功提交</p>
+          </div>
+          <p style="font-size:.7rem;color:#94a3b8">弹出动画 + 明确文案 → 用户确信任务完成</p>
+        </div>
+        <div class="bad">
+          <h4>❌ 错误反馈 — 提供解决方案</h4>
+          <div style="background:#fef2f2;border-radius:8px;padding:.8rem;margin-top:.5rem;font-size:.78rem">
+            <strong>⚠️ 文件过大</strong><br>
+            <span style="color:#dc2626">上传限制为 10MB，您的文件为 14.5MB</span><br>
+            <span style="color:#64748b;font-size:.72rem">💡 建议：压缩图片或选择更小的文件</span>
+          </div>
+          <p style="font-size:.7rem;color:#94a3b8;margin-top:.3rem">说明原因 + 给出解决方案，非冷冰代码</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 五、无障碍 & 避坑 ===== -->
+  <div class="card">
+    <div class="card-top"><span>♿ 无障碍 · 性能 · 避坑</span></div>
+    <div class="card-body" style="background:#1e293b;color:#e2e8f0">
+      <table style="width:100%;font-size:.8rem;border-collapse:collapse">
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem;font-weight:600;color:#22c55e">✅ 做</td>
+          <td style="padding:.5rem;color:#ef4444">❌ 不做</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem">Toast轻提示自动消失</td>
+          <td style="padding:.5rem">频繁弹窗阻断用户操作</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem">骨架屏预知内容形状</td>
+          <td style="padding:.5rem">无限旋转图标让用户盲等</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem">明确进度条+百分比</td>
+          <td style="padding:.5rem">假进度/无进度 → 焦虑</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem">错误信息+解决建议</td>
+          <td style="padding:.5rem">冷冰错误代码</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem">prefers-reduced-motion</td>
+          <td style="padding:.5rem">无视用户运动敏感偏好</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem">aria-live 传达加载状态</td>
+          <td style="padding:.5rem">屏幕阅读器用户被忽略</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem">纯CSS transform/opacity 动画</td>
+          <td style="padding:.5rem">width/left动画→卡顿</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem">非模态加载（可继续操作）</td>
+          <td style="padding:.5rem">强制遮罩让用户"傻等"</td>
+        </tr>
+        <tr>
+          <td style="padding:.5rem">全站交互风格统一</td>
+          <td style="padding:.5rem">不同页面反馈不一致</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast容器 -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- 确认弹窗 -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <h4>⚠️ 确认删除</h4>
+    <p style="font-size:.85rem;color:#64748b;margin-bottom:1rem">此操作不可恢复，确定要删除该项吗？</p>
+    <button class="btn-sm btn-outline" onclick="closeConfirm()" style="margin-right:.5rem">取消</button>
+    <button class="btn-sm btn-red" onclick="closeConfirm();showToast('success','已成功删除')">确认删除</button>
+  </div>
+</div>
+
+<script>
+// ===== Toast =====
+function showToast(type, msg) {
+  const container = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  const icons = { success: '✓', error: '✗', warning: '⚠', info: 'ℹ' };
+  t.innerHTML = '<span>' + icons[type] + '</span> ' + msg;
+  container.appendChild(t);
+  setTimeout(() => { if (t.parentNode) t.remove(); }, 3000);
+}
+
+// ===== 确认弹窗 =====
+function showConfirm() { document.getElementById('confirmOverlay').classList.add('show'); }
+function closeConfirm() { document.getElementById('confirmOverlay').classList.remove('show'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeConfirm(); });
+
+// ===== 进度条 =====
+let pgTimer;
+function startProgress() {
+  const fill = document.getElementById('pgFill');
+  const label = document.getElementById('pgPct');
+  let p = 0;
+  clearInterval(pgTimer);
+  fill.style.width = '0%'; label.textContent = '0%';
+  pgTimer = setInterval(() => {
+    p += Math.random() * 7 + 3;
+    if (p >= 100) { p = 100; clearInterval(pgTimer); showToast('success','图像优化完成！'); }
+    fill.style.width = p + '%';
+    label.textContent = Math.round(p) + '%';
+  }, 350);
+}
+
+// ===== 实时校验 =====
+function liveValidate() {
+  const nameEl = document.getElementById('uname');
+  const emailEl = document.getElementById('uemail');
+  const nameHint = document.getElementById('unameHint');
+  const emailHint = document.getElementById('uemailHint');
+
+  // 用户名
+  if (!nameEl.value) {
+    nameEl.classList.remove('valid','invalid'); nameHint.textContent = '';
+  } else if (nameEl.value.length >= 2) {
+    nameEl.classList.add('valid'); nameEl.classList.remove('invalid');
+    nameHint.textContent = '✓ 用户名可用'; nameHint.className = 'hint ok';
+  } else {
+    nameEl.classList.add('invalid'); nameEl.classList.remove('valid');
+    nameHint.textContent = '✗ 至少2个字符'; nameHint.className = 'hint err';
+  }
+
+  // 邮箱
+  if (!emailEl.value) {
+    emailEl.classList.remove('valid','invalid'); emailHint.textContent = '';
+  } else if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value)) {
+    emailEl.classList.add('valid'); emailEl.classList.remove('invalid');
+    emailHint.textContent = '✓ 邮箱格式正确'; emailHint.className = 'hint ok';
+  } else {
+    emailEl.classList.add('invalid'); emailEl.classList.remove('valid');
+    emailHint.textContent = '✗ 请输入有效的邮箱地址'; emailHint.className = 'hint err';
+  }
+}
+</script>
+</body>
+</html>

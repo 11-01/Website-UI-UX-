@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>侧边栏展开收起动画方案对比 | Sidebar Animation Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: #0f172a; color: #e2e8f0;
+  }
+
+  header {
+    text-align: center; padding: 2rem 1rem 1rem;
+  }
+  header h1 { font-size: 1.7rem; }
+  header h1 span { background: linear-gradient(135deg, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+  .intro { max-width: 900px; margin: 0 auto 2rem; padding: 0 1rem; text-align: center; }
+
+  /* 方案卡片 */
+  .scheme-row {
+    max-width: 1100px; margin: 0 auto; padding: 0 1rem 2rem;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+  .scheme-card {
+    background: #1e293b; border-radius: 14px; overflow: hidden;
+    border: 1px solid #334155;
+  }
+  .scheme-card .card-top {
+    padding: .7rem 1.2rem; border-bottom: 1px solid #334155;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: .85rem; font-weight: 700; background: #0f172a;
+  }
+  .badge { font-size: .65rem; padding: .2rem .6rem; border-radius: 10px; font-weight: 600; }
+  .badge-warn { background: rgba(245,158,11,.12); color: #fcd34d; }
+  .badge-best { background: rgba(34,197,94,.12); color: #4ade80; }
+  .badge-grid { background: rgba(139,92,246,.12); color: #a78bfa; }
+
+  .card-body { background: #f8fafc; color: #1e293b; }
+
+  /* 通用：演示区框架 */
+  .demo-box {
+    display: flex; overflow: hidden; position: relative;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  /* 侧边栏 */
+  .demo-sidebar {
+    height: 300px; background: #1e293b; color: #cbd5e1;
+    flex-shrink: 0; padding: 1rem 0; overflow: hidden;
+  }
+  .demo-sidebar .sb-logo {
+    padding: .5rem 1rem; font-weight: 900; font-size: .9rem;
+    border-bottom: 1px solid rgba(255,255,255,.06); margin-bottom: .5rem;
+    white-space: nowrap;
+  }
+  .demo-sidebar .sb-item {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .6rem 1rem; font-size: .8rem; white-space: nowrap;
+    cursor: pointer; transition: background .15s;
+  }
+  .demo-sidebar .sb-item:hover { background: rgba(255,255,255,.06); }
+  .demo-sidebar .sb-item .dot { width: 8px; height: 8px; border-radius: 50%; background: #475569; flex-shrink: 0; }
+
+  /* ===== 方案一：width 过渡 ===== */
+  .sb-width {
+    width: 220px; transition: width .35s ease;
+  }
+  .sb-width.collapsed { width: 64px; }
+
+  /* ===== 方案二：translateX（推荐） ===== */
+  .sb-translate {
+    width: 220px; transition: transform .35s cubic-bezier(.4,0,.2,1);
+    will-change: transform;
+  }
+  .sb-translate.collapsed { transform: translateX(-220px); }
+  /* 收起时内容淡出 */
+  .sb-translate .sb-content {
+    transition: opacity .2s ease .1s;
+  }
+  .sb-translate.collapsed .sb-content { opacity: 0; }
+
+  /* ===== 方案三：Grid grid-template-columns ===== */
+  .demo-box-grid {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    transition: grid-template-columns .35s ease;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .demo-box-grid.collapsed { grid-template-columns: 64px 1fr; }
+  .sb-grid { height: 300px; background: #1e293b; color: #cbd5e1; padding: 1rem 0; overflow: hidden; }
+
+  /* 主内容区 */
+  .demo-main {
+    flex: 1; min-width: 0; padding: 1.2rem; overflow: hidden;
+    background: white;
+  }
+  .demo-main h4 { font-size: .9rem; margin-bottom: .5rem; }
+  .demo-main .content-blocks { display: flex; flex-direction: column; gap: .4rem; }
+  .demo-main .cblock {
+    background: #f1f5f9; border-radius: 6px; padding: .5rem .8rem;
+    font-size: .75rem; color: #64748b;
+  }
+
+  /* 控制条 */
+  .control-bar {
+    padding: .5rem 1rem; display: flex; gap: .5rem; align-items: center;
+    background: #fafafa; border-bottom: 1px solid #e2e8f0;
+  }
+  .control-bar button {
+    padding: .35rem .9rem; border: 1px solid #d1d5db; background: white;
+    border-radius: 6px; cursor: pointer; font-size: .78rem;
+    transition: all .15s;
+  }
+  .control-bar button:hover { border-color: #3b82f6; color: #3b82f6; }
+  .control-bar .status {
+    margin-left: auto; font-size: .7rem; color: #94a3b8;
+  }
+
+  /* Perf标签 */
+  .perf-note {
+    padding: .5rem 1rem; font-size: .68rem;
+    border-top: 1px solid #e2e8f0;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .perf-note .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .perf-dot-green { background: #22c55e; }
+  .perf-dot-yellow { background: #f59e0b; }
+
+  /* ===== 移动端抽屉演示 ===== */
+  .mobile-demo {
+    max-width: 1100px; margin: 0 auto 2rem; padding: 0 1rem;
+  }
+  .mobile-demo .phone-row { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+  .phone-mock {
+    width: 360px; background: white; border-radius: 20px; overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,.2); color: #1e293b;
+  }
+  .phone-mock .ph-top {
+    background: #1a1a1a; color: white; padding: .3rem 1rem;
+    display: flex; justify-content: space-between; font-size: .6rem;
+  }
+  .ph-nav {
+    height: 48px; background: #1e293b; color: white;
+    display: flex; align-items: center; padding: 0 1rem; gap: .7rem;
+    font-size: .85rem;
+  }
+  .ph-nav .menu-btn {
+    background: none; border: none; color: white; font-size: 1.2rem;
+    cursor: pointer; padding: 6px; min-width: 40px; min-height: 40px;
+    border-radius: 8px;
+  }
+  .ph-body {
+    height: 260px; overflow-y: auto; position: relative;
+    background: #f8fafc;
+  }
+  .ph-body .ph-content { padding: 1rem; display: flex; flex-direction: column; gap:.5rem; }
+  .ph-body .ph-content .b {
+    background: white; border-radius: 8px; padding: .8rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.03); font-size: .8rem;
+  }
+  /* 移动端侧边栏覆盖 */
+  .ph-sidebar {
+    position: fixed; top: 0; left: 0; width: 80%; max-width: 280px;
+    height: 100%; background: #1e293b; color: #cbd5e1; z-index: 1000;
+    transform: translateX(-100%); transition: transform .3s cubic-bezier(.4,0,.2,1);
+  }
+  .ph-sidebar.open { transform: translateX(0); }
+  .ph-sidebar .ps-item {
+    padding: .8rem 1.2rem; font-size: .85rem; border-bottom: 1px solid rgba(255,255,255,.04);
+    cursor: pointer;
+  }
+  .ph-mask {
+    position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 999;
+    display: none;
+  }
+  .ph-mask.show { display: block; }
+
+  /* 代码区 */
+  pre {
+    background: #0a0f1a; border-radius: 10px; padding: .8rem;
+    font-family: 'Consolas',monospace; font-size: .72rem;
+    line-height: 1.6; color: #cbd5e1; overflow-x: auto;
+    border: 1px solid #1e293b; margin: .8rem;
+  }
+  pre .k { color: #93c5fd; }
+  pre .s { color: #86efac; }
+  pre .c { color: #64748b; font-style: italic; }
+  pre .t { color: #c084fc; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🗂️ 侧边栏展开收起 <span>三种动画方案对比</span></h1>
+</header>
+<div class="intro">
+  <p style="color:#94a3b8;font-size:.9rem">width过渡 · translateX(GPU) · Grid联动 — 点击"展开/收起"按钮体验差异</p>
+</div>
+
+<!-- ===== 三方案并排 ===== -->
+<div class="scheme-row">
+
+  <!-- 方案一：width -->
+  <div class="scheme-card">
+    <div class="card-top">
+      <span>方案一：width 过渡</span>
+      <span class="badge badge-warn">⚠️ 触发重排</span>
+    </div>
+    <div class="card-body">
+      <div class="control-bar">
+        <button onclick="toggleScheme('sbWidth')">↔️ 展开/收起</button>
+        <span class="status" id="status1">展开中</span>
+      </div>
+      <div class="demo-box">
+        <aside class="demo-sidebar sb-width" id="sbWidth">
+          <div class="sb-logo">⚡ Admin</div>
+          <div class="sb-item"><span class="dot"></span> 首页</div>
+          <div class="sb-item"><span class="dot"></span> 控制台</div>
+          <div class="sb-item"><span class="dot"></span> 数据</div>
+          <div class="sb-item"><span class="dot"></span> 设置</div>
+        </aside>
+        <div class="demo-main">
+          <div class="content-blocks">
+            <div class="cblock">📄 width变化 → 内容区被迫重新布局</div>
+            <div class="cblock">📄 浏览器需要重新计算所有元素位置</div>
+            <div class="cblock">📄 侧边栏文字随宽度实时压缩换行</div>
+          </div>
+        </div>
+      </div>
+      <div class="perf-note">
+        <span class="dot perf-dot-yellow"></span> 直观简单，但动画时内容会随宽度变化而挤压/换行
+      </div>
+    </div>
+  </div>
+
+  <!-- 方案二：translateX -->
+  <div class="scheme-card">
+    <div class="card-top">
+      <span>方案二：translateX（推荐）</span>
+      <span class="badge badge-best">✅ GPU加速</span>
+    </div>
+    <div class="card-body">
+      <div class="control-bar">
+        <button onclick="toggleScheme('sbTranslate')">↔️ 展开/收起</button>
+        <span class="status" id="status2">展开中</span>
+      </div>
+      <div class="demo-box" style="overflow:hidden">
+        <aside class="demo-sidebar sb-translate" id="sbTranslate">
+          <div class="sb-content">
+            <div class="sb-logo">⚡ Admin</div>
+            <div class="sb-item"><span class="dot"></span> 首页</div>
+            <div class="sb-item"><span class="dot"></span> 控制台</div>
+            <div class="sb-item"><span class="dot"></span> 数据</div>
+            <div class="sb-item"><span class="dot"></span> 设置</div>
+          </div>
+        </aside>
+        <div class="demo-main">
+          <div class="content-blocks">
+            <div class="cblock">🚀 transform 不触发重排，仅合成层移动</div>
+            <div class="cblock">🎯 GPU 硬件加速，60fps 丝滑</div>
+            <div class="cblock">✨ 收起时文字 opacity 淡出，视觉自然</div>
+          </div>
+        </div>
+      </div>
+      <div class="perf-note">
+        <span class="dot perf-dot-green"></span> 仅触发Composite，不走Layout/Paint，性能最佳
+      </div>
+    </div>
+  </div>
+
+  <!-- 方案三：Grid -->
+  <div class="scheme-card">
+    <div class="card-top">
+      <span>方案三：Grid 联动</span>
+      <span class="badge badge-grid">Grid布局</span>
+    </div>
+    <div class="card-body">
+      <div class="control-bar">
+        <button onclick="toggleScheme('sbGrid')">↔️ 展开/收起</button>
+        <span class="status" id="status3">展开中</span>
+      </div>
+      <div class="demo-box-grid" id="sbGrid">
+        <aside class="sb-grid" style="overflow:hidden">
+          <div class="sb-logo" style="padding:.5rem 1rem;font-weight:900;font-size:.9rem;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:.5rem;white-space:nowrap">⚡ Admin</div>
+          <div class="sb-item" style="display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;font-size:.8rem;white-space:nowrap"><span class="dot" style="width:8px;height:8px;border-radius:50%;background:#475569;flex-shrink:0"></span> 首页</div>
+          <div class="sb-item" style="display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;font-size:.8rem;white-space:nowrap"><span class="dot" style="width:8px;height:8px;border-radius:50%;background:#475569;flex-shrink:0"></span> 控制台</div>
+          <div class="sb-item" style="display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;font-size:.8rem;white-space:nowrap"><span class="dot" style="width:8px;height:8px;border-radius:50%;background:#475569;flex-shrink:0"></span> 数据</div>
+        </aside>
+        <div class="demo-main">
+          <div class="content-blocks">
+            <div class="cblock">📐 整页 Grid 布局，主内容区自动联动</div>
+            <div class="cblock">🔄 grid-template-columns 过渡</div>
+            <div class="cblock">📏 无需手动计算 margin-left</div>
+          </div>
+        </div>
+      </div>
+      <div class="perf-note">
+        <span class="dot perf-dot-yellow"></span> 也触发重排，但主内容自动同步，代码最简洁
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 代码 ===== -->
+<div class="scheme-row" style="grid-template-columns:1fr;max-width:1100px;">
+  <div class="scheme-card">
+    <div class="card-top"><span>📝 三种方案核心代码对比</span></div>
+    <div class="card-body">
+      <pre><span class="c">/* ===== 方案一：width 过渡 ===== */</span>
+<span class="t">.sidebar</span> { <span class="k">width</span>: 220px; <span class="k">transition</span>: width .35s ease; <span class="k">overflow</span>: hidden; }
+<span class="t">.sidebar.collapsed</span> { <span class="k">width</span>: 64px; }
+<span class="c">/* ⚠️ 触发Layout重排，内容会被挤压换行 */</span>
+
+<span class="c">/* ===== 方案二：translateX（推荐✅）===== */</span>
+<span class="t">.sidebar</span> {
+  <span class="k">width</span>: 220px; <span class="k">transition</span>: transform .35s ease;
+  <span class="k">will-change</span>: transform;   <span class="c">/* 提前通知浏览器优化 */</span>
+}
+<span class="t">.sidebar.collapsed</span> { <span class="k">transform</span>: translateX(-220px); }
+<span class="c">/* ✅ 仅触发Composite，GPU加速，60fps */</span>
+<span class="c">/* 收起时文字淡化 */</span>
+<span class="t">.sidebar.collapsed .sidebar-content</span> { <span class="k">opacity</span>: 0; }
+
+<span class="c">/* ===== 方案三：Grid联动 ===== */</span>
+<span class="t">.container</span> {
+  <span class="k">display</span>: grid;
+  <span class="k">grid-template-columns</span>: 220px 1fr;
+  <span class="k">transition</span>: grid-template-columns .35s ease;
+}
+<span class="t">.container.collapsed</span> { <span class="k">grid-template-columns</span>: 64px 1fr; }
+<span class="c">/* 主内容区自动联动，无需手动margin-left */</span>
+
+<span class="c">/* ===== 通用 JS ===== */</span>
+<span class="t">toggleBtn</span>.<span class="f">addEventListener</span>(<span class="s">'click'</span>, () => {
+  <span class="t">sidebar</span>.<span class="t">classList</span>.<span class="f">toggle</span>(<span class="s">'collapsed'</span>);
+});</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 移动端抽屉演示 ===== -->
+<h2 style="text-align:center;padding:2rem 0 .5rem;font-size:1.3rem">📱 移动端：抽屉式 + 遮罩层 + Escape关闭</h2>
+<div class="mobile-demo">
+  <div class="phone-row">
+    <div class="phone-mock">
+      <div class="ph-top"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="ph-nav">
+        <button class="menu-btn" id="phMenuBtn" aria-label="打开菜单" aria-expanded="false">☰</button>
+        <span>移动端演示</span>
+      </div>
+      <div class="ph-body" id="phBody">
+        <div class="ph-sidebar" id="phSidebar">
+          <div style="padding:1rem;border-bottom:1px solid rgba(255,255,255,.06);font-weight:900">📱 导航菜单</div>
+          <div class="ps-item">🏠 首页</div><div class="ps-item">📊 控制台</div>
+          <div class="ps-item">👥 用户</div><div class="ps-item">⚙️ 设置</div>
+          <div class="ps-item">❓ 帮助</div>
+        </div>
+        <div class="ph-mask" id="phMask"></div>
+        <div class="ph-content">
+          <div class="b">☰ 点击左上角按钮打开侧栏</div>
+          <div class="b">🖤 点击背景遮罩关闭</div>
+          <div class="b">⌨️ 按 Escape 键也可关闭</div>
+          <div class="b">✅ aria-expanded 同步更新</div>
+          <div class="b">👆 侧栏 touch-action:none 防误触</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 动态宽度演示 ===== -->
+<div class="scheme-row" style="grid-template-columns:1fr;max-width:900px;">
+  <div class="scheme-card">
+    <div class="card-top"><span>📏 进阶：动态测量宽度（内容自适应）</span></div>
+    <div class="card-body">
+      <div class="control-bar">
+        <button onclick="dynamicToggle()">↔️ 动态收起/展开</button>
+        <span class="status" id="dynStatus">展开中</span>
+      </div>
+      <div class="demo-box" style="overflow:hidden">
+        <aside class="demo-sidebar sb-translate" id="dynSidebar" style="width: auto; min-width: 200px;">
+          <div class="sb-content" id="dynContent">
+            <div class="sb-logo">📏 动态宽度侧边栏</div>
+            <div class="sb-item"><span class="dot"></span> 此文本长度决定宽度</div>
+            <div class="sb-item"><span class="dot"></span> 无需硬编码 220px</div>
+            <div class="sb-item"><span class="dot"></span> 自动适应内容</div>
+          </div>
+        </aside>
+        <div class="demo-main">
+          <div class="content-blocks">
+            <div class="cblock">💡 JS getBoundingClientRect() 读取真实宽度</div>
+            <div class="cblock">📏 展开：恢复测量的原始宽度</div>
+            <div class="cblock">📏 收起：transform到 0</div>
+            <div class="cblock">✅ 无需硬编码像素值</div>
+          </div>
+        </div>
+      </div>
+      <div class="perf-note">
+        <span class="dot perf-dot-green"></span> 适合侧边栏宽度由内容决定（多语言/动态菜单）的场景
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 三方案切换 =====
+function toggleScheme(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('collapsed');
+  const num = id === 'sbWidth' ? '1' : id === 'sbTranslate' ? '2' : '3';
+  const statusEl = document.getElementById('status' + num);
+  statusEl.textContent = el.classList.contains('collapsed') ? '收起了' : '展开中';
+}
+
+// ===== 移动端抽屉 =====
+const phSidebar = document.getElementById('phSidebar');
+const phMask = document.getElementById('phMask');
+const phMenuBtn = document.getElementById('phMenuBtn');
+
+function openDrawer() {
+  phSidebar.classList.add('open');
+  phMask.classList.add('show');
+  phMenuBtn.setAttribute('aria-expanded', 'true');
+}
+function closeDrawer() {
+  phSidebar.classList.remove('open');
+  phMask.classList.remove('show');
+  phMenuBtn.setAttribute('aria-expanded', 'false');
+}
+
+phMenuBtn.addEventListener('click', openDrawer);
+phMask.addEventListener('click', closeDrawer);
+
+// Escape关闭
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && phSidebar.classList.contains('open')) {
+    closeDrawer();
+    phMenuBtn.focus();
+  }
+});
+
+// ===== 动态宽度测量 =====
+const dynSidebar = document.getElementById('dynSidebar');
+let dynWidth = null;
+
+function dynamicToggle() {
+  if (!dynWidth) {
+    // 展开状态下测量真实宽度
+    dynWidth = dynSidebar.getBoundingClientRect().width;
+  }
+  if (dynSidebar.classList.contains('collapsed')) {
+    // 展开：恢复动态测量的宽度
+    dynSidebar.style.transform = 'translateX(0)';
+    dynSidebar.classList.remove('collapsed');
+    document.getElementById('dynStatus').textContent = '展开中 (' + Math.round(dynWidth) + 'px)';
+  } else {
+    // 收起
+    dynSidebar.style.transform = 'translateX(-' + dynWidth + 'px)';
+    dynSidebar.classList.add('collapsed');
+    document.getElementById('dynStatus').textContent = '收起了';
+  }
+}
+</script>
+</body>
+</html>

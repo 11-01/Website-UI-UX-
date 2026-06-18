@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>面包屑导航实战演示 | Breadcrumb Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: #0f172a; color: #e2e8f0;
+  }
+
+  header {
+    text-align: center; padding: 2rem 1rem 1rem;
+  }
+  header h1 { font-size: 1.7rem; }
+  header h1 span { background: linear-gradient(135deg, #f59e0b, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  header p { color: #64748b; font-size: .88rem; margin-top: .3rem; }
+
+  .page { max-width: 960px; margin: 0 auto; padding: 1rem; }
+
+  /* ===== 卡片 ===== */
+  .card {
+    background: #1e293b; border-radius: 14px; border: 1px solid #334155;
+    margin-bottom: 1.5rem; overflow: hidden;
+  }
+  .card .card-top {
+    background: #0f172a; padding: .65rem 1.2rem; border-bottom: 1px solid #334155;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: .82rem; font-weight: 700;
+  }
+  .badge {
+    font-size: .65rem; padding: .2rem .6rem; border-radius: 10px; font-weight: 600;
+  }
+  .badge-green { background: rgba(34,197,94,.12); color: #4ade80; }
+  .badge-blue { background: rgba(59,130,246,.12); color: #93c5fd; }
+  .badge-purple { background: rgba(168,85,247,.12); color: #a78bfa; }
+  .badge-red { background: rgba(239,68,68,.12); color: #fca5a5; }
+
+  .card-body { background: #f8fafc; color: #1e293b; padding: 1.2rem; }
+
+  /* ===== 面包屑通用 ===== */
+  .breadcrumb-nav {
+    font-size: .85rem;
+  }
+  .breadcrumb-nav ol {
+    list-style: none; display: flex; align-items: center; flex-wrap: wrap;
+    gap: 0; padding: .6rem 0;
+  }
+  .breadcrumb-nav ol li {
+    display: flex; align-items: center;
+  }
+  .breadcrumb-nav ol a {
+    color: #3b82f6; text-decoration: none; padding: .3rem .4rem;
+    border-radius: 4px; transition: all .15s;
+  }
+  .breadcrumb-nav ol a:hover { background: #eff6ff; text-decoration: underline; }
+  /* 分隔符 —— CSS伪元素，不写入HTML */
+  .breadcrumb-nav ol li + li::before {
+    content: "›"; color: #94a3b8; padding: 0 .4rem;
+    font-size: 1rem;
+    /* 屏幕阅读器不会朗读 content */
+  }
+  /* 当前页 —— 不可点击 */
+  .breadcrumb-nav ol [aria-current="page"] {
+    color: #475569; font-weight: 600; cursor: default;
+  }
+
+  /* ===== 三种类型对比 ===== */
+  .type-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  .type-box {
+    background: white; border-radius: 10px; padding: 1rem;
+    box-shadow: 0 1px 6px rgba(0,0,0,.03);
+  }
+  .type-box h4 { font-size: .9rem; margin-bottom: .4rem; display: flex; align-items: center; gap: .4rem; }
+  .type-box .bc-inner { font-size: .78rem; margin: .5rem 0; padding: .5rem 0; }
+
+  /* 属性型面包屑标签样式 */
+  .attr-tag {
+    display: inline-flex; align-items: center; gap: .2rem;
+    background: #eff6ff; color: #3b82f6; padding: .2rem .5rem;
+    border-radius: 12px; font-size: .72rem; text-decoration: none;
+  }
+  .attr-tag .close { cursor: pointer; margin-left: 2px; opacity: .5; }
+  .attr-tag .close:hover { opacity: 1; }
+
+  /* 步骤型面包屑 */
+  .stepper-bc ol {
+    list-style: none; display: flex; gap: 0;
+    counter-reset: step;
+  }
+  .stepper-bc ol li {
+    display: flex; align-items: center; counter-increment: step;
+    font-size: .78rem;
+  }
+  .stepper-bc ol li::before {
+    content: counter(step);
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #e2e8f0; color: #64748b; font-weight: 700;
+    font-size: .7rem; display: flex; align-items: center;
+    justify-content: center; margin-right: .4rem;
+  }
+  .stepper-bc ol li.done::before {
+    background: #22c55e; color: white; content: "✓";
+  }
+  .stepper-bc ol li.current::before {
+    background: #3b82f6; color: white;
+  }
+  .stepper-bc ol li + li::after {
+    content: "—"; color: #d1d5db; padding: 0 .5rem; font-size: .7rem;
+  }
+
+  /* 折叠面包屑（移动端） */
+  .fold-bc ol li.mid-fold { position: relative; }
+  .fold-bc ol li.mid-fold > span {
+    cursor: pointer; color: #3b82f6; padding: .3rem .4rem;
+    border-radius: 4px;
+  }
+  .fold-bc ol li.mid-fold > span:hover { background: #eff6ff; }
+  .fold-bc ol li.mid-fold .drop {
+    position: absolute; top: 100%; left: 0; min-width: 140px;
+    background: white; border-radius: 8px; box-shadow: 0 8px 30px rgba(0,0,0,.12);
+    padding: .4rem; z-index: 10;
+    opacity: 0; visibility: hidden; transform: translateY(-4px);
+    transition: all .2s;
+  }
+  .fold-bc ol li.mid-fold:hover .drop {
+    opacity: 1; visibility: visible; transform: translateY(0);
+  }
+  .fold-bc ol li.mid-fold .drop a {
+    display: block; padding: .4rem .6rem; font-size: .78rem;
+    color: #475569; text-decoration: none; border-radius: 4px;
+  }
+  .fold-bc ol li.mid-fold .drop a:hover { background: #f1f5f9; }
+
+  /* ===== 误区对比 ===== */
+  .mistake-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .mistake-row > div { flex: 1; min-width: 260px; }
+  .mistake-row pre {
+    background: #0a0f1a; border-radius: 8px; padding: .8rem;
+    font-family: Consolas,monospace; font-size: .72rem;
+    line-height: 1.7; color: #cbd5e1; overflow-x: auto;
+    margin: 0;
+  }
+  .mistake-row pre .k { color: #93c5fd; }
+  .mistake-row pre .s { color: #86efac; }
+  .mistake-row pre .c { color: #64748b; }
+  .mistake-row pre .t { color: #c084fc; }
+  .mistake-row pre .e { color: #fca5a5; }
+
+  /* ===== 真实网站模拟 ===== */
+  .site-mock {
+    background: white; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,.06);
+  }
+  .site-mock .top-nav {
+    background: #1e293b; color: white; padding: .7rem 1.5rem;
+    display: flex; gap: 1.5rem; font-size: .85rem;
+  }
+  .site-mock .top-nav a { color: #cbd5e1; text-decoration: none; }
+  .site-mock .content-area { padding: 1.2rem 1.5rem; }
+
+  /* ===== 结构化数据展示 ===== */
+  pre {
+    background: #0a0f1a; border-radius: 10px; padding: 1rem;
+    font-family: Consolas,monospace; font-size: .72rem;
+    line-height: 1.7; color: #cbd5e1; overflow-x: auto;
+    border: 1px solid #1e293b;
+  }
+  pre .k { color: #93c5fd; }
+  pre .s { color: #86efac; }
+  pre .c { color: #64748b; }
+  pre .t { color: #c084fc; }
+  pre .f { color: #fde68a; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍞 面包屑导航 <span>实战演示</span></h1>
+  <p>三种类型 · 标准实现 · 误区对比 · 结构化数据 · 折叠/步骤变体</p>
+</header>
+
+<div class="page">
+
+  <!-- ===== 三种类型 ===== -->
+  <div class="card">
+    <div class="card-top">
+      <span>📂 面包屑导航的三种类型</span>
+    </div>
+    <div class="card-body">
+      <div class="type-row">
+        <!-- 位置型 -->
+        <div class="type-box">
+          <h4>📍 位置型（层级式）<span class="badge badge-green" style="font-size:.6rem">最常用</span></h4>
+          <p style="font-size:.75rem;color:#64748b">反映网站物理层级结构</p>
+          <nav class="breadcrumb-nav" aria-label="位置型面包屑">
+            <ol>
+              <li><a href="#">首页</a></li>
+              <li><a href="#">电子产品</a></li>
+              <li><a href="#">智能手机</a></li>
+              <li><span aria-current="page">iPhone 16 Pro</span></li>
+            </ol>
+          </nav>
+        </div>
+        <!-- 属性型 -->
+        <div class="type-box">
+          <h4>🏷️ 属性型（筛选式）<span class="badge badge-blue" style="font-size:.6rem">电商专用</span></h4>
+          <p style="font-size:.75rem;color:#64748b">展示筛选条件，可逐个取消</p>
+          <nav class="breadcrumb-nav" aria-label="属性型面包屑">
+            <ol>
+              <li><a href="#">首页</a></li>
+              <li><a href="#">手机</a></li>
+              <li><span class="attr-tag">5G <span class="close">×</span></span></li>
+              <li><span class="attr-tag">256GB <span class="close">×</span></span></li>
+              <li><span aria-current="page" style="margin-left:.3rem">结果</span></li>
+            </ol>
+          </nav>
+        </div>
+        <!-- 路径型 -->
+        <div class="type-box">
+          <h4>🗺️ 路径型（历史式）<span class="badge badge-purple" style="font-size:.6rem">向导流程</span></h4>
+          <p style="font-size:.75rem;color:#64748b">用户实际浏览轨迹</p>
+          <nav class="breadcrumb-nav" aria-label="路径型面包屑">
+            <ol>
+              <li><a href="#">首页</a></li>
+              <li><a href="#">搜索结果</a></li>
+              <li><a href="#">商品详情</a></li>
+              <li><span aria-current="page">购物车</span></li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 标准实现 vs 误区 ===== -->
+  <div class="card">
+    <div class="card-top">
+      <span>✅ 正确实现 vs ❌ 常见误区</span>
+    </div>
+    <div class="card-body">
+      <div class="mistake-row">
+        <div>
+          <p style="font-size:.75rem;color:#22c55e;font-weight:600;margin-bottom:.4rem">✅ 正确写法</p>
+          <pre><span class="t">&lt;nav</span> <span class="k">aria-label</span>=<span class="s">"Breadcrumb"</span><span class="t">&gt;</span>
+  <span class="t">&lt;ol&gt;</span>
+    <span class="t">&lt;li&gt;&lt;a</span> <span class="k">href</span>=<span class="s">"/"</span><span class="t">&gt;</span>首页<span class="t">&lt;/a&gt;&lt;/li&gt;</span>
+    <span class="t">&lt;li&gt;&lt;a</span> <span class="k">href</span>=<span class="s">"/blog"</span><span class="t">&gt;</span>博客<span class="t">&lt;/a&gt;&lt;/li&gt;</span>
+    <span class="c">&lt;!-- 当前页：span + aria-current --&gt;</span>
+    <span class="t">&lt;li&gt;&lt;span</span> <span class="k">aria-current</span>=<span class="s">"page"</span><span class="t">&gt;</span>文章标题<span class="t">&lt;/span&gt;&lt;/li&gt;</span>
+  <span class="t">&lt;/ol&gt;</span>
+<span class="t">&lt;/nav&gt;</span>
+<span class="c">/* 分隔符用CSS ::after */</span>
+<span class="t">li + li::before</span> { <span class="k">content</span>: <span class="s">"›"</span>; }</pre>
+        </div>
+        <div>
+          <p style="font-size:.75rem;color:#ef4444;font-weight:600;margin-bottom:.4rem">❌ 错误写法</p>
+          <pre><span class="c">&lt;!-- 错误1：div堆砌，无语义 --&gt;</span>
+<span class="e">&lt;div class="breadcrumb"&gt;</span>
+  <span class="e">&lt;a href="/"&gt;首页&lt;/a&gt; &gt;</span>
+  <span class="e">&lt;a href="/blog"&gt;博客&lt;/a&gt; &gt;</span>
+  <span class="e">&lt;a href="/blog/post"&gt;文章&lt;/a&gt;</span>   <span class="c">← 当前页竟可点击</span>
+<span class="e">&lt;/div&gt;</span>
+<span class="c">&lt;!-- 错误2：分隔符 &gt; 直接写在HTML中 --&gt;</span>
+<span class="c">&lt;!-- 屏幕阅读器会朗读"大于号" --&gt;</span>
+<span class="c">&lt;!-- 错误3：无 aria-current，无结构化数据 --&gt;</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 真实网站模拟 ===== -->
+  <div class="card">
+    <div class="card-top"><span>🖥️ 真实页面中的面包屑效果</span></div>
+    <div class="card-body" style="padding:0">
+      <div class="site-mock">
+        <div class="top-nav">
+          <a>🏪 电商平台</a><a>全部分类</a><a>订单</a><a>购物车</a>
+        </div>
+        <div class="content-area">
+          <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+            <ol>
+              <li><a href="#">首页</a></li>
+              <li><a href="#">电子产品</a></li>
+              <li><a href="#">智能手机</a></li>
+              <li><a href="#">Apple</a></li>
+              <li><span aria-current="page">iPhone 16 Pro Max 256GB 深空黑</span></li>
+            </ol>
+          </nav>
+          <p style="font-size:.8rem;color:#64748b">
+            👆 面包屑在内容上方，极简一行，用户一眼看清位置和返回路径
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 步骤型 + 折叠型 ===== -->
+  <div class="card">
+    <div class="card-top"><span>🔀 视觉变体：步骤型 & 折叠型</span></div>
+    <div class="card-body">
+      <div class="type-row">
+        <div class="type-box">
+          <h4>1️⃣ 步骤型面包屑 <span class="badge badge-blue" style="font-size:.6rem">向导流程</span></h4>
+          <p style="font-size:.73rem;color:#64748b;margin-bottom:.5rem">带序号，强调进度感</p>
+          <nav class="stepper-bc" aria-label="结账步骤">
+            <ol>
+              <li class="done"><span>基本信息</span></li>
+              <li class="current"><span>身份验证</span></li>
+              <li><span>确认订单</span></li>
+              <li><span>完成支付</span></li>
+            </ol>
+          </nav>
+        </div>
+        <div class="type-box">
+          <h4>📁 折叠型面包屑 <span class="badge badge-purple" style="font-size:.6rem">移动端/深层级</span></h4>
+          <p style="font-size:.73rem;color:#64748b;margin-bottom:.5rem">中间层级折叠为下拉菜单</p>
+          <nav class="breadcrumb-nav fold-bc" aria-label="折叠面包屑">
+            <ol>
+              <li><a href="#">🏠</a></li>
+              <li class="mid-fold">
+                <span>…</span>
+                <div class="drop">
+                  <a href="#">电子产品</a><a href="#">智能手机</a><a href="#">Apple</a>
+                </div>
+              </li>
+              <li><span aria-current="page">iPhone 16 Pro</span></li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 结构化数据 ===== -->
+  <div class="card">
+    <div class="card-top"><span>🔍 SEO：Schema.org 结构化数据 (JSON-LD)</span></div>
+    <div class="card-body">
+      <p style="font-size:.8rem;color:#64748b;margin-bottom:.8rem">
+        将以下JSON-LD放在页面 <code style="background:#f1f5f9;padding:.1rem .3rem;border-radius:3px">&lt;head&gt;</code> 中，搜索引擎会在搜索结果中展示面包屑路径，显著提升点击率
+      </p>
+      <pre>{
+  <span class="k">"@context"</span>: <span class="s">"https://schema.org"</span>,
+  <span class="k">"@type"</span>: <span class="s">"BreadcrumbList"</span>,
+  <span class="k">"itemListElement"</span>: [
+    {
+      <span class="k">"@type"</span>: <span class="s">"ListItem"</span>,
+      <span class="k">"position"</span>: 1,
+      <span class="k">"name"</span>: <span class="s">"首页"</span>,
+      <span class="k">"item"</span>: <span class="s">"https://example.com/"</span>
+    },
+    {
+      <span class="k">"@type"</span>: <span class="s">"ListItem"</span>,
+      <span class="k">"position"</span>: 2,
+      <span class="k">"name"</span>: <span class="s">"智能手机"</span>,
+      <span class="k">"item"</span>: <span class="s">"https://example.com/phones/"</span>
+    },
+    {
+      <span class="k">"@type"</span>: <span class="s">"ListItem"</span>,
+      <span class="k">"position"</span>: 3,
+      <span class="k">"name"</span>: <span class="s">"iPhone 16 Pro"</span>
+    }
+  ]
+}</pre>
+      <div style="margin-top:.8rem;background:#eff6ff;border-radius:8px;padding:.6rem .8rem;font-size:.75rem;color:#3b82f6">
+        🔍 搜索结果会显示：<strong>example.com › 智能手机 › iPhone 16 Pro</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 面包屑 vs 目录树 ===== -->
+  <div class="card">
+    <div class="card-top"><span>🌲 面包屑 vs 目录树 — 不是一回事</span></div>
+    <div class="card-body">
+      <table style="width:100%;font-size:.8rem;border-collapse:collapse">
+        <tr style="border-bottom:1px solid #e2e8f0">
+          <td style="padding:.5rem;font-weight:600;color:#64748b">对比维度</td>
+          <td style="padding:.5rem;font-weight:600">🍞 面包屑</td>
+          <td style="padding:.5rem;font-weight:600">🌲 目录树</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f1f5f9">
+          <td style="padding:.5rem;color:#64748b">形态</td>
+          <td style="padding:.5rem">水平线性排列</td>
+          <td style="padding:.5rem">垂直树状结构</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f1f5f9">
+          <td style="padding:.5rem;color:#64748b">展示</td>
+          <td style="padding:.5rem">仅一条路径（根→当前）</td>
+          <td style="padding:.5rem">全部节点，支持多分支</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f1f5f9">
+          <td style="padding:.5rem;color:#64748b">功能</td>
+          <td style="padding:.5rem">定位当前位置 + 快速返回</td>
+          <td style="padding:.5rem">全局浏览 + 切换分支</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f1f5f9">
+          <td style="padding:.5rem;color:#64748b">交互</td>
+          <td style="padding:.5rem">点击链接跳转</td>
+          <td style="padding:.5rem">展开/折叠节点</td>
+        </tr>
+        <tr>
+          <td style="padding:.5rem;color:#64748b">空间</td>
+          <td style="padding:.5rem">极简一行，几乎不占空间</td>
+          <td style="padding:.5rem">占据侧栏等较大垂直空间</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- 总结 -->
+  <div class="card">
+    <div class="card-top"><span>📋 面包屑设计决策速查</span></div>
+    <div class="card-body" style="background:#1e293b;color:#e2e8f0">
+      <table style="width:100%;font-size:.8rem;border-collapse:collapse">
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem;font-weight:600">网站层级 ≥ 3？</td><td style="padding:.5rem">→ 需要面包屑</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem;font-weight:600">电商/内容站？</td><td style="padding:.5rem">→ 位置型 + 属性型组合</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem;font-weight:600">向导/多步表单？</td><td style="padding:.5rem">→ 步骤型面包屑</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem;font-weight:600">有SEO需求？</td><td style="padding:.5rem">→ 必须加JSON-LD结构化数据</td>
+        </tr>
+        <tr>
+          <td style="padding:.5rem;font-weight:600">最后一项？</td><td style="padding:.5rem">→ &lt;span aria-current="page"&gt;，不可点击</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

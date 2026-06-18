@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>纯CSS悬停下拉菜单 | Hover Dropdown Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: #0f172a; color: #e2e8f0;
+  }
+
+  header {
+    text-align: center; padding: 2.5rem 1rem 1rem;
+  }
+  header h1 { font-size: 1.8rem; margin-bottom: .3rem; }
+  header h1 span { background: linear-gradient(135deg, #f59e0b, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  header p { color: #64748b; font-size: .9rem; }
+
+  /* ===== 演示网格 ===== */
+  .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+    gap: 2rem; padding: 2rem; max-width: 1400px; margin: 0 auto;
+  }
+  @media (max-width: 540px) {
+    .demo-grid { grid-template-columns: 1fr; padding: 1rem; }
+  }
+
+  .demo-card {
+    background: #1e293b; border-radius: 14px; overflow: hidden;
+    border: 1px solid #334155;
+  }
+  .demo-card .card-label {
+    background: #0f172a; padding: .6rem 1.2rem; font-size: .8rem;
+    color: #94a3b8; border-bottom: 1px solid #334155;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .demo-card .card-label .tag {
+    font-size: .7rem; padding: .2rem .6rem; border-radius: 12px;
+    background: rgba(245,158,11,.12); color: #f59e0b;
+  }
+
+  .demo-card .demo-body {
+    background: #f8fafc; color: #1e293b; padding: 1.5rem;
+    min-height: 220px; position: relative;
+  }
+
+  /* ============================================
+     Demo 1: 基础版 — display:none/block
+     ============================================ */
+  .nav-basic {
+    display: flex; list-style: none; background: #1e293b;
+    border-radius: 10px; padding: 0;
+  }
+  .nav-basic .menu-item {
+    position: relative; padding: 0;
+  }
+  .nav-basic .menu-item > a {
+    display: block; padding: 14px 22px; color: #cbd5e1;
+    text-decoration: none; font-size: .9rem; border-radius: 10px;
+    transition: all .2s; white-space: nowrap;
+  }
+  .nav-basic .menu-item > a:hover { color: white; background: rgba(255,255,255,.08); }
+
+  /* 子菜单 — 基础方案 */
+  .nav-basic .submenu {
+    position: absolute; top: 100%; left: 0; min-width: 160px;
+    background: white; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,.15);
+    list-style: none; padding: .5rem; z-index: 10;
+    display: none; /* ❌ 无法过渡动画 */
+  }
+  .nav-basic .menu-item:hover .submenu {
+    display: block; /* 瞬间出现 */
+  }
+  .nav-basic .submenu a {
+    display: block; padding: .6rem 1rem; text-decoration: none;
+    color: #475569; font-size: .85rem; border-radius: 6px;
+  }
+  .nav-basic .submenu a:hover { background: #f1f5f9; }
+
+  /* ============================================
+     Demo 2: 进阶版 — opacity+visibility+transform 平滑过渡
+     ============================================ */
+  .nav-smooth {
+    display: flex; list-style: none; background: #1e293b;
+    border-radius: 10px; padding: 0;
+  }
+  .nav-smooth .menu-item {
+    position: relative; padding: 0;
+  }
+  .nav-smooth .menu-item > a {
+    display: block; padding: 14px 22px; color: #cbd5e1;
+    text-decoration: none; font-size: .9rem; border-radius: 10px;
+    transition: all .2s; white-space: nowrap;
+    display: flex; align-items: center; gap: .3rem;
+  }
+  .nav-smooth .menu-item > a:hover { color: white; background: rgba(255,255,255,.08); }
+  .nav-smooth .menu-item > a .arrow {
+    font-size: .6rem; transition: transform .3s ease;
+  }
+  .nav-smooth .menu-item:hover > a .arrow {
+    transform: rotate(180deg);
+  }
+
+  /* 子菜单 — 进阶方案：opacity + visibility + transform */
+  .nav-smooth .submenu {
+    position: absolute; top: calc(100% + 4px); left: 0; min-width: 170px;
+    background: white; border-radius: 10px; box-shadow: 0 12px 40px rgba(0,0,0,.12);
+    list-style: none; padding: .5rem; z-index: 10;
+
+    /* ✅ 三件套 — 支持过渡动画 */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity .25s ease, visibility .25s ease, transform .25s cubic-bezier(.4,0,.2,1);
+  }
+  .nav-smooth .menu-item:hover .submenu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  .nav-smooth .submenu a {
+    display: block; padding: .6rem 1rem; text-decoration: none;
+    color: #475569; font-size: .85rem; border-radius: 6px;
+    transition: all .15s;
+  }
+  .nav-smooth .submenu a:hover { background: #eff6ff; color: #3b82f6; }
+
+  /* ============================================
+     Demo 3: Mega Menu 大型面板
+     ============================================ */
+  .nav-mega {
+    display: flex; list-style: none; background: #1e293b;
+    border-radius: 10px; padding: 0;
+  }
+  .nav-mega .menu-item {
+    position: static; /* 注意：static让mega-menu相对nav定位 */
+  }
+  .nav-mega .menu-item > a {
+    display: block; padding: 14px 22px; color: #cbd5e1;
+    text-decoration: none; font-size: .9rem; border-radius: 10px;
+    transition: all .2s;
+  }
+  .nav-mega .menu-item > a:hover { color: white; background: rgba(255,255,255,.08); }
+
+  /* Mega面板 — 全宽下拉 */
+  .nav-mega .mega-panel {
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: white; border-radius: 0 0 12px 12px;
+    box-shadow: 0 16px 48px rgba(0,0,0,.15);
+    padding: 1.5rem 2rem; z-index: 10;
+    display: none; /* 这里用display演示另一个问题：Mega Menu通常需要JS */
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); gap: 2rem;
+    /* 过渡 */
+    opacity: 0; visibility: hidden;
+    transform: translateY(-6px);
+    transition: all .3s ease;
+  }
+  .nav-mega .menu-item:hover .mega-panel {
+    opacity: 1; visibility: visible; transform: translateY(0);
+  }
+  .nav-mega .mega-col h4 {
+    font-size: .8rem; text-transform: uppercase; color: #94a3b8;
+    letter-spacing: .5px; margin-bottom: .8rem; padding-bottom: .5rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .nav-mega .mega-col a {
+    display: block; padding: .35rem 0; text-decoration: none;
+    color: #475569; font-size: .85rem; transition: color .15s;
+  }
+  .nav-mega .mega-col a:hover { color: #3b82f6; }
+
+  @media (max-width: 640px) {
+    .nav-mega .mega-panel {
+      grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem;
+    }
+  }
+
+  /* ============================================
+     Demo 4: 多级嵌套
+     ============================================ */
+  .nav-nested {
+    display: flex; list-style: none; background: #1e293b;
+    border-radius: 10px; padding: 0;
+  }
+  .nav-nested .menu-item {
+    position: relative; padding: 0;
+  }
+  .nav-nested .menu-item > a {
+    display: block; padding: 14px 22px; color: #cbd5e1;
+    text-decoration: none; font-size: .9rem; border-radius: 10px;
+    transition: all .2s;
+  }
+  .nav-nested .menu-item > a:hover { color: white; background: rgba(255,255,255,.08); }
+
+  /* 一级子菜单 */
+  .nav-nested .submenu {
+    position: absolute; top: calc(100% + 4px); left: 0; min-width: 170px;
+    background: white; border-radius: 10px; box-shadow: 0 12px 40px rgba(0,0,0,.12);
+    list-style: none; padding: .5rem; z-index: 10;
+    opacity: 0; visibility: hidden;
+    transform: translateY(-8px);
+    transition: all .25s ease;
+  }
+  .nav-nested .menu-item:hover > .submenu {
+    opacity: 1; visibility: visible; transform: translateY(0);
+  }
+  .nav-nested .submenu a {
+    display: block; padding: .6rem 1rem; text-decoration: none;
+    color: #475569; font-size: .85rem; border-radius: 6px;
+    transition: all .15s;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .nav-nested .submenu a:hover { background: #eff6ff; color: #3b82f6; }
+
+  /* 二级子菜单 — 向右飞出 */
+  .nav-nested .submenu .menu-item { position: relative; }
+  .nav-nested .submenu .submenu {
+    top: -.5rem; left: 100%; /* 向右飞出 */
+    transform: translateX(-8px);
+  }
+  .nav-nested .submenu .menu-item:hover > .submenu {
+    transform: translateX(0);
+  }
+
+  /* ===== 代码展示 ===== */
+  .code-section {
+    max-width: 1400px; margin: 0 auto; padding: 2rem;
+  }
+  .code-section h2 { margin-bottom: 1rem; font-size: 1.3rem; }
+
+  pre {
+    background: #0a0f1a; border-radius: 10px; padding: 1.2rem;
+    font-family: 'Consolas','Monaco',monospace; font-size: .82rem;
+    line-height: 1.7; color: #cbd5e1; overflow-x: auto;
+    border: 1px solid #1e293b; margin-bottom: 1rem;
+  }
+  pre .k { color: #93c5fd; }
+  pre .s { color: #86efac; }
+  pre .c { color: #64748b; font-style: italic; }
+  pre .t { color: #c084fc; }
+
+  /* ===== 移动端对比 ===== */
+  .mobile-demo {
+    max-width: 1400px; margin: 0 auto; padding: 2rem;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+  .mobile-card {
+    background: #1e293b; border-radius: 14px; overflow: hidden;
+    border: 1px solid #334155;
+  }
+  .mobile-card .card-label {
+    background: #0f172a; padding: .6rem 1.2rem; font-size: .8rem;
+    color: #94a3b8; border-bottom: 1px solid #334155;
+  }
+  .mobile-card .demo-body { padding: 1.5rem; background: #f8fafc; color: #1e293b; }
+
+  /* 移动端click方案 */
+  .nav-mobile {
+    background: #1e293b; border-radius: 10px; padding: 0;
+  }
+  .nav-mobile .menu-item {
+    border-bottom: 1px solid rgba(255,255,255,.05);
+  }
+  .nav-mobile .menu-item:last-child { border: none; }
+  .nav-mobile .menu-item > a {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .9rem 1.2rem; color: #cbd5e1; text-decoration: none;
+    font-size: .9rem;
+  }
+  .nav-mobile .submenu {
+    max-height: 0; overflow: hidden;
+    background: rgba(255,255,255,.03);
+    transition: max-height .35s ease;
+    list-style: none;
+  }
+  .nav-mobile .submenu.open { max-height: 300px; }
+  .nav-mobile .submenu a {
+    display: block; padding: .7rem 2rem; color: #94a3b8;
+    text-decoration: none; font-size: .85rem;
+  }
+  .nav-mobile .menu-item > a .indicator {
+    transition: transform .3s; font-size: .7rem;
+  }
+  .nav-mobile .menu-item > a .indicator.open {
+    transform: rotate(180deg);
+  }
+
+  /* tab切换 */
+  .compare-tabs {
+    display: flex; gap: .3rem; margin-bottom: 1rem;
+  }
+  .compare-tabs button {
+    padding: .4rem 1rem; border: 1px solid #334155; background: #1e293b;
+    color: #94a3b8; border-radius: 20px; cursor: pointer; font-size: .8rem;
+    transition: all .2s;
+  }
+  .compare-tabs button:hover { border-color: #3b82f6; }
+  .compare-tabs button.on { background: #3b82f6; border-color: #3b82f6; color: white; }
+
+  .compare-panel { display: none; }
+  .compare-panel.on { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎯 纯CSS 悬停下拉菜单 <span>实战演示</span></h1>
+  <p>语义化HTML · hover触发 · opacity+visibility+transform平滑过渡 · 移动端click降级</p>
+</header>
+
+<!-- ===== 核心Demo网格 ===== -->
+<div class="demo-grid">
+  <!-- Demo 1: 基础版 -->
+  <div class="demo-card">
+    <div class="card-label">
+      <span>📦 Demo 1：display:none 方案</span>
+      <span class="tag">❌ 无动画</span>
+    </div>
+    <div class="demo-body">
+      <p style="font-size:.8rem;color:#94a3b8;margin-bottom:.8rem;">
+        悬停"产品中心"看效果 — 子菜单瞬间出现，生硬
+      </p>
+      <nav>
+        <ul class="nav-basic">
+          <li class="menu-item"><a>首页</a></li>
+          <li class="menu-item">
+            <a>产品中心 ▾</a>
+            <ul class="submenu">
+              <li><a>软件产品</a></li>
+              <li><a>硬件设备</a></li>
+              <li><a>解决方案</a></li>
+              <li><a>技术服务</a></li>
+            </ul>
+          </li>
+          <li class="menu-item">
+            <a>新闻资讯 ▾</a>
+            <ul class="submenu">
+              <li><a>公司动态</a></li>
+              <li><a>行业趋势</a></li>
+              <li><a>媒体报道</a></li>
+            </ul>
+          </li>
+          <li class="menu-item"><a>联系我们</a></li>
+        </ul>
+      </nav>
+      <p style="font-size:.7rem;color:#ef4444;margin-top:2.5rem;">
+        ⚠️ display:none→block 无法添加CSS过渡动画
+      </p>
+    </div>
+  </div>
+
+  <!-- Demo 2: 进阶版 -->
+  <div class="demo-card">
+    <div class="card-label">
+      <span>✨ Demo 2：opacity+visibility+transform</span>
+      <span class="tag" style="background:rgba(34,197,94,.12);color:#22c55e;">✅ 推荐</span>
+    </div>
+    <div class="demo-body">
+      <p style="font-size:.8rem;color:#94a3b8;margin-bottom:.8rem;">
+        悬停"产品中心" — 菜单淡入+下滑，箭头旋转180°
+      </p>
+      <nav>
+        <ul class="nav-smooth">
+          <li class="menu-item"><a>首页</a></li>
+          <li class="menu-item">
+            <a>产品中心 <span class="arrow">▾</span></a>
+            <ul class="submenu">
+              <li><a>软件产品</a></li>
+              <li><a>硬件设备</a></li>
+              <li><a>解决方案</a></li>
+              <li><a>技术服务</a></li>
+            </ul>
+          </li>
+          <li class="menu-item">
+            <a>新闻资讯 <span class="arrow">▾</span></a>
+            <ul class="submenu">
+              <li><a>公司动态</a></li>
+              <li><a>行业趋势</a></li>
+              <li><a>媒体报道</a></li>
+            </ul>
+          </li>
+          <li class="menu-item"><a>联系我们</a></li>
+        </ul>
+      </nav>
+      <p style="font-size:.7rem;color:#22c55e;margin-top:2.5rem;">
+        ✅ 0.25s cubic-bezier 平滑过渡 → 体验丝滑
+      </p>
+    </div>
+  </div>
+
+  <!-- Demo 3: Mega Menu -->
+  <div class="demo-card">
+    <div class="card-label">
+      <span>🏗️ Demo 3：Mega Menu 大型面板</span>
+      <span class="tag" style="background:rgba(59,130,246,.12);color:#60a5fa;">全宽下拉</span>
+    </div>
+    <div class="demo-body">
+      <p style="font-size:.8rem;color:#94a3b8;margin-bottom:.8rem;">
+        悬停"产品" — 全宽4列面板，展示大量链接
+      </p>
+      <nav style="position:relative;">
+        <ul class="nav-mega">
+          <li class="menu-item"><a>首页</a></li>
+          <li class="menu-item">
+            <a>产品 ▾</a>
+            <div class="mega-panel">
+              <div class="mega-col">
+                <h4>🏗️ 平台</h4>
+                <a>云服务平台</a><a>数据分析</a><a>AI 引擎</a><a>物联网平台</a>
+              </div>
+              <div class="mega-col">
+                <h4>🛠️ 工具</h4>
+                <a>API 网关</a><a>消息队列</a><a>监控告警</a><a>CI/CD</a>
+              </div>
+              <div class="mega-col">
+                <h4>📚 资源</h4>
+                <a>技术文档</a><a>视频教程</a><a>最佳实践</a><a>社区论坛</a>
+              </div>
+              <div class="mega-col">
+                <h4>💼 服务</h4>
+                <a>企业咨询</a><a>定制开发</a><a>技术培训</a><a>7×24支持</a>
+              </div>
+            </div>
+          </li>
+          <li class="menu-item"><a>定价</a></li>
+          <li class="menu-item"><a>关于</a></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Demo 4: 多级嵌套 -->
+  <div class="demo-card">
+    <div class="card-label">
+      <span>🪺 Demo 4：多级嵌套菜单</span>
+      <span class="tag" style="background:rgba(168,85,247,.12);color:#a78bfa;">向右飞出</span>
+    </div>
+    <div class="demo-body">
+      <p style="font-size:.8rem;color:#94a3b8;margin-bottom:.8rem;">
+        悬停"产品"→ 一级菜单 → 悬停"软件产品 ▶" → 二级向右飞出
+      </p>
+      <nav>
+        <ul class="nav-nested">
+          <li class="menu-item"><a>首页</a></li>
+          <li class="menu-item">
+            <a>产品 ▾</a>
+            <ul class="submenu">
+              <li class="menu-item">
+                <a>软件产品 ▸</a>
+                <ul class="submenu">
+                  <li><a>Web 应用</a></li>
+                  <li><a>移动App</a></li>
+                  <li><a>桌面软件</a></li>
+                </ul>
+              </li>
+              <li class="menu-item">
+                <a>硬件设备 ▸</a>
+                <ul class="submenu">
+                  <li><a>服务器</a></li>
+                  <li><a>网络设备</a></li>
+                </ul>
+              </li>
+              <li><a>解决方案</a></li>
+            </ul>
+          </li>
+          <li class="menu-item"><a>关于</a></li>
+          <li class="menu-item"><a>联系</a></li>
+        </ul>
+      </nav>
+      <p style="font-size:.7rem;color:#a78bfa;margin-top:2.5rem;">
+        🪺 二级菜单 `left:100%` 向右飞出，逻辑清晰
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 移动端方案 ===== -->
+<h2 style="text-align:center;padding:2rem 0 0;font-size:1.3rem">📱 移动端适配：触屏无Hover → Click降级</h2>
+<div class="mobile-demo">
+  <div class="mobile-card">
+    <div class="card-label">👆 移动端方案：纯CSS hover（触屏失效）</div>
+    <div class="demo-body">
+      <p style="font-size:.78rem;color:#ef4444;margin-bottom:.8rem">
+        ⚠️ 在手机上尝试悬停"产品中心"— 子菜单无法触发，功能失效
+      </p>
+      <nav>
+        <ul class="nav-smooth">
+          <li class="menu-item"><a>首页</a></li>
+          <li class="menu-item">
+            <a>产品中心 ▾</a>
+            <ul class="submenu">
+              <li><a>软件产品</a></li>
+              <li><a>硬件设备</a></li>
+              <li><a>解决方案</a></li>
+            </ul>
+          </li>
+          <li class="menu-item"><a>关于我们</a></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <div class="mobile-card">
+    <div class="card-label">✅ 移动端方案：Click 展开（max-height过渡）</div>
+    <div class="demo-body">
+      <p style="font-size:.78rem;color:#22c55e;margin-bottom:.8rem">
+        点击"产品中心"— 子菜单平滑展开，箭头旋转
+      </p>
+      <nav>
+        <ul class="nav-mobile" id="mobileNav">
+          <li class="menu-item"><a>首页</a></li>
+          <li class="menu-item">
+            <a onclick="toggleMobileSub(this)">
+              产品中心 <span class="indicator">▾</span>
+            </a>
+            <ul class="submenu">
+              <li><a>软件产品</a></li>
+              <li><a>硬件设备</a></li>
+              <li><a>解决方案</a></li>
+            </ul>
+          </li>
+          <li class="menu-item">
+            <a onclick="toggleMobileSub(this)">
+              新闻资讯 <span class="indicator">▾</span>
+            </a>
+            <ul class="submenu">
+              <li><a>公司动态</a></li>
+              <li><a>行业趋势</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 核心CSS代码 ===== -->
+<div class="code-section">
+  <h2>📝 进阶方案核心CSS（推荐套用）</h2>
+
+  <div class="compare-tabs">
+    <button class="on" onclick="switchCompare('html')">HTML结构</button>
+    <button onclick="switchCompare('css')">CSS样式</button>
+    <button onclick="switchCompare('vs')">display vs 过渡 对比</button>
+  </div>
+
+  <pre id="panel-html" class="compare-panel on"><span class="c">&lt;!-- 语义化结构：nav > ul > li > a + ul.submenu --&gt;</span>
+<span class="t">&lt;nav&gt;</span>
+  <span class="t">&lt;ul</span> <span class="k">class</span>=<span class="s">"main-menu"</span><span class="t">&gt;</span>
+    <span class="t">&lt;li</span> <span class="k">class</span>=<span class="s">"menu-item"</span><span class="t">&gt;</span>
+      <span class="t">&lt;a</span> <span class="k">href</span>=<span class="s">"#"</span><span class="t">&gt;</span>首页<span class="t">&lt;/a&gt;</span>
+    <span class="t">&lt;/li&gt;</span>
+    <span class="t">&lt;li</span> <span class="k">class</span>=<span class="s">"menu-item"</span><span class="t">&gt;</span>
+      <span class="t">&lt;a</span> <span class="k">href</span>=<span class="s">"#"</span><span class="t">&gt;</span>产品中心 ▾<span class="t">&lt;/a&gt;</span>
+      <span class="c">&lt;!-- 子菜单嵌套在父li中 --&gt;</span>
+      <span class="t">&lt;ul</span> <span class="k">class</span>=<span class="s">"submenu"</span><span class="t">&gt;</span>
+        <span class="t">&lt;li&gt;&lt;a</span> <span class="k">href</span>=<span class="s">"#"</span><span class="t">&gt;</span>软件产品<span class="t">&lt;/a&gt;&lt;/li&gt;</span>
+        <span class="t">&lt;li&gt;&lt;a</span> <span class="k">href</span>=<span class="s">"#"</span><span class="t">&gt;</span>硬件设备<span class="t">&lt;/a&gt;&lt;/li&gt;</span>
+        <span class="t">&lt;li&gt;&lt;a</span> <span class="k">href</span>=<span class="s">"#"</span><span class="t">&gt;</span>解决方案<span class="t">&lt;/a&gt;&lt;/li&gt;</span>
+      <span class="t">&lt;/ul&gt;</span>
+    <span class="t">&lt;/li&gt;</span>
+    <span class="t">&lt;li</span> <span class="k">class</span>=<span class="s">"menu-item"</span><span class="t">&gt;</span>
+      <span class="t">&lt;a</span> <span class="k">href</span>=<span class="s">"#"</span><span class="t">&gt;</span>联系我们<span class="t">&lt;/a&gt;</span>
+    <span class="t">&lt;/li&gt;</span>
+  <span class="t">&lt;/ul&gt;</span>
+<span class="t">&lt;/nav&gt;</span></pre>
+
+  <pre id="panel-css" class="compare-panel"><span class="c">/* ===== 核心三板斧 ===== */</span>
+<span class="t">.menu-item</span> { <span class="k">position</span>: relative; }  <span class="c">/* 为子菜单的 absolute 提供定位基准 */</span>
+
+<span class="t">.submenu</span> {
+  <span class="k">position</span>: absolute;
+  <span class="k">top</span>: 100%;           <span class="c">/* 紧贴父菜单下方 */</span>
+  <span class="k">left</span>: 0;
+  <span class="k">min-width</span>: 170px;
+  <span class="k">background</span>: white;
+  <span class="k">box-shadow</span>: 0 12px 40px rgba(0,0,0,.12);
+  <span class="k">z-index</span>: 1000;
+
+  <span class="c">/* ✅ 过渡三件套（替代display:none） */</span>
+  <span class="k">opacity</span>: 0;
+  <span class="k">visibility</span>: hidden;
+  <span class="k">transform</span>: translateY(-8px);
+  <span class="k">transition</span>: opacity .25s ease,
+              visibility .25s ease,
+              transform .25s cubic-bezier(.4,0,.2,1);
+}
+
+<span class="c">/* hover 触发 */</span>
+<span class="t">.menu-item:hover .submenu</span> {
+  <span class="k">opacity</span>: 1;
+  <span class="k">visibility</span>: visible;
+  <span class="k">transform</span>: translateY(0);    <span class="c">/* 下滑到原位 */</span>
+}
+
+<span class="c">/* 箭头动画 */</span>
+<span class="t">.menu-item > a .arrow</span> {
+  <span class="k">transition</span>: transform .3s ease;
+}
+<span class="t">.menu-item:hover > a .arrow</span> {
+  <span class="k">transform</span>: rotate(180deg);   <span class="c">/* 箭头旋转180° */</span>
+}</pre>
+
+  <pre id="panel-vs" class="compare-panel"><span class="c">/* ❌ 方案A：display:none → 无法过渡 */</span>
+<span class="t">.submenu</span> {
+  <span class="k">display</span>: none;             <span class="c">/* 瞬间隐藏 */</span>
+}
+<span class="t">.menu-item:hover .submenu</span> {
+  <span class="k">display</span>: block;            <span class="c">/* 瞬间出现 — 无法添加transition */</span>
+}
+<span class="c">/* 可加过渡吗？ transition 对 display 无效 🙅 */</span>
+
+<span class="c">/* ✅ 方案B：opacity+visibility+transform — 完美过渡 */</span>
+<span class="t">.submenu</span> {
+  <span class="k">opacity</span>: 0;
+  <span class="k">visibility</span>: hidden;       <span class="c">/* 隐藏时不可交互 */</span>
+  <span class="k">transform</span>: translateY(-8px); <span class="c">/* 初始向上偏移 */</span>
+  <span class="k">transition</span>: opacity .25s, visibility .25s, transform .25s;
+}
+<span class="t">.menu-item:hover .submenu</span> {
+  <span class="k">opacity</span>: 1;
+  <span class="k">visibility</span>: visible;      <span class="c">/* 可交互 */</span>
+  <span class="k">transform</span>: translateY(0);
+}
+<span class="c">/* 为什么用visibility而不用opacity:0？            */</span>
+<span class="c">/* opacity:0 的元素仍然可以被鼠标触发hover        */</span>
+<span class="c">/* visibility:hidden 彻底阻止交互，体验更好       */</span></pre>
+</div>
+
+<script>
+function switchCompare(name) {
+  document.querySelectorAll('.compare-panel').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.compare-tabs button').forEach(b => b.classList.remove('on'));
+  document.getElementById('panel-' + name).classList.add('on');
+}
+
+function toggleMobileSub(el) {
+  const submenu = el.nextElementSibling;
+  const indicator = el.querySelector('.indicator');
+  submenu.classList.toggle('open');
+  indicator.classList.toggle('open');
+}
+</script>
+</body>
+</html>

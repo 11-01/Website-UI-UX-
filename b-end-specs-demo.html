@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B端UI设计规范演示 | Enterprise UI Specs Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ===== B端全局规范 ===== */
+  :root {
+    /* 画布 */
+    --canvas-opt: 1440px;
+    /* 顶部导航 */
+    --topnav-h: 64px;
+    /* 侧边栏 */
+    --sidebar-w: 232px;
+    --sidebar-collapsed: 64px;
+    /* 栅格 */
+    --grid-base: 8px;
+    --grid-cols: 24;
+    --page-margin: 24px;
+    --gutter: 16px;
+    /* 背景 */
+    --bg-page: #f6f6f6;
+    --bg-white: #ffffff;
+    /* 字体 */
+    --font-body: 14px;
+    --font-title: 18px;
+    --font-small: 12px;
+    --line-height: 1.6;
+    /* 按钮 */
+    --btn-lg: 36px;
+    --btn-md: 32px;
+    --btn-sm: 24px;
+    --btn-radius: 4px;
+    /* 输入框 */
+    --input-lg: 40px;
+    --input-sm: 28px;
+  }
+
+  body {
+    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+    background: var(--bg-page); color: #1e293b; font-size: var(--font-body);
+    line-height: var(--line-height);
+  }
+
+  /* ===== 顶部导航 ===== */
+  .topnav {
+    height: var(--topnav-h); background: #1e293b; color: white;
+    display: flex; align-items: center; padding: 0 24px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topnav .logo { font-weight: 900; font-size: 16px; margin-right: 32px; display: flex; align-items: center; gap: 8px; }
+  .topnav .logo .icon { width: 32px; height: 32px; background: #3b82f6; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .topnav .nav-links { display: flex; gap: 0; flex: 1; }
+  .topnav .nav-links a { color: #cbd5e1; text-decoration: none; padding: 0 16px; font-size: 14px; height: var(--topnav-h); display: flex; align-items: center; transition: all .15s; }
+  .topnav .nav-links a:hover { color: white; background: rgba(255,255,255,.04); }
+  .topnav .nav-links a.active { color: white; border-bottom: 2px solid #3b82f6; }
+  .topnav .user-area { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+  .topnav .user-area .avatar { width: 32px; height: 32px; border-radius: 50%; background: #475569; }
+
+  /* ===== 页面布局 ===== */
+  .page-layout {
+    display: flex; min-height: calc(100vh - var(--topnav-h));
+  }
+
+  /* ===== 侧边栏 ===== */
+  .sidebar {
+    width: var(--sidebar-w); background: white; border-right: 1px solid #e2e8f0;
+    display: flex; flex-direction: column; flex-shrink: 0;
+    transition: width .3s ease; overflow: hidden;
+  }
+  .sidebar.collapsed { width: var(--sidebar-collapsed); }
+  .sidebar .side-nav { padding: 12px 0; flex: 1; }
+  .sidebar .side-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 20px; height: 40px; font-size: 14px; color: #475569;
+    cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  .sidebar .side-item:hover { background: #f1f5f9; }
+  .sidebar .side-item.active { background: #eff6ff; color: #3b82f6; font-weight: 500; }
+  .sidebar .side-item .icon { width: 20px; text-align: center; flex-shrink: 0; }
+
+  /* ===== 主内容区 ===== */
+  .main-area {
+    flex: 1; padding: 24px var(--page-margin); min-width: 0;
+  }
+
+  /* 面包屑 */
+  .breadcrumb { font-size: 12px; color: #94a3b8; margin-bottom: 16px; }
+  .breadcrumb a { color: #3b82f6; text-decoration: none; }
+  .breadcrumb span { color: #475569; }
+
+  /* 页面标题 */
+  .page-title { font-size: var(--font-title); font-weight: 600; margin-bottom: 20px; }
+
+  /* ===== 24列栅格演示 ===== */
+  .grid-demo {
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    gap: var(--gutter);
+    margin-bottom: 24px;
+  }
+  .grid-demo .col {
+    height: 32px; background: #dbeafe; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: #3b82f6; font-weight: 600;
+  }
+  .grid-label { font-size: 12px; color: #94a3b8; margin-bottom: 8px; }
+
+  /* ===== 卡片容器 ===== */
+  .card {
+    background: white; border-radius: 8px; padding: 20px 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.03); margin-bottom: 24px;
+  }
+  .card .card-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+  /* ===== 按钮规格展示 ===== */
+  .btn-showcase { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+  .btn-group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .btn-group .spec-label { font-size: 10px; color: #94a3b8; }
+
+  .btn { border: none; cursor: pointer; font-weight: 500; font-size: 14px; border-radius: var(--btn-radius); display: inline-flex; align-items: center; gap: 4px; transition: all .2s; white-space: nowrap; }
+  .btn-primary { background: #3b82f6; color: white; }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-default { background: white; color: #475569; border: 1px solid #d1d5db; }
+  .btn-default:hover { border-color: #3b82f6; color: #3b82f6; }
+  .btn-disabled { background: #f1f5f9; color: #94a3b8; cursor: not-allowed; }
+
+  .btn-lg { height: var(--btn-lg); padding: 0 20px; }
+  .btn-md { height: var(--btn-md); padding: 0 16px; }
+  .btn-sm { height: var(--btn-sm); padding: 0 12px; font-size: 12px; }
+  .btn-xs { height: 20px; padding: 0 8px; font-size: 12px; border-radius: 3px; }
+
+  /* ===== 输入框规格展示 ===== */
+  .input-showcase { display: flex; gap: 24px; flex-wrap: wrap; align-items: center; }
+  .input-group-vert { display: flex; flex-direction: column; gap: 4px; }
+  .input-group-vert .spec-label { font-size: 10px; color: #94a3b8; }
+
+  .input {
+    border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;
+    padding: 0 12px; outline: none; font-family: inherit;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,.1); }
+  .input-lg { height: var(--input-lg); }
+  .input-sm { height: var(--input-sm); font-size: 12px; padding: 0 8px; }
+
+  /* ===== 字体层级展示 ===== */
+  .font-showcase { display: flex; flex-direction: column; gap: 12px; }
+  .font-row { display: flex; align-items: baseline; gap: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+  .font-row .f-label { font-size: 12px; color: #94a3b8; min-width: 80px; }
+  .font-row .f-sample { color: #1e293b; }
+
+  /* ===== 间距展示 ===== */
+  .spacing-demo { display: flex; gap: 4px; align-items: flex-end; }
+  .spacing-demo .spacer {
+    background: #3b82f6; border-radius: 2px; display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 10px; font-weight: 600;
+  }
+
+  /* ===== Bento Box演示 ===== */
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(4, 80px);
+    gap: 12px;
+  }
+  .bento-grid .bento-item {
+    background: white; border: 1px solid #e2e8f0; border-radius: 8px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 13px; color: #475569; transition: all .2s ease;
+    cursor: pointer; gap: 4px;
+  }
+  .bento-grid .bento-item:hover { border-color: #3b82f6; box-shadow: 0 4px 12px rgba(59,130,246,.08); }
+  .bento-grid .bento-item.bento-wide { grid-column: span 2; }
+  .bento-grid .bento-item.bento-tall { grid-row: span 2; }
+  .bento-grid .bento-item.bento-big { grid-column: span 2; grid-row: span 2; }
+  .bento-grid .bento-item .bento-val { font-size: 24px; font-weight: 700; color: #3b82f6; }
+
+  /* 2026趋势标签 */
+  .trend-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .trend-tag {
+    padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe;
+  }
+
+  /* 标尺提示 */
+  .ruler-hint {
+    font-size: 11px; color: #94a3b8; display: flex; gap: 12px; flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .ruler-hint code {
+    background: #f1f5f9; padding: 1px 6px; border-radius: 3px;
+    font-family: Consolas,monospace; font-size: 11px;
+  }
+
+  @media (max-width: 1024px) {
+    .sidebar { width: var(--sidebar-collapsed); }
+  }
+  @media (max-width: 640px) {
+    .topnav .nav-links { display: none; }
+    .bento-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 顶部导航（64px） ===== -->
+<nav class="topnav">
+  <div class="logo"><div class="icon">B</div> 企业后台</div>
+  <div class="nav-links">
+    <a class="active">工作台</a><a>数据管理</a><a>系统设置</a><a>帮助中心</a>
+  </div>
+  <div class="user-area">
+    <span style="font-size:12px;color:#94a3b8">64px高度</span>
+    <div class="avatar"></div>
+    <span>管理员</span>
+  </div>
+</nav>
+
+<div class="page-layout">
+
+  <!-- ===== 侧边栏（232px） ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="side-nav">
+      <div class="side-item active"><span class="icon">📊</span> 工作台</div>
+      <div class="side-item"><span class="icon">👥</span> 用户管理</div>
+      <div class="side-item"><span class="icon">📦</span> 订单管理</div>
+      <div class="side-item"><span class="icon">📈</span> 数据分析</div>
+      <div class="side-item"><span class="icon">⚙️</span> 系统设置</div>
+    </div>
+    <div style="padding:12px 20px;font-size:10px;color:#94a3b8;border-top:1px solid #f1f5f9">
+      232px展开 / 64px收起
+    </div>
+  </aside>
+
+  <!-- ===== 主内容区 ===== -->
+  <main class="main-area">
+
+    <!-- 面包屑 -->
+    <div class="breadcrumb">
+      <a>首页</a> › <a>设计规范</a> › <span>B端参数总览</span>
+    </div>
+
+    <h1 class="page-title">📐 B端 UI 设计规范 · 核心参数可视化</h1>
+
+    <!-- ===== 栅格系统：24列 ===== -->
+    <div class="card">
+      <div class="card-title">📏 栅格系统 — 24列 × 8px基数</div>
+      <div class="grid-label">24列栅格（可被2/3/4/6/8整除），Gutter 16px，Margin 24px</div>
+      <div class="grid-demo">
+        <div class="col">1</div><div class="col">2</div><div class="col">3</div>
+        <div class="col">4</div><div class="col">5</div><div class="col">6</div>
+        <div class="col">7</div><div class="col">8</div><div class="col">9</div>
+        <div class="col">10</div><div class="col">11</div><div class="col">12</div>
+        <div class="col">13</div><div class="col">14</div><div class="col">15</div>
+        <div class="col">16</div><div class="col">17</div><div class="col">18</div>
+        <div class="col">19</div><div class="col">20</div><div class="col">21</div>
+        <div class="col">22</div><div class="col">23</div><div class="col">24</div>
+      </div>
+      <div class="ruler-hint">
+        <span><code>8px</code> 网格基数</span>
+        <span><code>24列</code> 栅格</span>
+        <span><code>16px</code> Gutter间距</span>
+        <span><code>24px</code> 页面边距</span>
+      </div>
+    </div>
+
+    <!-- ===== 按钮规格 ===== -->
+    <div class="card">
+      <div class="card-title">🔘 按钮规格 — 4种高度</div>
+      <div class="btn-showcase">
+        <div class="btn-group">
+          <button class="btn btn-primary btn-lg">大按钮 36px</button>
+          <span class="spec-label">L: 36px / 圆角4px</span>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary btn-md">正常 32px</button>
+          <span class="spec-label">M: 32px / 主力</span>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary btn-sm">小 24px</button>
+          <span class="spec-label">S: 24px / 表格</span>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary btn-xs">超小 20</button>
+          <span class="spec-label">XS: 20px / 标签</span>
+        </div>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-md">主操作（品牌色）</button>
+        <button class="btn btn-default btn-md">辅助（灰白边框）</button>
+        <button class="btn btn-disabled btn-md">禁用（浅灰底）</button>
+      </div>
+    </div>
+
+    <!-- ===== 输入框规格 ===== -->
+    <div class="card">
+      <div class="card-title">📝 输入框规格 — ≤2种尺寸</div>
+      <div class="input-showcase">
+        <div class="input-group-vert">
+          <input class="input input-lg" placeholder="大输入框 40px（主力控件）">
+          <span class="spec-label">L: 40px / 聚焦蓝边框+外发光</span>
+        </div>
+        <div class="input-group-vert">
+          <input class="input input-sm" placeholder="小输入框 28px（紧凑筛选）">
+          <span class="spec-label">S: 28px / 表格筛选栏</span>
+        </div>
+      </div>
+      <p style="font-size:12px;color:#94a3b8;margin-top:12px">
+        💡 一个项目的输入框尺寸控制在 <strong>2种以内</strong> 即可覆盖90%场景
+      </p>
+    </div>
+
+    <!-- ===== 字体层级 ===== -->
+    <div class="card">
+      <div class="card-title">🔤 字体层级</div>
+      <div class="font-showcase">
+        <div class="font-row">
+          <span class="f-label">标题 24px</span>
+          <span class="f-sample" style="font-size:24px;font-weight:600">页面大标题</span>
+        </div>
+        <div class="font-row">
+          <span class="f-label">标题 18px</span>
+          <span class="f-sample" style="font-size:18px;font-weight:600">卡片标题</span>
+        </div>
+        <div class="font-row">
+          <span class="f-label">标题 16px</span>
+          <span class="f-sample" style="font-size:16px;font-weight:500">区块标题</span>
+        </div>
+        <div class="font-row">
+          <span class="f-label">正文 14px</span>
+          <span class="f-sample" style="font-size:14px">正文内容，PC端阅读距离最佳。Regular 400字重。</span>
+        </div>
+        <div class="font-row">
+          <span class="f-label">辅助 12px</span>
+          <span class="f-sample" style="font-size:12px;color:#94a3b8">中文最小字号12px，英文/数字可到10px</span>
+        </div>
+      </div>
+      <div class="ruler-hint" style="margin-top:12px">
+        <span>行高: <code>1.2× - 1.8×</code> 字号</span>
+        <span>字重: <code>400</code> Regular / <code>500</code> Medium</span>
+        <span>字体: 苹方 / 微软雅黑 / Roboto</span>
+      </div>
+    </div>
+
+    <!-- ===== 间距标尺 ===== -->
+    <div class="card">
+      <div class="card-title">📐 间距系统 — 8px网格基数</div>
+      <div class="spacing-demo" style="margin-bottom:8px">
+        <div class="spacer" style="width:8px;height:8px">8</div>
+        <div class="spacer" style="width:16px;height:16px">16</div>
+        <div class="spacer" style="width:24px;height:24px">24</div>
+        <div class="spacer" style="width:32px;height:32px">32</div>
+        <div class="spacer" style="width:40px;height:40px">40</div>
+        <div class="spacer" style="width:48px;height:48px">48</div>
+      </div>
+      <div class="ruler-hint">
+        <span>所有间距为 <code>8px</code> 的整数倍</span>
+        <span><code>8 / 16 / 24 / 32 / 40 / 48</code></span>
+      </div>
+    </div>
+
+    <!-- ===== Bento Box ===== -->
+    <div class="card">
+      <div class="card-title">🍱 2026趋势：Bento Box弹性布局</div>
+      <div class="bento-grid">
+        <div class="bento-item bento-wide">
+          <div class="bento-val">12,846</div>
+          <span>总用户数</span>
+        </div>
+        <div class="bento-item bento-tall">
+          <div class="bento-val">99.7%</div>
+          <span>可用率</span>
+          <span style="font-size:10px;color:#94a3b8">纵跨2行</span>
+        </div>
+        <div class="bento-item">
+          <div class="bento-val">847</div>
+          <span>订单</span>
+        </div>
+        <div class="bento-item">
+          <div class="bento-val">23</div>
+          <span>待处理</span>
+        </div>
+        <div class="bento-item bento-big">
+          <div class="bento-val">📈</div>
+          <span>趋势图占位</span>
+          <span style="font-size:10px;color:#94a3b8">横纵各跨2</span>
+        </div>
+        <div class="bento-item">
+          <div class="bento-val">4.8</div>
+          <span>评分</span>
+        </div>
+        <div class="bento-item bento-wide">
+          <span>📊 实时数据流</span>
+        </div>
+      </div>
+      <div class="trend-tags" style="margin-top:12px">
+        <span class="trend-tag">📐 Container Queries 容器查询</span>
+        <span class="trend-tag">🧠 AI 意图感知布局</span>
+        <span class="trend-tag">💬 Prompt 驱动生成</span>
+        <span class="trend-tag">🥽 XR 空间计算 3D悬浮</span>
+      </div>
+    </div>
+
+    <!-- ===== 参数总览 ===== -->
+    <div class="card">
+      <div class="card-title">📋 B端核心参数速查</div>
+      <table style="width:100%;font-size:13px;border-collapse:collapse">
+        <tr style="border-bottom:1px solid #f1f5f9">
+          <td style="padding:8px 0;color:#94a3b8;width:140px">最佳画布</td>
+          <td style="padding:8px 0"><strong>1440 × 900</strong>（向下适配1280容易）</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f1f5f9">
+          <td style="padding:8px 0;color:#94a3b8">顶部导航</td>
+          <td style="padding:8px 0"><strong>64px</strong> · 左Logo · 中菜单 · 右用户</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f1f5f9">
+          <td style="padding:8px 0;color:#94a3b8">侧边栏</td>
+          <td style="padding:8px 0"><strong>展开232px</strong> / 收起64px</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f1f5f9">
+          <td style="padding:8px 0;color:#94a3b8">背景色</td>
+          <td style="padding:8px 0"><strong>#F6F6F6</strong> — 浅灰底，减少视觉疲劳</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f1f5f9">
+          <td style="padding:8px 0;color:#94a3b8">栅格</td>
+          <td style="padding:8px 0"><strong>24列 × 8px基数</strong> · Gutter 16px · Margin 24px</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f1f5f9">
+          <td style="padding:8px 0;color:#94a3b8">正文</td>
+          <td style="padding:8px 0"><strong>14px</strong> · 行高1.2-1.8× · 最小中文12px</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f1f5f9">
+          <td style="padding:8px 0;color:#94a3b8">按钮</td>
+          <td style="padding:8px 0"><strong>36/32/24/20px</strong> · 圆角4px或8px</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f1f5f9">
+          <td style="padding:8px 0;color:#94a3b8">输入框</td>
+          <td style="padding:8px 0"><strong>大40px / 小28px</strong> · ≤2种尺寸</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f1f5f9">
+          <td style="padding:8px 0;color:#94a3b8">图标</td>
+          <td style="padding:8px 0"><strong>1024×1024</strong>画板 · 线框/实底风格统一</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#94a3b8">2026趋势</td>
+          <td style="padding:8px 0">Container Queries · AI布局 · Prompt驱动生成 · Bento Box</td>
+        </tr>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+</body>
+</html>

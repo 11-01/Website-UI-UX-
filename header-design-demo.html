@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>网站UI页头设计指南 | Header Design Guide</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f172a;--card-bg:#1e293b;--card-border:#334155;--surface:#f8fafc;--text:#e2e8f0;--text-dim:#94a3b8;--text-dark:#1e293b;--blue:#3b82f6;--purple:#8b5cf6;--green:#22c55e;--red:#ef4444;--orange:#f59e0b;--radius:10px;--radius-lg:16px}
+body{font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.hero{text-align:center;padding:3rem 1.5rem 2rem;background:linear-gradient(180deg,#0f172a 0%,#1a2332 100%)}
+.hero h1{font-size:clamp(1.8rem,4vw,3rem);font-weight:900;margin-bottom:.6rem}
+.hero h1 span{background:linear-gradient(135deg,#f59e0b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .subtitle{font-size:1rem;color:var(--text-dim);max-width:700px;margin:0 auto}
+.hero .meta-tags{display:flex;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
+.hero .meta-tags span{font-size:.75rem;padding:.25rem .75rem;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:20px;color:#fcd34d}
+
+.page{max-width:1200px;margin:0 auto;padding:0 1.5rem 4rem}
+.section-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);margin-bottom:2rem;overflow:hidden}
+.section-card .card-header{padding:1.2rem 1.5rem;border-bottom:1px solid var(--card-border);display:flex;align-items:center;gap:.8rem}
+.section-card .card-header .section-num{width:36px;height:36px;background:linear-gradient(135deg,#f59e0b,#ef4444);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;color:white;flex-shrink:0}
+.section-card .card-header h2{font-size:1.3rem;font-weight:700}
+.section-card .card-header .en-label{font-size:.75rem;color:var(--text-dim);margin-left:auto}
+.section-card .card-body{background:var(--surface);color:var(--text-dark);padding:1.5rem}
+
+.sub-title{font-size:.95rem;font-weight:700;color:#475569;margin-bottom:1rem;margin-top:1.5rem;padding-bottom:.5rem;border-bottom:2px solid #e2e8f0;display:flex;align-items:center;gap:.5rem}
+.sub-title:first-child{margin-top:0}
+.sub-title::before{content:'';width:4px;height:18px;background:var(--orange);border-radius:2px}
+
+.demo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.2rem}
+.code-block{background:#1e293b;color:#e2e8f0;border-radius:8px;padding:.9rem 1.1rem;font-family:'JetBrains Mono','Fira Code','Consolas',monospace;font-size:.76rem;line-height:1.7;overflow-x:auto;margin:.6rem 0}
+.code-block .tag{color:#f472b6}.code-block .attr{color:#67e8f9}.code-block .val{color:#a5d6ff}.code-block .comment{color:#64748b}.code-block .prop{color:#fde68a}
+
+.tip-box{display:flex;align-items:flex-start;gap:.6rem;padding:.8rem 1rem;border-radius:8px;font-size:.8rem;margin:.8rem 0}
+.tip-box.info{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
+.tip-box.success{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.tip-box .icon{font-size:1rem;flex-shrink:0}
+
+.plan-card{background:white;border-radius:var(--radius);padding:1.2rem;box-shadow:0 1px 6px rgba(0,0,0,.03);border:1px solid #f1f5f9}
+.plan-card h4{font-size:.9rem;margin-bottom:.5rem}
+
+/* ===== 7种页头氛围演示 ===== */
+.header-showcase{border-radius:12px;overflow:hidden;margin:.8rem 0;position:relative}
+.header-showcase .h-inner{min-height:180px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem;position:relative}
+.header-showcase .h-tag{position:absolute;top:10px;left:12px;font-size:.65rem;padding:.2rem .6rem;background:rgba(0,0,0,.3);color:white;border-radius:10px}
+
+/* 1.纯色页头 */
+.h-solid{background:#2563eb;color:white}
+.h-solid h3{font-size:1.6rem;font-weight:900}
+.h-solid p{font-size:.85rem;opacity:.85;margin-top:.3rem}
+
+/* 2.渐变色页头 */
+.h-gradient{
+  background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  color:white;position:relative;overflow:hidden;
+}
+.h-gradient::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;background:white;border-radius:50% 50% 0 0;}
+.h-gradient h3{font-size:1.6rem;font-weight:900;position:relative;z-index:1}
+.h-gradient p{font-size:.85rem;opacity:.9;margin-top:.3rem;position:relative;z-index:1}
+
+/* 3.纹理/插画 */
+.h-pattern{background:#1e293b;color:white;position:relative;overflow:hidden}
+.h-pattern::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 20% 50%,rgba(99,102,241,.3),transparent 50%),
+             radial-gradient(circle at 80% 50%,rgba(236,72,153,.2),transparent 50%);
+}
+.h-pattern .dots{position:absolute;inset:0;opacity:.15;
+  background-image:radial-gradient(circle,white 1px,transparent 1px);
+  background-size:20px 20px;
+}
+.h-pattern h3{font-size:1.6rem;font-weight:900;position:relative;z-index:1}
+.h-pattern p{font-size:.85rem;color:#94a3b8;margin-top:.3rem;position:relative;z-index:1}
+
+/* 4.照片抠图/蒙版 */
+.h-photo{background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.6)),linear-gradient(135deg,#0ea5e9,#6366f1);color:white}
+.h-photo h3{font-size:1.6rem;font-weight:900}
+.h-photo p{font-size:.85rem;opacity:.85;margin-top:.3rem}
+
+/* 5.3D元素 */
+.h-3d{background:linear-gradient(180deg,#0f172a,#1e1b4b);color:white;perspective:500px;overflow:hidden}
+.h-3d .cube{width:60px;height:60px;background:linear-gradient(135deg,rgba(99,102,241,.6),rgba(236,72,153,.4));
+  border-radius:12px;margin-bottom:1rem;
+  transform:rotateX(25deg)rotateY(-25deg);
+  box-shadow:0 20px 50px rgba(99,102,241,.3);
+}
+.h-3d h3{font-size:1.6rem;font-weight:900;position:relative;z-index:1}
+.h-3d p{font-size:.85rem;color:#a5b4fc;margin-top:.3rem;position:relative;z-index:1}
+
+/* 6.视频/动画背景 */
+.h-video{background:linear-gradient(135deg,#0f172a,#1e1b4b);color:white;position:relative;overflow:hidden}
+.h-video .animated-bg{position:absolute;inset:0;opacity:.3;
+  background:linear-gradient(45deg,#6366f1 25%,transparent 25%,transparent 75%,#ec4899 75%);
+  background-size:60px 60px;
+  animation:bgShift 8s linear infinite;
+}
+@keyframes bgShift{0%{background-position:0 0}100%{background-position:60px 60px}}
+.h-video h3{font-size:1.6rem;font-weight:900;position:relative;z-index:1}
+.h-video p{font-size:.85rem;color:#a5b4fc;margin-top:.3rem;position:relative;z-index:1}
+
+/* 7.极简留白 */
+.h-minimal{background:white;color:#1e293b;border-bottom:1px solid #e2e8f0}
+.h-minimal h3{font-size:1.6rem;font-weight:300;letter-spacing:2px}
+.h-minimal p{font-size:.85rem;color:#94a3b8;margin-top:.3rem}
+
+/* 吸顶演示 */
+.sticky-demo-box{border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;max-height:320px;overflow-y:auto}
+.sticky-header{position:sticky;top:0;z-index:10;background:white;padding:.7rem 1.2rem;display:flex;align-items:center;gap:1rem;border-bottom:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.sticky-header .logo{font-weight:900;font-size:.9rem;margin-right:auto}
+.sticky-header a{color:#64748b;text-decoration:none;font-size:.75rem;transition:color .2s}
+.sticky-header a:hover{color:var(--blue)}
+.sticky-content{padding:1rem}
+.sticky-content p{font-size:.75rem;color:#64748b;margin-bottom:.6rem}
+
+@media(max-width:640px){.demo-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1><span>网站UI页头设计指南</span></h1>
+  <p class="subtitle">页头是建立品牌第一印象的关键。用户在1秒内形成初步看法 — 它是整个网站视觉基调的"定海神针"。</p>
+  <div class="meta-tags">
+    <span>核心元素</span><span>7种氛围</span><span>吸顶导航</span><span>响应式</span><span>动效</span>
+  </div>
+</header>
+
+<div class="page">
+
+<!-- ===== 一、核心功能 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">1</div><h2>核心功能与内容规划</h2><span class="en-label">Core Elements</span></div>
+  <div class="card-body">
+    <p style="font-size:.85rem;color:#475569;margin-bottom:1rem;">页头需要快速回答用户"这是什么网站"以及"我能在这里做什么"。</p>
+    <div class="demo-grid">
+      <div class="plan-card" style="border-left:4px solid var(--blue);"><h4>🏷️ Logo/品牌标识</h4><p style="font-size:.78rem;color:#475569;">左上角放置，符合浏览习惯，点击可回首页。</p></div>
+      <div class="plan-card" style="border-left:4px solid var(--green);"><h4>🧭 主导航菜单</h4><p style="font-size:.78rem;color:#475569;">简洁明了：首页·产品·关于·联系等核心入口。</p></div>
+      <div class="plan-card" style="border-left:4px solid var(--orange);"><h4>🔍 搜索功能</h4><p style="font-size:.78rem;color:#475569;">电商/内容型网站置于显眼位置，支持智能提示。</p></div>
+      <div class="plan-card" style="border-left:4px solid var(--purple);"><h4>🎯 CTA / 用户信息</h4><p style="font-size:.78rem;color:#475569;">登录·注册·购物车·个人头像，置于右上角。</p></div>
+    </div>
+  </div>
+</article>
+
+<!-- ===== 二、7种页头氛围 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">2</div><h2>7种常见页头氛围玩法</h2><span class="en-label">Visual Styles</span></div>
+  <div class="card-body">
+    <div class="demo-grid">
+      <div class="plan-card" style="padding:0;overflow:hidden;border:none;">
+        <div class="header-showcase"><div class="h-inner h-solid"><span class="h-tag">纯色页头</span><h3>专注简洁</h3><p>信息密集型页面首选 · ≤200px</p></div></div>
+      </div>
+      <div class="plan-card" style="padding:0;overflow:hidden;border:none;">
+        <div class="header-showcase"><div class="h-inner h-gradient"><span class="h-tag">渐变+圆弧底边</span><h3>设计感</h3><p>增加视觉层次</p></div></div>
+      </div>
+      <div class="plan-card" style="padding:0;overflow:hidden;border:none;">
+        <div class="header-showcase"><div class="h-inner h-pattern"><span class="h-tag">纹理/插画元素</span><div class="dots"></div><h3>品牌叙事</h3><p>点线面传达营销主题</p></div></div>
+      </div>
+      <div class="plan-card" style="padding:0;overflow:hidden;border:none;">
+        <div class="header-showcase"><div class="h-inner h-photo"><span class="h-tag">照片蒙版</span><h3>专业质感</h3><p>传达行业专业性或主题氛围</p></div></div>
+      </div>
+      <div class="plan-card" style="padding:0;overflow:hidden;border:none;">
+        <div class="header-showcase"><div class="h-inner h-3d"><span class="h-tag">3D元素</span><div class="cube"></div><h3>现代质感</h3><p>大幅提升页面现代感</p></div></div>
+      </div>
+      <div class="plan-card" style="padding:0;overflow:hidden;border:none;">
+        <div class="header-showcase"><div class="h-inner h-video"><span class="h-tag">动画背景</span><div class="animated-bg"></div><h3>动态叙事</h3><p>直观讲述品牌故事</p></div></div>
+      </div>
+      <div class="plan-card" style="padding:0;overflow:hidden;border:none;">
+        <div class="header-showcase"><div class="h-inner h-minimal"><span class="h-tag" style="background:rgba(0,0,0,.05);color:#64748b;">极简留白</span><h3>呼吸感</h3><p>大量留白 · 字体为王</p></div></div>
+      </div>
+    </div>
+  </div>
+</article>
+
+<!-- ===== 三、视觉设计原则 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">3</div><h2>视觉设计原则 — 统一克制，主次分明</h2><span class="en-label">Design Principles</span></div>
+  <div class="card-body">
+    <div class="demo-grid">
+      <div class="plan-card" style="border-left:4px solid var(--blue);"><h4>🎨 色彩与排版</h4><p style="font-size:.78rem;color:#475569;">严格贴合企业VI，全站主色调≤4种。正文用深灰(#333)而非纯黑，提升阅读柔和度。字体统一，层级清晰。</p></div>
+      <div class="plan-card" style="border-left:4px solid var(--green);"><h4>📐 留白与网格</h4><p style="font-size:.78rem;color:#475569;">采用网格标准化布局，所有元素对齐规整。留白适度 — 既不拥挤堆砌，也不过度空旷，保持页面"呼吸感"。</p></div>
+      <div class="plan-card" style="border-left:4px solid var(--orange);"><h4>📌 吸顶导航 (Sticky)</h4><p style="font-size:.78rem;color:#475569;">页头固定顶部，滚动时可调整背景透明度或简化高度，确保随时可切换页面且不遮挡核心内容。</p></div>
+      <div class="plan-card" style="border-left:4px solid var(--purple);"><h4>✨ 轻量化动效</h4><p style="font-size:.78rem;color:#475569;">动效应为体验加分而非干扰。仅设置基础hover悬浮、平滑滚动渐入等微动效，杜绝闪烁或夸张弹跳。</p></div>
+    </div>
+  </div>
+</article>
+
+<!-- ===== 四、吸顶导航演示 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">4</div><h2>吸顶导航与响应式适配</h2><span class="en-label">Sticky & Responsive</span></div>
+  <div class="card-body">
+    <div class="sub-title">Sticky Header 实时演示 — 滚动下方区域观察吸顶效果</div>
+    <div class="sticky-demo-box">
+      <div class="sticky-header">
+        <span class="logo">🏢 Brand</span>
+        <a href="#">首页</a><a href="#">产品</a><a href="#">关于</a>
+        <a href="#" style="margin-left:auto;background:var(--blue);color:white!important;padding:.3rem .8rem;border-radius:15px;font-weight:600;">登录</a>
+      </div>
+      <div class="sticky-content">
+        <p><strong>📜 向下滚动观察</strong> — 页头始终固定在顶部</p>
+        <p>使用 <code>position: sticky; top: 0;</code> 实现吸顶效果。</p>
+        <p>当用户向下滚动时，导航栏固定在顶部，确保随时可以切换页面。</p>
+        <p>可配合 JS 监听滚动位置，动态调整导航栏的背景透明度或高度。</p>
+        <p>例如：滚动超过 100px 后，减小 Logo 尺寸，压缩导航栏高度。</p>
+        <p>--- 内容分隔线 ---</p>
+        <p>在移动端（屏幕宽度 &lt; 768px），主导航应折叠为汉堡菜单。</p>
+        <p>确保所有可点击元素的触控区域 ≥ 44×44px，防止误触。</p>
+        <p>--- EOF ---</p>
+      </div>
+    </div>
+
+    <div class="sub-title">核心 CSS</div>
+    <div class="code-block">
+      <span class="tag">.header</span> {<br>
+      &nbsp;&nbsp;<span class="prop">position</span>: <span class="val">sticky</span>;<br>
+      &nbsp;&nbsp;<span class="prop">top</span>: <span class="val">0</span>;<br>
+      &nbsp;&nbsp;<span class="prop">z-index</span>: <span class="val">100</span>;<br>
+      &nbsp;&nbsp;<span class="prop">background</span>: <span class="val">rgba(255,255,255,.95)</span>;<br>
+      &nbsp;&nbsp;<span class="prop">backdrop-filter</span>: <span class="val">blur(10px)</span>;<br>
+      }
+    </div>
+    <div class="tip-box success">
+      <span class="icon">✅</span>
+      <span><strong>最佳实践：</strong><code>sticky</code> 优于 <code>fixed</code> — 不脱离文档流，无需额外设置 margin/padding 补偿。配合 <code>backdrop-filter: blur()</code> 实现毛玻璃效果更佳。</span>
+    </div>
+  </div>
+</article>
+
+<!-- ===== 五、技术实现 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">5</div><h2>技术实现思路（HTML+CSS）</h2><span class="en-label">Implementation</span></div>
+  <div class="card-body">
+    <div class="demo-grid">
+      <div class="plan-card"><h4>① HTML 语义化结构</h4><div class="code-block"><span class="tag">&lt;header&gt;</span><br>&nbsp;&nbsp;<span class="tag">&lt;nav&gt;</span><br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tag">&lt;ul&gt;</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tag">&lt;li&gt;&lt;a</span> <span class="attr">href</span>=<span class="val">"#"</span><span class="tag">&gt;</span>首页<span class="tag">&lt;/a&gt;&lt;/li&gt;</span><br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tag">&lt;/ul&gt;</span><br>&nbsp;&nbsp;<span class="tag">&lt;/nav&gt;</span><br><span class="tag">&lt;/header&gt;</span></div><p style="font-size:.72rem;color:#94a3b8;"><code>&lt;ul&gt; &gt; &lt;li&gt; &gt; &lt;a&gt;</code> 比直接用 <code>&lt;a&gt;</code> 更语义化，利于 SEO。</p></div>
+      <div class="plan-card"><h4>② CSS 布局</h4><div class="code-block"><span class="tag">.header-inner</span> {<br>&nbsp;&nbsp;<span class="prop">max-width</span>: <span class="val">1200px</span>;<br>&nbsp;&nbsp;<span class="prop">margin</span>: <span class="val">0 auto</span>;<br>&nbsp;&nbsp;<span class="prop">display</span>: <span class="val">flex</span>;<br>&nbsp;&nbsp;<span class="prop">align-items</span>: <span class="val">center</span>;<br>&nbsp;&nbsp;<span class="prop">justify-content</span>: <span class="val">space-between</span>;<br>}</div><p style="font-size:.72rem;color:#94a3b8;">版心宽度（如1200px）水平居中，Flexbox 弹性布局水平排列。</p></div>
+      <div class="plan-card"><h4>③ 导航链接间距</h4><div class="code-block"><span class="tag">.nav a</span> {<br>&nbsp;&nbsp;<span class="prop">padding</span>: <span class="val">.5rem 1rem</span>;<br>&nbsp;&nbsp;<span class="comment">/* 不设 width，用 padding 撑开 */</span><br>}</div><p style="font-size:.72rem;color:#94a3b8;">不直接指定宽度，通过左右 padding 撑开盒子，方便增减文字。</p></div>
+      <div class="plan-card"><h4>④ 响应式汉堡菜单</h4><div class="code-block"><span class="tag">@media</span> (<span class="prop">max-width</span>: <span class="val">768px</span>) {<br>&nbsp;&nbsp;<span class="tag">.nav-links</span> { <span class="prop">display</span>: <span class="val">none</span>; }<br>&nbsp;&nbsp;<span class="tag">.hamburger</span> { <span class="prop">display</span>: <span class="val">block</span>; }<br>}</div><p style="font-size:.72rem;color:#94a3b8;">移动端隐藏导航链接，显示汉堡图标，点击展开。</p></div>
+    </div>
+  </div>
+</article>
+
+</div>
+</body>
+</html>

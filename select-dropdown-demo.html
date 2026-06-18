@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>网站UI下拉选择组件指南 | Select Dropdown Guide</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f172a;--card-bg:#1e293b;--card-border:#334155;--surface:#f8fafc;--text:#e2e8f0;--text-dim:#94a3b8;--text-dark:#1e293b;--blue:#3b82f6;--green:#22c55e;--purple:#8b5cf6;--orange:#f59e0b;--radius:10px;--radius-lg:16px}
+body{font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.hero{text-align:center;padding:3rem 1.5rem 2rem;background:linear-gradient(180deg,#0f172a 0%,#1a2332 100%)}
+.hero h1{font-size:clamp(1.8rem,4vw,3rem);font-weight:900;margin-bottom:.6rem}
+.hero h1 span{background:linear-gradient(135deg,#6366f1,#14b8a6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .subtitle{font-size:1rem;color:var(--text-dim);max-width:700px;margin:0 auto}
+.hero .meta-tags{display:flex;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
+.hero .meta-tags span{font-size:.75rem;padding:.25rem .75rem;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);border-radius:20px;color:#a5b4fc}
+
+.page{max-width:1200px;margin:0 auto;padding:0 1.5rem 4rem}
+.section-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);margin-bottom:2rem;overflow:hidden}
+.section-card .card-header{padding:1.2rem 1.5rem;border-bottom:1px solid var(--card-border);display:flex;align-items:center;gap:.8rem}
+.section-card .card-header .section-num{width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#14b8a6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;color:white;flex-shrink:0}
+.section-card .card-header h2{font-size:1.3rem;font-weight:700}
+.section-card .card-header .en-label{font-size:.75rem;color:var(--text-dim);margin-left:auto}
+.section-card .card-body{background:var(--surface);color:var(--text-dark);padding:1.5rem}
+
+.sub-title{font-size:.95rem;font-weight:700;color:#475569;margin-bottom:1rem;margin-top:1.5rem;padding-bottom:.5rem;border-bottom:2px solid #e2e8f0;display:flex;align-items:center;gap:.5rem}
+.sub-title:first-child{margin-top:0}
+.sub-title::before{content:'';width:4px;height:18px;background:#6366f1;border-radius:2px}
+
+.demo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.2rem}
+.code-block{background:#1e293b;color:#e2e8f0;border-radius:8px;padding:.9rem 1.1rem;font-family:'JetBrains Mono','Fira Code','Consolas',monospace;font-size:.76rem;line-height:1.7;overflow-x:auto;margin:.6rem 0}
+.code-block .tag{color:#f472b6}.code-block .attr{color:#67e8f9}.code-block .val{color:#a5d6ff}.code-block .comment{color:#64748b}.code-block .prop{color:#fde68a}.code-block .kw{color:#f472b6}.code-block .fn{color:#c4b5fd}
+
+.tip-box{display:flex;align-items:flex-start;gap:.6rem;padding:.8rem 1rem;border-radius:8px;font-size:.8rem;margin:.8rem 0}
+.tip-box.info{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
+.tip-box.success{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.tip-box.warn{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+.tip-box .icon{font-size:1rem;flex-shrink:0}
+
+.plan-card{background:white;border-radius:var(--radius);padding:1.2rem;box-shadow:0 1px 6px rgba(0,0,0,.03);border:1px solid #f1f5f9}
+.plan-card h4{font-size:.9rem;margin-bottom:.5rem}
+.compare-table{width:100%;border-collapse:collapse;font-size:.8rem;margin:.8rem 0}
+.compare-table th{background:#f1f5f9;padding:.5rem .8rem;text-align:left;font-weight:600}
+.compare-table td{padding:.5rem .8rem;border-bottom:1px solid #e2e8f0}
+
+/* ===== 原生 Select 美化 ===== */
+.select-native{
+  width:100%;padding:.55rem 2.2rem .55rem .75rem;
+  font-size:.85rem;font-family:inherit;color:#1e293b;
+  border:1.5px solid #d1d5db;border-radius:8px;
+  background:white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right .75rem center;
+  appearance:none;-webkit-appearance:none;cursor:pointer;transition:all .25s;outline:none;
+}
+.select-native:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+
+/* 大号 Select */
+.select-lg{padding:.7rem 2.5rem .7rem .9rem;font-size:.9rem;border-radius:10px}
+
+/* 带标签的 Select */
+.select-group label{display:block;font-size:.8rem;font-weight:600;color:#475569;margin-bottom:.3rem}
+
+/* 分组 select */
+.select-native optgroup{font-weight:700;color:#64748b;font-size:.8rem}
+.select-native option{padding:.4rem;font-size:.85rem}
+
+/* ===== 自定义下拉菜单(导航用) ===== */
+.custom-select-dropdown{position:relative;display:inline-block}
+.custom-select-dropdown .select-trigger{
+  padding:.55rem 1.2rem;background:white;color:#475569;
+  border:1.5px solid #d1d5db;border-radius:8px;
+  font-size:.85rem;font-weight:500;cursor:pointer;
+  transition:all .2s;font-family:inherit;
+  display:inline-flex;align-items:center;gap:.4rem;min-width:160px;justify-content:space-between;
+}
+.custom-select-dropdown .select-trigger:hover{border-color:#93c5fd}
+.custom-select-dropdown .select-arrow{font-size:.65rem;transition:transform .3s}
+.custom-select-dropdown.open .select-arrow{transform:rotate(180deg)}
+.custom-select-dropdown .select-menu{
+  position:absolute;top:calc(100% + 4px);left:0;min-width:100%;
+  background:white;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.12);
+  border:1px solid #e2e8f0;padding:.4rem;z-index:100;
+  opacity:0;visibility:hidden;transform:translateY(-6px);
+  transition:all .25s cubic-bezier(.4,0,.2,1);
+}
+.custom-select-dropdown.open .select-menu{opacity:1;visibility:visible;transform:translateY(0)}
+.custom-select-dropdown .select-menu .sel-option{
+  display:flex;align-items:center;gap:.5rem;padding:.55rem .9rem;
+  color:#475569;text-decoration:none;border-radius:6px;font-size:.82rem;
+  transition:all .15s;cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:inherit;
+}
+.custom-select-dropdown .select-menu .sel-option:hover{background:#f1f5f9;color:#1e293b}
+.custom-select-dropdown .select-menu .sel-option.selected{background:#eff6ff;color:var(--blue);font-weight:600}
+
+@media(max-width:640px){.demo-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1><span>网站UI下拉选择组件指南</span></h1>
+  <p class="subtitle">下拉选择（Select Dropdown）是表单核心组件。从原生 <code>&lt;select&gt;</code> 到完全自定义菜单，覆盖全场景。</p>
+  <div class="meta-tags"><span>原生Select</span><span>CSS美化</span><span>JS动态</span><span>自定义菜单</span><span>A11y</span><span>框架方案</span></div>
+</header>
+
+<div class="page">
+
+<!-- ===== 一、原生 Select ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">1</div><h2>原生 HTML <code>&lt;select&gt;</code> — 基础 + CSS 美化</h2><span class="en-label">Native Select</span></div>
+  <div class="card-body">
+    <div class="demo-grid">
+      <div class="plan-card"><h4>默认浏览器样式（不统一）</h4>
+        <select style="width:100%;padding:.5rem;font-size:.85rem;font-family:inherit;">
+          <option>选项 1</option><option>选项 2</option><option>选项 3</option></select>
+        <p style="font-size:.7rem;color:#94a3b8;margin-top:.4rem;">macOS/Windows/iOS/Android 下外观各不相同。</p></div>
+      <div class="plan-card"><h4>✨ CSS 美化后 + 自定义箭头</h4>
+        <select class="select-native">
+          <option>选项 1 — 默认</option><option>选项 2</option><option>选项 3</option></select>
+        <p style="font-size:.7rem;color:#16a34a;margin-top:.4rem;">统一边框+圆角+SVG箭头+聚焦光晕</p></div>
+    </div>
+    <div class="sub-title">美化 CSS 关键代码</div>
+    <div class="code-block"><span class="comment">/* 1. 清除默认箭头 */</span><br><span class="tag">select</span> { <span class="prop">appearance</span>: <span class="val">none</span>; }<br><br><span class="comment">/* 2. 用 background-image 绘制自定义箭头 */</span><br><span class="tag">select</span> {<br>&nbsp;&nbsp;<span class="prop">background</span>: <span class="val">url("data:image/svg+xml,...") no-repeat right .75rem center</span>;<br>&nbsp;&nbsp;<span class="prop">padding-right</span>: <span class="val">2.2rem</span>;<br>}</div>
+  </div>
+</article>
+
+<!-- ===== 二、原生 Select 变体 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">2</div><h2>原生 Select 变体 — 分组 + 尺寸 + 禁用</h2><span class="en-label">Variants</span></div>
+  <div class="card-body">
+    <div class="demo-grid">
+      <div class="plan-card"><h4>📦 optgroup 分组</h4>
+        <div class="select-group"><label>选择城市：</label>
+          <select class="select-native">
+            <optgroup label="华北地区"><option>北京</option><option>天津</option></optgroup>
+            <optgroup label="华东地区"><option>上海</option><option>杭州</option></optgroup>
+            <optgroup label="华南地区"><option>广州</option><option>深圳</option></optgroup>
+          </select></div></div>
+      <div class="plan-card"><h4>📐 尺寸 + 禁用</h4>
+        <div class="select-group"><label>大号 Select：</label><select class="select-native select-lg"><option>大号选项</option></select></div>
+        <div class="select-group" style="margin-top:.8rem;"><label>禁用状态：</label><select class="select-native" disabled style="background-color:#f8fafc;color:#94a3b8;cursor:not-allowed;"><option>不可选择</option></select></div></div>
+    </div>
+  </div>
+</article>
+
+<!-- ===== 三、自定义下拉菜单 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">3</div><h2>完全自定义下拉菜单（点击展开）</h2><span class="en-label">Custom Select</span></div>
+  <div class="card-body">
+    <p style="font-size:.85rem;color:#475569;margin-bottom:1rem;">当原生 <code>&lt;select&gt;</code> 无法满足设计需求（如需要图标、描述、搜索等），就需要用 <code>div+ul+JS</code> 手写自定义下拉。</p>
+
+    <div class="sub-title">实时演示</div>
+    <div class="demo-grid">
+      <div class="plan-card"><h4>📋 自定义下拉选择器</h4>
+        <div class="custom-select-dropdown" id="customSel1">
+          <button class="select-trigger" onclick="toggleSelect('customSel1')"><span id="customSel1Label">🌐 请选择语言</span><span class="select-arrow">▼</span></button>
+          <div class="select-menu">
+            <button class="sel-option selected" data-val="zh" onclick="selectOption('customSel1','🇨🇳 中文（简体）',this)">🇨🇳 中文（简体）</button>
+            <button class="sel-option" data-val="en" onclick="selectOption('customSel1','🇺🇸 English',this)">🇺🇸 English</button>
+            <button class="sel-option" data-val="ja" onclick="selectOption('customSel1','🇯🇵 日本語',this)">🇯🇵 日本語</button>
+            <button class="sel-option" data-val="ko" onclick="selectOption('customSel1','🇰🇷 한국어',this)">🇰🇷 한국어</button>
+          </div>
+        </div>
+      </div>
+      <div class="plan-card"><h4>核心 JS 逻辑</h4>
+        <div class="code-block"><span class="kw">function</span> <span class="fn">toggleSelect</span>(<span class="prop">id</span>) {<br>&nbsp;&nbsp;document.<span class="fn">getElementById</span>(id).<span class="fn">classList</span>.<span class="fn">toggle</span>(<span class="val">'open'</span>);<br>}<br><br><span class="comment">// 点击外部关闭</span><br><span class="tag">document</span>.<span class="fn">addEventListener</span>(<span class="val">'click'</span>,<span class="prop">e</span>=>{<br>&nbsp;&nbsp;<span class="kw">if</span>(!e.<span class="prop">target</span>.<span class="fn">closest</span>(<span class="val">'.custom-select-dropdown'</span>))<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// 关闭所有打开的菜单</span><br>});</div></div>
+    </div>
+  </div>
+</article>
+
+<!-- ===== 四、框架方案 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">4</div><h2>UI 框架方案 + 避坑指南</h2><span class="en-label">Frameworks & Pitfalls</span></div>
+  <div class="card-body">
+    <div class="demo-grid">
+      <div class="plan-card" style="border-left:4px solid var(--green);">
+        <h4>🧩 主流框架 Select 组件</h4>
+        <table class="compare-table" style="margin:0;font-size:.75rem;">
+          <tr><td style="font-weight:600;">Ant Design</td><td><code>&lt;Select mode="multiple"&gt;</code></td><td>多选/搜索/分组/虚拟滚动</td></tr>
+          <tr><td style="font-weight:600;">Element Plus</td><td><code>&lt;el-select v-model="val"&gt;</code></td><td>远程搜索/自定义模板/下拉菜单</td></tr>
+          <tr><td style="font-weight:600;">Bootstrap 5</td><td><code>&lt;select class="form-select"&gt;</code></td><td>轻量 · 仅样式 · 无JS交互</td></tr>
+        </table>
+      </div>
+      <div class="plan-card" style="border-left:4px solid var(--red);">
+        <h4>🐛 避坑清单</h4>
+        <p style="font-size:.78rem;color:#475569;"><strong>① ID唯一性：</strong>页面多个下拉框，必须保证每个 id 唯一，或用 class + querySelectorAll。</p>
+        <p style="font-size:.78rem;color:#475569;"><strong>② 悬停断连：</strong>CSS下拉菜单中，父级和子级之间不能有像素级空隙（margin-top），否则鼠标移动时菜单会意外收起。</p>
+        <p style="font-size:.78rem;color:#475569;"><strong>③ A11y：</strong>自定义下拉菜单必须补全 ARIA：<code>aria-expanded="true/false"</code> + <code>aria-haspopup="listbox"</code> + <code>role="option"</code>。</p>
+      </div>
+      <div class="plan-card" style="border-left:4px solid var(--blue);">
+        <h4>📡 JS 动态生成选项</h4>
+        <div class="code-block"><span class="kw">const</span> data = [<span class="val">'北京'</span>,<span class="val">'上海'</span>,<span class="val">'广州'</span>];<br><span class="kw">const</span> sel = <span class="tag">document</span>.<span class="fn">createElement</span>(<span class="val">'select'</span>);<br>data.<span class="fn">forEach</span>(<span class="prop">city</span> => {<br>&nbsp;&nbsp;<span class="kw">const</span> opt = <span class="kw">new</span> <span class="fn">Option</span>(city, city);<br>&nbsp;&nbsp;sel.<span class="fn">appendChild</span>(opt);<br>});<br><span class="tag">document</span>.<span class="fn">getElementById</span>(<span class="val">'container'</span>).<span class="fn">appendChild</span>(sel);</div><p style="font-size:.72rem;color:#475569;">适合选项需从接口动态获取的场景。</p></div>
+      <div class="plan-card" style="border-left:4px solid var(--purple);">
+        <h4>📊 四种实现方式对比</h4>
+        <table class="compare-table" style="margin:0;font-size:.72rem;">
+          <tr><th>方式</th><th>场景</th><th>自定义度</th><th>A11y</th></tr>
+          <tr><td>原生 select</td><td>表单收集</td><td>低</td><td>✅</td></tr>
+          <tr><td>select+CSS美化</td><td>表单+品牌色</td><td>中</td><td>✅</td></tr>
+          <tr><td>div+JS自定义</td><td>复杂交互</td><td>高</td><td>⚠️</td></tr>
+          <tr><td>UI组件库</td><td>企业级项目</td><td>高</td><td>✅</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</article>
+
+</div>
+
+<script>
+// ===== 自定义下拉菜单 =====
+function toggleSelect(id) {
+  const dd = document.getElementById(id);
+  if (!dd) return;
+  // 关闭其他菜单
+  document.querySelectorAll('.custom-select-dropdown.open').forEach(d => { if (d.id !== id) d.classList.remove('open'); });
+  dd.classList.toggle('open');
+}
+function selectOption(dropdownId, label, btn) {
+  const dd = document.getElementById(dropdownId);
+  dd.querySelector('#' + dropdownId + 'Label').textContent = label;
+  dd.querySelectorAll('.sel-option').forEach(o => o.classList.remove('selected'));
+  btn.classList.add('selected');
+  dd.classList.remove('open');
+}
+// 点击外部关闭
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.custom-select-dropdown')) {
+    document.querySelectorAll('.custom-select-dropdown.open').forEach(d => d.classList.remove('open'));
+  }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微交互实战演示 | Micro-Interactions Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: #0f172a; color: #e2e8f0;
+  }
+
+  header {
+    text-align: center; padding: 2.5rem 1rem 1.5rem;
+  }
+  header h1 { font-size: 1.8rem; }
+  header h1 span { background: linear-gradient(135deg, #06b6d4, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+  .page { max-width: 960px; margin: 0 auto; padding: 1rem; }
+
+  .card {
+    background: #1e293b; border-radius: 14px; border: 1px solid #334155;
+    margin-bottom: 1.5rem; overflow: hidden;
+  }
+  .card .card-top {
+    background: #0f172a; padding: .65rem 1.2rem; border-bottom: 1px solid #334155;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: .82rem; font-weight: 700;
+  }
+  .badge {
+    font-size: .65rem; padding: .2rem .6rem; border-radius: 10px; font-weight: 600;
+  }
+  .badge-green { background: rgba(34,197,94,.12); color: #4ade80; }
+  .badge-blue { background: rgba(59,130,246,.12); color: #93c5fd; }
+  .card-body { background: #f8fafc; color: #1e293b; padding: 1.2rem; }
+
+  /* ===== 1. 按钮微交互 ===== */
+  .btn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+  .btn-box {
+    background: white; border-radius: 10px; padding: 1rem; text-align: center;
+    box-shadow: 0 1px 6px rgba(0,0,0,.03);
+  }
+  .btn-box h4 { font-size: .8rem; color: #94a3b8; margin-bottom: .8rem; }
+
+  /* 悬停抬升 */
+  .mi-btn-lift {
+    padding: .6rem 1.5rem; background: #3b82f6; color: white; border: none;
+    border-radius: 8px; font-size: .85rem; cursor: pointer; font-weight: 600;
+    transition: all .25s cubic-bezier(.34,1.56,.64,1);
+    box-shadow: 0 2px 8px rgba(59,130,246,.2);
+  }
+  .mi-btn-lift:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(59,130,246,.35); }
+  .mi-btn-lift:active { transform: translateY(0) scale(.97); box-shadow: 0 1px 3px rgba(59,130,246,.15); }
+
+  /* 点击反弹 */
+  .mi-btn-bounce {
+    padding: .6rem 1.5rem; background: #22c55e; color: white; border: none;
+    border-radius: 8px; font-size: .85rem; cursor: pointer; font-weight: 600;
+    transition: all .25s cubic-bezier(.34,1.56,.64,1);
+  }
+  .mi-btn-bounce:active { transform: scale(.9); }
+  .mi-btn-bounce:not(:active) { transition: all .5s cubic-bezier(.34,1.56,.64,1); }
+
+  /* 辉光扩散 */
+  .mi-btn-glow {
+    padding: .6rem 1.5rem; background: #7c3aed; color: white; border: none;
+    border-radius: 8px; font-size: .85rem; cursor: pointer; font-weight: 600;
+    transition: all .25s ease;
+    box-shadow: 0 0 0 0 rgba(124,58,237,.4);
+  }
+  .mi-btn-glow:hover { box-shadow: 0 0 0 8px rgba(124,58,237,0); }
+  .mi-btn-glow:active { box-shadow: 0 0 0 3px rgba(124,58,237,.3); }
+
+  /* 边框淡入 */
+  .mi-btn-border {
+    padding: .6rem 1.5rem; background: transparent; color: #475569; border: 2px solid #d1d5db;
+    border-radius: 8px; font-size: .85rem; cursor: pointer; font-weight: 600;
+    transition: all .3s ease;
+  }
+  .mi-btn-border:hover { border-color: #3b82f6; color: #3b82f6; background: rgba(59,130,246,.04); }
+
+  /* ===== 2. 表单微交互 ===== */
+  .form-demo { display: flex; flex-direction: column; gap: 1.2rem; max-width: 400px; }
+  .input-group { position: relative; }
+  .input-group input {
+    width: 100%; padding: .9rem .8rem .5rem; border: 2px solid #e2e8f0;
+    border-radius: 8px; font-size: .9rem; outline: none; background: white;
+    transition: border-color .25s ease, box-shadow .25s ease;
+  }
+  .input-group input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
+  .input-group input.error { border-color: #ef4444; animation: shake .4s ease; }
+  .input-group input.valid { border-color: #22c55e; }
+  .input-group label {
+    position: absolute; left: .8rem; top: .75rem; font-size: .9rem;
+    color: #94a3b8; pointer-events: none;
+    transition: all .2s cubic-bezier(.4,0,.2,1);
+    background: white; padding: 0 .3rem;
+  }
+  /* 悬浮标签 */
+  .input-group input:focus ~ label,
+  .input-group input:not(:placeholder-shown) ~ label {
+    top: -.5rem; left: .6rem; font-size: .72rem; color: #3b82f6; font-weight: 600;
+  }
+  .input-group .validation-icon {
+    position: absolute; right: .8rem; top: 50%; transform: translateY(-50%);
+    font-size: 1rem; opacity: 0; transition: opacity .2s;
+  }
+  .input-group input.valid ~ .validation-icon { opacity: 1; color: #22c55e; }
+  .input-group input.error ~ .validation-icon { opacity: 1; color: #ef4444; }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  /* ===== 3. 骨架屏 vs 旋转Loading ===== */
+  .loading-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 500px) { .loading-compare { grid-template-columns: 1fr; } }
+
+  .skeleton-card {
+    background: white; border-radius: 10px; padding: 1rem;
+    box-shadow: 0 1px 6px rgba(0,0,0,.03);
+  }
+  .skeleton-line {
+    height: 14px; background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%; border-radius: 4px; margin-bottom: .6rem;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+  .skeleton-avatar {
+    width: 40px; height: 40px; border-radius: 50%; margin-bottom: .8rem;
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .spinner-box {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 150px; background: white; border-radius: 10px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.03);
+  }
+  .spinner {
+    width: 36px; height: 36px; border: 3px solid #e2e8f0;
+    border-top-color: #3b82f6; border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== 4. 进度条 ===== */
+  .progress-real {
+    height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;
+  }
+  .progress-real .fill {
+    height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    border-radius: 3px; transition: width .3s ease;
+    width: 0%;
+  }
+  .progress-label { font-size: .75rem; color: #64748b; margin-top: .3rem; }
+
+  /* ===== 5. 悬停卡片 ===== */
+  .hover-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+
+  /* 柔和高亮 */
+  .hc-soft {
+    background: white; border-radius: 12px; padding: 1.5rem; text-align: center;
+    cursor: pointer; transition: all .35s ease;
+    box-shadow: 0 1px 6px rgba(0,0,0,.03);
+  }
+  .hc-soft:hover {
+    background: #f8fafc; box-shadow: 0 4px 16px rgba(0,0,0,.06);
+    transform: translateY(-2px);
+  }
+  .hc-soft:active { transform: translateY(0); }
+
+  /* 边框淡入 */
+  .hc-border {
+    background: white; border-radius: 12px; padding: 1.5rem; text-align: center;
+    cursor: pointer; border: 2px solid #f1f5f9;
+    transition: all .3s ease;
+  }
+  .hc-border:hover { border-color: #3b82f6; background: rgba(59,130,246,.02); }
+
+  /* 光标的合理变化 */
+  .hc-cursor {
+    background: white; border-radius: 12px; padding: 1.5rem; text-align: center;
+    cursor: pointer; transition: all .3s ease;
+    box-shadow: 0 1px 6px rgba(0,0,0,.03);
+  }
+  .hc-cursor:hover { cursor: grab; background: #fafafa; }
+
+  /* ===== 6. 页面过渡模拟 ===== */
+  .transition-demo { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+  .transition-demo .modal-trigger {
+    padding: .6rem 1.5rem; background: #3b82f6; color: white; border: none;
+    border-radius: 8px; cursor: pointer; font-size: .85rem; font-weight: 600;
+  }
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden; transition: all .3s ease;
+  }
+  .modal-overlay.show { opacity: 1; visibility: visible; }
+  .modal-box {
+    background: white; border-radius: 16px; padding: 2rem; min-width: 320px;
+    text-align: center; color: #1e293b;
+    transform: translateY(30px) scale(.95);
+    transition: all .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .modal-overlay.show .modal-box { transform: translateY(0) scale(1); }
+
+  /* 对比区 */
+  .compare-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 500px) { .compare-2col { grid-template-columns: 1fr; } }
+  .anti-box {
+    background: #fef2f2; border: 1px solid #fecaca;
+    border-radius: 8px; padding: .8rem; font-size: .78rem; color: #dc2626;
+  }
+  .anti-box .title { font-weight: 700; margin-bottom: .3rem; }
+
+  /* 指标展示 */
+  .metric-row { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+  .metric {
+    display: flex; flex-direction: column; align-items: center;
+    padding: .8rem; min-width: 80px;
+  }
+  .metric .val { font-size: 1.6rem; font-weight: 900; }
+  .metric .lbl { font-size: .7rem; color: #94a3b8; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>✨ 微交互 <span>提升高级感</span></h1>
+  <p style="color:#64748b;font-size:.88rem;margin-top:.3rem">克制 · 自然缓动 · 100ms响应 — 亲手试试每个交互</p>
+</header>
+
+<div class="page">
+
+  <!-- ===== 1. 按钮微交互 ===== -->
+  <div class="card">
+    <div class="card-top">
+      <span>🖱️ 按钮微交互 — 物理反馈的"生命力"</span>
+      <span class="badge badge-green">点击试试</span>
+    </div>
+    <div class="card-body">
+      <div class="btn-grid">
+        <div class="btn-box">
+          <h4>悬停抬升 + 阴影加深</h4>
+          <button class="mi-btn-lift">悬停&点击我</button>
+          <p style="font-size:.68rem;color:#94a3b8;margin-top:.5rem">translateY(-3px) + box-shadow扩散</p>
+        </div>
+        <div class="btn-box">
+          <h4>点击弹性反弹</h4>
+          <button class="mi-btn-bounce">用力按我</button>
+          <p style="font-size:.68rem;color:#94a3b8;margin-top:.5rem">scale(.9) → cubic-bezier回弹</p>
+        </div>
+        <div class="btn-box">
+          <h4>辉光扩散</h4>
+          <button class="mi-btn-glow">悬停发光</button>
+          <p style="font-size:.68rem;color:#94a3b8;margin-top:.5rem">box-shadow 0→8px→0 脉冲感</p>
+        </div>
+        <div class="btn-box">
+          <h4>边框淡入</h4>
+          <button class="mi-btn-border">边框呼应</button>
+          <p style="font-size:.68rem;color:#94a3b8;margin-top:.5rem">border-color + color 同步过渡</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 2. 表单微交互 ===== -->
+  <div class="card">
+    <div class="card-top">
+      <span>📝 表单输入 — 悬浮标签 + 实时验证</span>
+      <span class="badge badge-blue">聚焦试试</span>
+    </div>
+    <div class="card-body">
+      <div class="form-demo">
+        <div class="input-group">
+          <input type="text" placeholder=" " id="nameInput" onblur="validateName()" onfocus="clearValidation('nameInput')">
+          <label>姓名</label>
+          <span class="validation-icon" id="nameIcon"></span>
+        </div>
+        <div class="input-group">
+          <input type="email" placeholder=" " id="emailInput" onblur="validateEmail()" onfocus="clearValidation('emailInput')">
+          <label>邮箱</label>
+          <span class="validation-icon" id="emailIcon"></span>
+        </div>
+      </div>
+      <p style="font-size:.72rem;color:#94a3b8;margin-top:.8rem">
+        👆 聚焦时占位符上移缩小为标签（Ghost Placeholder），输入后失焦触发实时验证
+      </p>
+    </div>
+  </div>
+
+  <!-- ===== 3. 骨架屏 vs 旋转 ===== -->
+  <div class="card">
+    <div class="card-top">
+      <span>⏳ 加载状态 — 骨架屏 vs 旋转Loading</span>
+    </div>
+    <div class="card-body">
+      <div class="loading-compare">
+        <div>
+          <h4 style="font-size:.82rem;margin-bottom:.5rem;color:#22c55e">✅ 骨架屏（预知形状）</h4>
+          <div class="skeleton-card">
+            <div class="skeleton-avatar"></div>
+            <div class="skeleton-line" style="width:60%"></div>
+            <div class="skeleton-line" style="width:90%"></div>
+            <div class="skeleton-line" style="width:40%"></div>
+          </div>
+        </div>
+        <div>
+          <h4 style="font-size:.82rem;margin-bottom:.5rem;color:#94a3b8">传统旋转图标</h4>
+          <div class="spinner-box">
+            <div class="spinner"></div>
+            <p style="font-size:.75rem;color:#94a3b8;margin-top:.5rem">加载中...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 4. 真实进度条 ===== -->
+  <div class="card">
+    <div class="card-top">
+      <span>📊 进度反馈 — 真实进度 vs 假进度</span>
+    </div>
+    <div class="card-body">
+      <div class="compare-2col">
+        <div>
+          <h4 style="font-size:.8rem;color:#22c55e;margin-bottom:.3rem">✅ 真实递增</h4>
+          <div class="progress-real" id="realProgress"><div class="fill" id="realFill"></div></div>
+          <div class="progress-label" id="realLabel">0%</div>
+          <button class="mi-btn-lift" style="margin-top:.8rem;font-size:.75rem;padding:.4rem 1rem" onclick="startRealProgress()">开始上传</button>
+        </div>
+        <div class="anti-box">
+          <div class="title">❌ 假进度（跳变1%→85%）</div>
+          <p>虚假进度条破坏用户信任，比不显示更糟糕</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 5. 悬停卡片 ===== -->
+  <div class="card">
+    <div class="card-top">
+      <span>👆 悬停状态 — "界面在关注你"</span>
+    </div>
+    <div class="card-body">
+      <div class="hover-cards">
+        <div class="hc-soft">
+          <div style="font-size:1.8rem;margin-bottom:.5rem">📦</div>
+          <h4 style="font-size:.85rem">柔和高亮</h4>
+          <p style="font-size:.72rem;color:#94a3b8">背景微变+阴影抬升<br>"我注意到你了"</p>
+        </div>
+        <div class="hc-border">
+          <div style="font-size:1.8rem;margin-bottom:.5rem">🔲</div>
+          <h4 style="font-size:.85rem">边框淡入</h4>
+          <p style="font-size:.72rem;color:#94a3b8">边框颜色渐变切换<br>克制而明确</p>
+        </div>
+        <div class="hc-cursor">
+          <div style="font-size:1.8rem;margin-bottom:.5rem">🖐️</div>
+          <h4 style="font-size:.85rem">光标变化</h4>
+          <p style="font-size:.72rem;color:#94a3b8">hover→cursor:grab<br>传达"可拖拽"语义</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 6. 弹窗过渡 ===== -->
+  <div class="card">
+    <div class="card-top">
+      <span>🪟 页面过渡 — 滑入渐显，非突兀闪烁</span>
+    </div>
+    <div class="card-body">
+      <div class="transition-demo">
+        <button class="modal-trigger" onclick="openModal()">打开弹窗 →</button>
+        <p style="font-size:.78rem;color:#64748b">
+          弹窗从下方滑入+scale回弹（translateY(30px)→0 + scale(.95)→1）
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 三大原则 ===== -->
+  <div class="card">
+    <div class="card-top"><span>📐 三大核心原则</span></div>
+    <div class="card-body" style="background:#1e293b;color:#e2e8f0">
+      <div class="metric-row">
+        <div class="metric">
+          <div class="val">🎯</div>
+          <div class="lbl">微妙与克制<br>少即是多</div>
+        </div>
+        <div class="metric">
+          <div class="val">0.3s</div>
+          <div class="lbl">自然缓动时间<br>cubic-bezier</div>
+        </div>
+        <div class="metric">
+          <div class="val">≤100ms</div>
+          <div class="lbl">响应时间<br>无延迟丝滑感</div>
+        </div>
+        <div class="metric">
+          <div class="val">60fps</div>
+          <div class="lbl">GPU加速<br>transform/opacity</div>
+        </div>
+      </div>
+      <div class="anti-box" style="margin-top:1rem;background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.15);color:#fca5a5">
+        <strong>🚫 避坑：</strong>不用 width/left/margin 做动画（触发Layout） · 不用 display:none 做过渡（无效） · 不用假进度条 · 不滥用动效
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 弹窗 -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <h3 style="font-size:1.2rem;margin-bottom:.5rem">✨ 这是一个弹窗</h3>
+    <p style="font-size:.85rem;color:#64748b;margin-bottom:1rem">滑入渐显的过渡动画<br>非突兀闪烁</p>
+    <button class="mi-btn-lift" style="font-size:.8rem" onclick="closeModal()">关闭</button>
+  </div>
+</div>
+
+<script>
+// 表单验证
+function validateName() {
+  const el = document.getElementById('nameInput');
+  const icon = document.getElementById('nameIcon');
+  el.classList.remove('valid','error');
+  if (el.value.trim().length >= 2) { el.classList.add('valid'); icon.textContent = '✓'; }
+  else { el.classList.add('error'); icon.textContent = '✗'; }
+}
+function validateEmail() {
+  const el = document.getElementById('emailInput');
+  const icon = document.getElementById('emailIcon');
+  el.classList.remove('valid','error');
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value)) { el.classList.add('valid'); icon.textContent = '✓'; }
+  else { el.classList.add('error'); icon.textContent = '✗'; }
+}
+function clearValidation(id) {
+  document.getElementById(id).classList.remove('valid','error');
+}
+
+// 真实进度
+let progressTimer;
+function startRealProgress() {
+  const fill = document.getElementById('realFill');
+  const label = document.getElementById('realLabel');
+  let p = 0;
+  clearInterval(progressTimer);
+  fill.style.width = '0%'; label.textContent = '0%';
+  progressTimer = setInterval(() => {
+    p += Math.random() * 8 + 2; // 2-10% 随机递增
+    if (p >= 100) { p = 100; clearInterval(progressTimer); }
+    fill.style.width = p + '%';
+    label.textContent = Math.round(p) + '%';
+  }, 300);
+}
+
+// 弹窗
+function openModal() { document.getElementById('modalOverlay').classList.add('show'); }
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modalOverlay')) return;
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('modalOverlay').classList.remove('show'); });
+</script>
+</body>
+</html>

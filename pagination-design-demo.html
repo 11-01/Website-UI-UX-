@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>网站UI分页组件设计指南 | Pagination Design Guide</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f172a;--card-bg:#1e293b;--card-border:#334155;--surface:#f8fafc;--text:#e2e8f0;--text-dim:#94a3b8;--text-dark:#1e293b;--blue:#3b82f6;--purple:#8b5cf6;--green:#22c55e;--red:#ef4444;--orange:#f59e0b;--radius:10px;--radius-lg:16px}
+body{font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.hero{text-align:center;padding:3rem 1.5rem 2rem;background:linear-gradient(180deg,#0f172a 0%,#1a2332 100%)}
+.hero h1{font-size:clamp(1.8rem,4vw,3rem);font-weight:900;margin-bottom:.6rem}
+.hero h1 span{background:linear-gradient(135deg,#14b8a6,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .subtitle{font-size:1rem;color:var(--text-dim);max-width:700px;margin:0 auto}
+.hero .meta-tags{display:flex;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
+.hero .meta-tags span{font-size:.75rem;padding:.25rem .75rem;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.2);border-radius:20px;color:#5eead4}
+
+.page{max-width:1200px;margin:0 auto;padding:0 1.5rem 4rem}
+.section-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);margin-bottom:2rem;overflow:hidden}
+.section-card .card-header{padding:1.2rem 1.5rem;border-bottom:1px solid var(--card-border);display:flex;align-items:center;gap:.8rem}
+.section-card .card-header .section-num{width:36px;height:36px;background:linear-gradient(135deg,#14b8a6,#3b82f6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;color:white;flex-shrink:0}
+.section-card .card-header h2{font-size:1.3rem;font-weight:700}
+.section-card .card-header .en-label{font-size:.75rem;color:var(--text-dim);margin-left:auto}
+.section-card .card-body{background:var(--surface);color:var(--text-dark);padding:1.5rem}
+
+.sub-title{font-size:.95rem;font-weight:700;color:#475569;margin-bottom:1rem;margin-top:1.5rem;padding-bottom:.5rem;border-bottom:2px solid #e2e8f0;display:flex;align-items:center;gap:.5rem}
+.sub-title:first-child{margin-top:0}
+.sub-title::before{content:'';width:4px;height:18px;background:#14b8a6;border-radius:2px}
+
+.demo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.2rem}
+.code-block{background:#1e293b;color:#e2e8f0;border-radius:8px;padding:.9rem 1.1rem;font-family:'JetBrains Mono','Fira Code','Consolas',monospace;font-size:.76rem;line-height:1.7;overflow-x:auto;margin:.6rem 0}
+.code-block .tag{color:#f472b6}.code-block .attr{color:#67e8f9}.code-block .val{color:#a5d6ff}.code-block .comment{color:#64748b}.code-block .prop{color:#fde68a}.code-block .kw{color:#f472b6}
+
+.tip-box{display:flex;align-items:flex-start;gap:.6rem;padding:.8rem 1rem;border-radius:8px;font-size:.8rem;margin:.8rem 0}
+.tip-box.info{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
+.tip-box.success{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.tip-box.warn{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+.tip-box .icon{font-size:1rem;flex-shrink:0}
+
+.plan-card{background:white;border-radius:var(--radius);padding:1.2rem;box-shadow:0 1px 6px rgba(0,0,0,.03);border:1px solid #f1f5f9}
+.plan-card h4{font-size:.9rem;margin-bottom:.5rem}
+
+.compare-table{width:100%;border-collapse:collapse;font-size:.8rem;margin:.8rem 0}
+.compare-table th{background:#f1f5f9;padding:.5rem .8rem;text-align:left;font-weight:600}
+.compare-table td{padding:.5rem .8rem;border-bottom:1px solid #e2e8f0}
+
+/* ===== 分页组件样式 ===== */
+
+/* 基础数字分页 */
+.pagination{display:flex;align-items:center;gap:.25rem;flex-wrap:wrap;justify-content:center;padding:.5rem 0}
+.pagination .page-item{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:36px;height:36px;padding:0 .5rem;
+  border:1.5px solid #d1d5db;border-radius:8px;
+  font-size:.8rem;font-weight:500;color:#475569;
+  background:white;cursor:pointer;transition:all .2s;
+  text-decoration:none;user-select:none;font-family:inherit;
+}
+.pagination .page-item:hover{background:#f1f5f9;border-color:#94a3b8}
+.pagination .page-item.active{background:var(--blue);color:white;border-color:var(--blue);font-weight:700}
+.pagination .page-item.disabled{color:#d1d5db;cursor:not-allowed;pointer-events:none;border-color:#e2e8f0}
+.pagination .page-item.ellipsis{border:none;cursor:default;min-width:auto;padding:0 .25rem}
+.pagination .page-item.ellipsis:hover{background:transparent}
+
+/* 圆角药丸分页 */
+.pagination-pill .page-item{border-radius:20px;min-width:38px}
+
+/* 大号分页 */
+.pagination-lg .page-item{min-width:44px;height:44px;font-size:.9rem;border-radius:10px}
+
+/* 带总数提示的分页条 */
+.pagination-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem;padding:.8rem 0}
+.pagination-bar .total{font-size:.78rem;color:#94a3b8}
+
+/* 加载更多按钮 */
+.load-more-btn{display:block;width:100%;max-width:300px;margin:1rem auto;padding:.7rem 1.5rem;background:white;border:2px solid #d1d5db;border-radius:24px;font-size:.85rem;font-weight:600;color:#475569;cursor:pointer;transition:all .2s;font-family:inherit}
+.load-more-btn:hover{background:#f8fafc;border-color:var(--blue);color:var(--blue)}
+.load-more-btn .spinner{display:inline-block;width:16px;height:16px;border:2px solid #d1d5db;border-top-color:var(--blue);border-radius:50%;animation:spin .6s linear infinite;margin-right:.4rem;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 无限滚动指示器 */
+.infinite-indicator{text-align:center;padding:1rem;color:#94a3b8;font-size:.78rem}
+.infinite-indicator .dot-pulse{display:flex;justify-content:center;gap:.3rem;margin-bottom:.4rem}
+.infinite-indicator .dot-pulse span{width:8px;height:8px;background:#94a3b8;border-radius:50%;animation:pulse 1.4s infinite ease-in-out}
+.infinite-indicator .dot-pulse span:nth-child(2){animation-delay:.2s}
+.infinite-indicator .dot-pulse span:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+
+/* 快速跳转 */
+.jump-box{display:inline-flex;align-items:center;gap:.3rem;font-size:.78rem;color:#475569}
+.jump-box input{width:50px;padding:.3rem .4rem;border:1.5px solid #d1d5db;border-radius:6px;text-align:center;font-size:.78rem;font-family:inherit}
+.jump-box input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+
+@media(max-width:640px){.demo-grid{grid-template-columns:1fr}.pagination-bar{flex-direction:column;align-items:center}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1><span>网站UI分页组件设计指南</span></h1>
+  <p class="subtitle">分页（Pagination）将大量内容分割成独立页面，避免用户被海量数据淹没，降低认知负荷并提升浏览体验。</p>
+  <div class="meta-tags">
+    <span>数字分页</span><span>加载更多</span><span>无限滚动</span><span>省略号策略</span><span>无障碍</span>
+  </div>
+</header>
+
+<div class="page">
+
+<!-- ===== 一、四种分页类型 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">1</div><h2>四种分页类型及应用场景</h2><span class="en-label">Pagination Types</span></div>
+  <div class="card-body">
+
+    <div class="sub-title">类型1：数字分页 — 最常见，用户可直接跳转任意页</div>
+    <div style="text-align:center;">
+      <div class="pagination">
+        <button class="page-item disabled">⟨ 上一页</button>
+        <button class="page-item active">1</button>
+        <button class="page-item">2</button>
+        <button class="page-item">3</button>
+        <button class="page-item">4</button>
+        <button class="page-item">5</button>
+        <span class="page-item ellipsis">…</span>
+        <button class="page-item">99</button>
+        <button class="page-item">下一页 ⟩</button>
+      </div>
+    </div>
+    <p style="font-size:.72rem;color:#94a3b8;text-align:center;">适合大多数场景：搜索结果、文章列表、数据表格等。</p>
+
+    <div class="sub-title">类型2：上一页/下一页 — 最简洁，适合按顺序浏览的内容</div>
+    <div style="text-align:center;">
+      <div class="pagination">
+        <button class="page-item disabled">← 上一页</button>
+        <button class="page-item">下一页 →</button>
+      </div>
+    </div>
+
+    <div class="sub-title">类型3：加载更多（Load More）— 用户主动触发，体验可控</div>
+    <div style="text-align:center;">
+      <button class="load-more-btn">📥 加载更多内容</button>
+      <br>
+      <button class="load-more-btn" disabled><span class="spinner"></span>加载中...</button>
+    </div>
+    <p style="font-size:.72rem;color:#94a3b8;text-align:center;">常见于电商、搜索引擎。体验比无限滚动更可控，用户可选择是否继续浏览。</p>
+
+    <div class="sub-title">类型4：无限滚动（Infinite Scroll）— 内容动态加载</div>
+    <div style="background:#f8fafc;border-radius:8px;padding:1rem;text-align:center;border:1px solid #e2e8f0;">
+      <p style="font-size:.78rem;color:#475569;">📜 内容区域 — 向下滚动自动加载更多...</p>
+      <div style="height:40px;"></div>
+      <div class="infinite-indicator">
+        <div class="dot-pulse"><span></span><span></span><span></span></div>
+        正在加载更多内容...
+      </div>
+    </div>
+    <p style="font-size:.72rem;color:#94a3b8;text-align:center;margin-top:.4rem;">常用于社交媒体信息流（微博、Twitter）。注意需提供页脚访问入口。</p>
+  </div>
+</article>
+
+<!-- ===== 二、省略号策略 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">2</div><h2>海量页码的省略号（Ellipsis）策略</h2><span class="en-label">Ellipsis Strategy</span></div>
+  <div class="card-body">
+    <p style="font-size:.85rem;color:#475569;margin-bottom:1rem;">当数据量极大时（如100页），直接展示所有页码会撑爆布局。正确的省略号策略：</p>
+    <div class="demo-grid">
+      <div class="plan-card" style="border-left:4px solid var(--blue);">
+        <h4>✅ 正确策略</h4>
+        <div class="pagination" style="justify-content:flex-start;">
+          <button class="page-item">1</button><span class="page-item ellipsis">…</span>
+          <button class="page-item">5</button><button class="page-item">6</button>
+          <button class="page-item active">7</button>
+          <button class="page-item">8</button><button class="page-item">9</button>
+          <span class="page-item ellipsis">…</span><button class="page-item">100</button>
+        </div>
+        <p style="font-size:.72rem;color:#16a34a;margin-top:.5rem;">首尾页始终可见 · 当前页居中 · 相邻页环绕 · 省略号替代中间页</p>
+      </div>
+      <div class="plan-card" style="border-left:4px solid var(--red);">
+        <h4>❌ 错误做法</h4>
+        <div style="font-size:.7rem;color:#94a3b8;word-break:break-all;">1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 ...</div>
+        <p style="font-size:.72rem;color:#dc2626;margin-top:.5rem;">直接展示所有页码 — 视觉混乱、占用空间、用户选择困难</p>
+      </div>
+    </div>
+
+    <div class="sub-title">省略号算法核心逻辑</div>
+    <div class="code-block">
+      <span class="comment">// 始终显示：第一页 + 最后一页</span><br>
+      <span class="comment">// 当前页 + 左右各 N 个相邻页（N通常=2）</span><br>
+      <span class="comment">// 中间间隙用 "..." 替代</span><br>
+      <span class="kw">const</span> pages = [];<br>
+      <span class="kw">if</span> (current &gt; 1 + 2 + 1) pages.push(1, <span class="val">'...'</span>);<br>
+      <span class="kw">else</span> <span class="kw">for</span> (<span class="kw">let</span> i = 1; i &lt; current; i++) pages.push(i);<br>
+      <span class="comment">// 当前页及其邻居</span><br>
+      <span class="kw">for</span> (<span class="kw">let</span> i = Math.max(1, current-2); i &lt;= Math.min(total, current+2); i++) pages.push(i);<br>
+      <span class="kw">if</span> (current &lt; total - 2 - 1) pages.push(<span class="val">'...'</span>, total);<br>
+      <span class="kw">else</span> <span class="kw">for</span> (<span class="kw">let</span> i = current + 1; i &lt;= total; i++) pages.push(i);
+    </div>
+  </div>
+</article>
+
+<!-- ===== 三、UI设计细节 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">3</div><h2>关键 UI 设计与交互细节</h2><span class="en-label">UI Design Details</span></div>
+  <div class="card-body">
+
+    <div class="sub-title">分页组件变体演示</div>
+    <div class="demo-grid">
+      <!-- 标准风格 -->
+      <div class="plan-card">
+        <h4>📐 标准风（默认圆角）</h4>
+        <div class="pagination" style="justify-content:flex-start;">
+          <button class="page-item disabled">⟨</button>
+          <button class="page-item active">1</button><button class="page-item">2</button><button class="page-item">3</button>
+          <button class="page-item">⟩</button>
+        </div>
+      </div>
+      <!-- 药丸风格 -->
+      <div class="plan-card">
+        <h4>💊 药丸风（全圆角）</h4>
+        <div class="pagination pagination-pill" style="justify-content:flex-start;">
+          <button class="page-item disabled">⟨</button>
+          <button class="page-item active">1</button><button class="page-item">2</button><button class="page-item">3</button>
+          <button class="page-item">⟩</button>
+        </div>
+      </div>
+      <!-- 大号 -->
+      <div class="plan-card">
+        <h4>🔍 大号分页</h4>
+        <div class="pagination pagination-lg" style="justify-content:flex-start;">
+          <button class="page-item disabled">⟨</button>
+          <button class="page-item active">1</button><button class="page-item">2</button><button class="page-item">3</button>
+          <button class="page-item">⟩</button>
+        </div>
+      </div>
+      <!-- 完整信息条 -->
+      <div class="plan-card">
+        <h4>📊 含总数提示 + 快速跳转</h4>
+        <div class="pagination-bar" style="padding:0;">
+          <span class="total">共 <strong>1,280</strong> 条</span>
+          <div class="pagination">
+            <button class="page-item disabled">⟨</button>
+            <button class="page-item active">1</button><button class="page-item">2</button><button class="page-item">3</button>
+            <span class="page-item ellipsis">…</span><button class="page-item">128</button>
+            <button class="page-item">⟩</button>
+          </div>
+          <span class="jump-box">跳至 <input type="text" value="1" size="3"> 页</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-title">状态反馈要点</div>
+    <div class="demo-grid">
+      <div class="plan-card"><h4>📍 当前页高亮</h4><div class="pagination" style="justify-content:flex-start;"><button class="page-item active">7</button></div><p style="font-size:.72rem;color:#475569;margin-top:.4rem;">明确的样式区分（颜色+字重），让用户一眼知道"我在哪"。</p></div>
+      <div class="plan-card"><h4>🚫 首尾禁用态</h4><div class="pagination" style="justify-content:flex-start;"><button class="page-item disabled">⟨ 上一页</button></div><p style="font-size:.72rem;color:#475569;margin-top:.4rem;">第一页"上一页"按钮和最后一页"下一页"按钮应置灰且不可点击。</p></div>
+      <div class="plan-card"><h4>⏳ 加载反馈</h4><div class="pagination" style="justify-content:flex-start;"><button class="load-more-btn" disabled style="margin:0;"><span class="spinner"></span>加载中...</button></div><p style="font-size:.72rem;color:#475569;margin-top:.4rem;">点击翻页时显示加载动画，完成后同步更新分页器。</p></div>
+      <div class="plan-card"><h4>📱 移动端适配</h4><p style="font-size:.72rem;color:#475569;">数字分页在小屏幕易溢出。简化为"上一页/下一页"按钮或改用"加载更多"。触控区域 ≥ 44×44px。</p></div>
+    </div>
+  </div>
+</article>
+
+<!-- ===== 四、无障碍与性能 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">4</div><h2>无障碍设计 + 性能与一致性</h2><span class="en-label">A11y & Performance</span></div>
+  <div class="card-body">
+    <div class="demo-grid">
+      <div class="plan-card" style="border-left:4px solid var(--green);">
+        <h4>♿ 语义化 HTML + ARIA</h4>
+        <div class="code-block"><span class="tag">&lt;nav</span> <span class="attr">aria-label</span>=<span class="val">"分页导航"</span><span class="tag">&gt;</span><br>&nbsp;&nbsp;<span class="tag">&lt;ul&gt;</span><br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tag">&lt;li&gt;&lt;a</span> <span class="attr">href</span>=<span class="val">"?page=1"</span> <span class="attr">aria-current</span>=<span class="val">"page"</span><span class="tag">&gt;</span>1<span class="tag">&lt;/a&gt;&lt;/li&gt;</span><br>&nbsp;&nbsp;<span class="tag">&lt;/ul&gt;</span><br><span class="tag">&lt;/nav&gt;</span></div>
+        <p style="font-size:.72rem;color:#475569;">使用 <code>&lt;nav&gt;</code> + <code>aria-current="page"</code> + <code>aria-disabled</code>，确保屏幕阅读器用户能理解分页状态。</p>
+      </div>
+      <div class="plan-card" style="border-left:4px solid var(--blue);">
+        <h4>⚡ 性能优化</h4>
+        <p style="font-size:.78rem;color:#475569;">分页能显著减少单次页面加载时间。后端配合：</p>
+        <div class="code-block"><span class="kw">SELECT</span> * <span class="kw">FROM</span> items<br><span class="kw">ORDER BY</span> created_at <span class="kw">DESC</span><br><span class="kw">LIMIT</span> <span class="val">20</span> <span class="kw">OFFSET</span> <span class="val">40</span>; <span class="comment">/* 第3页 */</span></div>
+        <p style="font-size:.72rem;color:#475569;">使用 <code>LIMIT/OFFSET</code> + 合理索引，确保翻页响应迅速。</p>
+      </div>
+      <div class="plan-card" style="border-left:4px solid var(--orange);">
+        <h4>🔄 全局一致性</h4>
+        <p style="font-size:.78rem;color:#475569;">整个网站的分页样式、位置和行为必须保持统一。包括：页码尺寸、颜色主题、省略号位置、上一页/下一页文案。</p>
+      </div>
+      <div class="plan-card" style="border-left:4px solid var(--purple);">
+        <h4>📝 URL 与 SEO</h4>
+        <p style="font-size:.78rem;color:#475569;">分页应能通过 URL 参数定位：<code>?page=3</code>。SEO 方面使用 <code>rel="prev"</code> / <code>rel="next"</code> 链接标签告知搜索引擎页面关系。</p>
+      </div>
+    </div>
+  </div>
+</article>
+
+<!-- ===== 五、类型对比 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">5</div><h2>四种分页类型对比</h2><span class="en-label">Comparison</span></div>
+  <div class="card-body">
+    <div style="overflow-x:auto;">
+      <table class="compare-table">
+        <thead><tr><th>维度</th><th>数字分页</th><th>上一页/下一页</th><th>加载更多</th><th>无限滚动</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:600;">适用场景</td><td>搜索结果·数据表格</td><td>博客·教程</td><td>电商·图片搜索</td><td>社交信息流</td></tr>
+          <tr><td style="font-weight:600;">用户控制感</td><td>⭐⭐⭐ 强</td><td>⭐⭐ 中</td><td>⭐⭐ 中</td><td>⭐ 弱</td></tr>
+          <tr><td style="font-weight:600;">跳转灵活性</td><td>✅ 任意跳转</td><td>❌ 仅顺序</td><td>⚠️ 单向</td><td>❌ 仅向下</td></tr>
+          <tr><td style="font-weight:600;">SEO友好</td><td>✅ 最佳</td><td>✅ 好</td><td>⚠️ 一般</td><td>❌ 差</td></tr>
+          <tr><td style="font-weight:600;">移动端体验</td><td>⚠️ 需适配</td><td>✅ 好</td><td>✅ 最佳</td><td>✅ 最佳</td></tr>
+          <tr><td style="font-weight:600;">页脚可访问</td><td>✅</td><td>✅</td><td>⚠️</td><td>❌</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tip-box success" style="margin-top:1rem;">
+      <span class="icon">🏆</span>
+      <span><strong>推荐组合：</strong>桌面端使用"完整数字分页"（含总数+跳转），移动端降级为"加载更多"。这样兼顾两端的最佳体验。</span>
+    </div>
+  </div>
+</article>
+
+</div>
+</body>
+</html>

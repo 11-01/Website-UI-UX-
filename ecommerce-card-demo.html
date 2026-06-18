@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>电商卡片设计实战 | E-commerce Card Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #f5f5f5; color: #1e293b;
+  }
+
+  header {
+    background: #1e293b; color: white; text-align: center;
+    padding: 2.5rem 1rem 1.5rem;
+  }
+  header h1 { font-size: 1.6rem; }
+  header h1 span { background: linear-gradient(135deg, #ef4444, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+  .page { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+
+  /* ===== 高转化率三原则演示 ===== */
+  .section-title {
+    font-size: 1.2rem; font-weight: 700; margin: 2rem 0 1rem;
+    display: flex; align-items: center; gap: .5rem;
+  }
+
+  /* 商品卡片对比：好 vs 差 */
+  .card-compare {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+  }
+  @media (max-width: 700px) { .card-compare { grid-template-columns: 1fr; } }
+
+  /* 高转化率商品卡 */
+  .product-card-good {
+    background: white; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,.04);
+    position: relative;
+  }
+  .product-card-good .pcg-img {
+    height: 200px; background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 4rem; position: relative;
+  }
+  .product-card-good .pcg-badge {
+    position: absolute; top: 10px; left: 10px;
+    background: #ef4444; color: white; padding: 3px 10px;
+    border-radius: 4px; font-size: .7rem; font-weight: 700;
+  }
+  .product-card-good .pcg-body { padding: 1rem; }
+  .product-card-good .pcg-name { font-size: .95rem; font-weight: 600; margin-bottom: .5rem; }
+  /* 一级卖点：价格放大+色块 */
+  .product-card-good .pcg-price-row {
+    display: flex; align-items: baseline; gap: .5rem; margin-bottom: .6rem;
+  }
+  .product-card-good .pcg-price {
+    font-size: 1.5rem; font-weight: 900; color: #ef4444;
+  }
+  .product-card-good .pcg-original {
+    font-size: .75rem; color: #94a3b8; text-decoration: line-through;
+  }
+  .product-card-good .pcg-tag {
+    background: #fef2f2; color: #dc2626; padding: 1px 6px;
+    border-radius: 3px; font-size: .65rem; font-weight: 700;
+  }
+  /* 二级卖点：图标+短文案 */
+  .product-card-good .pcg-perks {
+    display: flex; gap: .8rem; margin-bottom: .8rem; flex-wrap: wrap;
+    font-size: .72rem; color: #64748b;
+  }
+  .product-card-good .pcg-perks span { display: flex; align-items: center; gap: 3px; }
+  /* 三级卖点：小字 */
+  .product-card-good .pcg-specs {
+    font-size: .7rem; color: #94a3b8; margin-bottom: .8rem;
+  }
+  /* CTA */
+  .product-card-good .pcg-cta {
+    width: 100%; padding: .7rem; background: #ef4444; color: white;
+    border: none; border-radius: 8px; font-size: .9rem; font-weight: 700;
+    cursor: pointer; transition: all .2s;
+  }
+  .product-card-good .pcg-cta:hover { background: #dc2626; transform: translateY(-1px); }
+
+  /* 差的产品卡 */
+  .product-card-bad {
+    background: white; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,.04);
+  }
+  .product-card-bad .pcb-img {
+    height: 200px; background: #e2e8f0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 4rem;
+  }
+  .product-card-bad .pcb-body { padding: 1rem; }
+  .product-card-bad .pcb-name { font-size: .85rem; color: #475569; margin-bottom: .5rem; }
+  .product-card-bad .pcb-price {
+    font-size: 1rem; color: #475569; margin-bottom: .8rem;
+  }
+  .product-card-bad .pcb-desc { font-size: .7rem; color: #94a3b8; margin-bottom: .8rem; }
+  .product-card-bad .pcb-btn {
+    width: 100%; padding: .5rem; background: #94a3b8; color: white;
+    border: none; border-radius: 8px; font-size: .8rem;
+  }
+
+  /* ===== 卖点分层可视化 ===== */
+  .sell-hierarchy {
+    display: flex; flex-direction: column; gap: .5rem;
+    background: white; border-radius: 12px; padding: 1.5rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,.03);
+  }
+  .sell-level {
+    display: flex; align-items: center; gap: .8rem; padding: .5rem 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .sell-level .sl-tag {
+    padding: 2px 8px; border-radius: 4px; font-size: .65rem; font-weight: 700; flex-shrink: 0;
+  }
+  .sl-l1 { background: #fef2f2; color: #dc2626; }
+  .sl-l2 { background: #fefce8; color: #d97706; }
+  .sl-l3 { background: #f1f5f9; color: #64748b; }
+
+  /* ===== PC vs 移动端对比 ===== */
+  .device-compare {
+    display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem;
+  }
+  @media (max-width: 800px) { .device-compare { grid-template-columns: 1fr; } }
+
+  .pc-view {
+    background: white; border-radius: 12px; padding: 1rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,.03);
+  }
+  .pc-view .pc-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: .8rem;
+  }
+  .pc-view .pc-grid .mini-card {
+    background: #f8fafc; border-radius: 8px; padding: .6rem; text-align: center;
+    font-size: .7rem; transition: all .2s; cursor: pointer;
+  }
+  .pc-view .pc-grid .mini-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,.08); transform: translateY(-2px);
+  }
+  .pc-view .pc-grid .mini-card .img {
+    height: 60px; background: #e2e8f0; border-radius: 6px; margin-bottom: .3rem;
+  }
+
+  .mobile-view {
+    width: 320px; background: white; border-radius: 20px; overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,.1);
+  }
+  .mobile-view .mv-top {
+    background: #1a1a1a; color: white; padding: .3rem 1rem;
+    display: flex; justify-content: space-between; font-size: .6rem;
+  }
+  .mobile-view .mv-nav {
+    background: white; padding: .5rem 1rem; font-size: .8rem; font-weight: 700;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .mobile-view .mv-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .5rem;
+    padding: .5rem;
+  }
+  .mobile-view .mv-grid .mcard {
+    background: #f8fafc; border-radius: 8px; padding: .6rem;
+    font-size: .68rem; min-height: 100px; text-align: center;
+  }
+  .mobile-view .mv-grid .mcard .img {
+    height: 50px; background: #e2e8f0; border-radius: 4px; margin-bottom: .3rem;
+  }
+  .mobile-view .mv-bar {
+    display: flex; border-top: 1px solid #f1f5f9; padding: .4rem .5rem;
+    gap: .3rem; font-size: .65rem; text-align: center; color: #64748b;
+  }
+  .mv-bar span { flex: 1; }
+  .mv-bar .active { color: #ef4444; }
+
+  /* 热区示意 */
+  .touch-target-demo {
+    background: white; border-radius: 12px; padding: 1.5rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,.03); text-align: center;
+  }
+  .touch-target-demo .tt-compare { display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; }
+  .tt-box { text-align: center; }
+  .tt-rect {
+    margin: 0 auto .5rem; background: rgba(59,130,246,.15);
+    border: 2px dashed #3b82f6; display: flex; align-items: center;
+    justify-content: center; font-size: .7rem; color: #3b82f6; font-weight: 700;
+  }
+  .tt-rect.pc { width: 44px; height: 44px; }
+  .tt-rect.mobile { width: 96px; height: 96px; }
+
+  /* 品牌店铺卡 */
+  .brand-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+  .brand-card {
+    border-radius: 14px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.04);
+  }
+  .brand-card .bc-head {
+    padding: 1.2rem; display: flex; align-items: center; gap: .8rem;
+  }
+  .brand-card .bc-head .bc-logo {
+    width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 1.3rem;
+  }
+  .brand-card .bc-head .bc-name { font-weight: 700; font-size: .95rem; }
+  .brand-card .bc-head .bc-desc { font-size: .72rem; opacity: .7; }
+  .brand-card .bc-body { padding: 0 1.2rem 1.2rem; }
+  .brand-card .bc-body .bc-value {
+    font-size: .78rem; padding: .4rem .8rem; border-radius: 6px;
+    margin-bottom: .5rem; display: inline-block;
+  }
+  .brand-card .bc-body .bc-action {
+    width: 100%; padding: .6rem; border-radius: 8px; border: none;
+    font-size: .82rem; font-weight: 700; cursor: pointer;
+  }
+
+  /* 高端品牌 */
+  .brand-luxury {
+    background: #faf8f5; border: 1px solid #e5e0d8;
+  }
+  .brand-luxury .bc-head .bc-logo { background: #1a1a1a; }
+  .brand-luxury .bc-head .bc-name { font-family: Georgia, serif; }
+  .brand-luxury .bc-value { background: #f5f0ea; color: #8b7355; }
+  .brand-luxury .bc-action { background: #1a1a1a; color: white; }
+
+  /* 年轻品牌 */
+  .brand-young {
+    background: linear-gradient(135deg, #fef3c7, #fef9c3);
+    border: 2px solid #fcd34d;
+  }
+  .brand-young .bc-head .bc-logo { background: #f59e0b; }
+  .brand-young .bc-value { background: #fefce8; color: #d97706; }
+  .brand-young .bc-action { background: #f59e0b; color: white; border-radius: 20px; }
+
+  /* 注释标签 */
+  .annotation {
+    position: relative; margin: .5rem 0; padding: .5rem .8rem;
+    font-size: .7rem; border-radius: 6px;
+  }
+  .annotation.good { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+  .annotation.bad { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🛒 电商卡片设计 <span>实战三场景</span></h1>
+  <p style="color:#94a3b8;font-size:.85rem;margin-top:.3rem">高转化率 · 跨端差异 · 品牌调性</p>
+</header>
+
+<div class="page">
+
+  <!-- ===== 1. 高转化率商品卡对比 ===== -->
+  <div class="section-title">📈 场景一：高转化率商品卡 — 好设计 vs 差设计</div>
+  <div class="card-compare">
+    <div>
+      <div class="annotation good">✅ 高转化率设计</div>
+      <div class="product-card-good">
+        <div class="pcg-img">
+          📱
+          <span class="pcg-badge">🔥 爆款</span>
+        </div>
+        <div class="pcg-body">
+          <div class="pcg-name">iPhone 16 Pro Max 256GB</div>
+          <div class="pcg-price-row">
+            <span class="pcg-price">¥8,999</span>
+            <span class="pcg-original">¥9,999</span>
+            <span class="pcg-tag">-10%</span>
+          </div>
+          <div class="pcg-perks">
+            <span>📦 包邮</span><span>✅ 正品</span><span>⚡ 现货</span><span>⭐ 4.9</span>
+          </div>
+          <div class="pcg-specs">A18 Pro芯片 · 6.9英寸 · 4800万像素</div>
+          <button class="pcg-cta">🔥 立即下单</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="annotation bad">❌ 低转化率设计</div>
+      <div class="product-card-bad">
+        <div class="pcb-img">📱</div>
+        <div class="pcb-body">
+          <div class="pcb-name">iPhone 16 Pro Max 256GB 深空黑色 5G智能手机 A18 Pro芯片 6.9英寸超视网膜显示屏 4800万像素</div>
+          <div class="pcb-price">8999元</div>
+          <div class="pcb-desc">本产品采用全新A18 Pro仿生芯片，搭载6.9英寸超视网膜XDR显示屏，支持ProMotion自适应刷新率...</div>
+          <button class="pcb-btn">查看详情</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 卖点分层可视化 -->
+  <div class="sell-hierarchy" style="margin-top:1rem">
+    <h4 style="font-size:.85rem;margin-bottom:.3rem">📊 卖点分层体系</h4>
+    <div class="sell-level">
+      <span class="sl-tag sl-l1">一级</span>
+      <span style="font-size:1.2rem;font-weight:900;color:#ef4444">¥8,999</span>
+      <span style="font-size:.75rem;color:#64748b">← 放大+色块衬托，第一眼看到</span>
+    </div>
+    <div class="sell-level">
+      <span class="sl-tag sl-l2">二级</span>
+      <span>📦包邮 ✅正品 ⚡现货 ⭐4.9</span>
+      <span style="font-size:.75rem;color:#64748b">← 图标+短文案</span>
+    </div>
+    <div class="sell-level">
+      <span class="sl-tag sl-l3">三级</span>
+      <span style="font-size:.7rem;color:#94a3b8">A18 Pro芯片 · 6.9英寸 · 4800万像素</span>
+      <span style="font-size:.75rem;color:#64748b">← 小字备注</span>
+    </div>
+  </div>
+
+  <!-- ===== 2. PC vs 移动端 ===== -->
+  <div class="section-title">📱💻 场景二：PC端 vs 移动端</div>
+  <div class="device-compare">
+    <div class="pc-view">
+      <h4 style="font-size:.82rem;margin-bottom:.8rem;color:#64748b">🖥️ PC端 — 4列平铺 · hover悬停 · 精细操作</h4>
+      <div class="pc-grid">
+        <div class="mini-card"><div class="img"></div>商品1</div>
+        <div class="mini-card"><div class="img"></div>商品2</div>
+        <div class="mini-card"><div class="img"></div>商品3</div>
+        <div class="mini-card"><div class="img"></div>商品4</div>
+        <div class="mini-card"><div class="img"></div>商品5</div>
+        <div class="mini-card"><div class="img"></div>商品6</div>
+        <div class="mini-card"><div class="img"></div>商品7</div>
+        <div class="mini-card"><div class="img"></div>商品8</div>
+      </div>
+      <p style="font-size:.7rem;color:#94a3b8;margin-top:.5rem">
+        横屏 1440px+ · 悬停可预览详情 · 右键新窗口比价 · 热区22dp即可
+      </p>
+    </div>
+    <div class="mobile-view">
+      <div class="mv-top"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="mv-nav">🛍️ 商品列表</div>
+      <div class="mv-grid">
+        <div class="mcard"><div class="img"></div>¥89 商品A</div>
+        <div class="mcard"><div class="img"></div>¥129 商品B</div>
+        <div class="mcard"><div class="img"></div>¥59 商品C</div>
+        <div class="mcard"><div class="img"></div>¥199 商品D</div>
+      </div>
+      <div class="mv-bar">
+        <span class="active">🏠 首页</span><span>🔍 搜索</span><span>🛒 购物车</span><span>👤 我的</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 热区对比 -->
+  <div class="touch-target-demo" style="margin-top:1rem">
+    <h4 style="font-size:.82rem;margin-bottom:1rem;color:#64748b">👆 触摸热区差异（真实比例）</h4>
+    <div class="tt-compare">
+      <div class="tt-box">
+        <div class="tt-rect pc">22×22dp</div>
+        <span style="font-size:.75rem;color:#64748b">PC端鼠标</span>
+      </div>
+      <div class="tt-box">
+        <div class="tt-rect mobile" style="width:88px;height:88px">44×44dp</div>
+        <span style="font-size:.75rem;color:#64748b">iOS 最小热区</span>
+      </div>
+      <div class="tt-box">
+        <div class="tt-rect mobile">48×48dp</div>
+        <span style="font-size:.75rem;color:#64748b">Material Design</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 3. 品牌店铺卡 ===== -->
+  <div class="section-title">🏪 场景三：品牌调性店铺卡片</div>
+  <div class="brand-cards">
+    <!-- 高端品牌 -->
+    <div class="brand-card brand-luxury">
+      <div class="bc-head">
+        <div class="bc-logo">L</div>
+        <div>
+          <div class="bc-name">LUXE 奢品馆</div>
+          <div class="bc-desc">Since 1923 · 匠心传承</div>
+        </div>
+      </div>
+      <div class="bc-body">
+        <div class="bc-value">✦ 手工甄选 · 全球限量</div>
+        <p style="font-size:.72rem;color:#8b7355;line-height:1.6;margin-bottom:.8rem">
+          每一件作品都是匠人与时间的对话。<br>大量留白，沉稳配色，传递高级感。
+        </p>
+        <button class="bc-action">进入店铺 →</button>
+      </div>
+    </div>
+
+    <!-- 年轻品牌 -->
+    <div class="brand-card brand-young">
+      <div class="bc-head">
+        <div class="bc-logo">🔥</div>
+        <div>
+          <div class="bc-name">潮玩星球</div>
+          <div class="bc-desc">Z世代的玩具仓 · 100万+收藏</div>
+        </div>
+      </div>
+      <div class="bc-body">
+        <div class="bc-value">🎁 新人首单立减30元</div>
+        <p style="font-size:.72rem;color:#92400e;line-height:1.6;margin-bottom:.8rem">
+          活泼色彩+圆润造型=<strong>年轻化娱乐</strong><br>扫码加入社群，解锁隐藏款！
+        </p>
+        <button class="bc-action">🎁 领券进店</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 核心要点速查 ===== -->
+  <div style="background:#1e293b;color:#e2e8f0;border-radius:14px;padding:1.2rem;margin-top:2rem">
+    <h4 style="margin-bottom:.8rem">📋 电商卡片设计三场景速查</h4>
+    <table style="width:100%;font-size:.78rem;border-collapse:collapse">
+      <tr style="border-bottom:1px solid #334155">
+        <td style="padding:.4rem;font-weight:700;color:#fca5a5">场景一</td>
+        <td style="padding:.4rem">高转化率</td>
+        <td style="padding:.4rem;color:#94a3b8">心智路径(图→名→价格→按钮) + 卖点分层(一/二/三级) + CTA直购文字</td>
+      </tr>
+      <tr style="border-bottom:1px solid #334155">
+        <td style="padding:.4rem;font-weight:700;color:#93c5fd">场景二</td>
+        <td style="padding:.4rem">PC vs 移动</td>
+        <td style="padding:.4rem;color:#94a3b8">PC多列悬停/移动双列触摸 · 热区22dp vs 48dp · 冲动vs精细决策</td>
+      </tr>
+      <tr>
+        <td style="padding:.4rem;font-weight:700;color:#fcd34d">场景三</td>
+        <td style="padding:.4rem">品牌调性</td>
+        <td style="padding:.4rem;color:#94a3b8">视觉DNA统一 + 核心价值大字体 + 8pt网格留白 + 情感共鸣私域沉淀</td>
+      </tr>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>

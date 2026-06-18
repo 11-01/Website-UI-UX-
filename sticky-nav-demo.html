@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>吸顶导航栏三方案对比 | Sticky Nav Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: #f1f5f9; color: #1e293b;
+  }
+
+  /* ===== 全局演示布局 ===== */
+  .demo-section {
+    max-width: 1000px; margin: 0 auto 3rem;
+    background: white; border-radius: 16px;
+    overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,.06);
+  }
+  .demo-section .section-head {
+    background: #1e293b; color: white; padding: .8rem 1.5rem;
+    font-weight: 700; font-size: 1rem; display: flex;
+    justify-content: space-between; align-items: center;
+  }
+  .demo-section .section-head .badge {
+    font-size: .7rem; padding: .25rem .7rem; border-radius: 12px;
+    font-weight: 600;
+  }
+  .badge-css { background: rgba(34,197,94,.2); color: #4ade80; }
+  .badge-js { background: rgba(245,158,11,.2); color: #fcd34d; }
+  .badge-observer { background: rgba(59,130,246,.2); color: #93c5fd; }
+
+  /* ============================================
+     方案一：纯 CSS position:sticky
+     ============================================ */
+  .demo-1 .scroll-area {
+    height: 420px; overflow-y: auto; background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .demo-1 .nav-sticky-css {
+    position: sticky; top: 0; z-index: 100;
+    background: white;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 1.5rem; height: 56px;
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: none;
+    transition: box-shadow .3s ease;
+    /* 注意：section-head设置了overflow:hidden，但overflow在scroll-area上 */
+  }
+  /* 实际项目中这样检测（仅视觉示意） */
+  .demo-1 .scroll-area.scrolled .nav-sticky-css {
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+  }
+  .demo-1 .nav-sticky-css .logo { font-weight: 900; font-size: 1.1rem; }
+  .demo-1 .nav-sticky-css .links { display: flex; gap: 1.2rem; list-style: none; }
+  .demo-1 .nav-sticky-css .links a {
+    color: #475569; text-decoration: none; font-size: .85rem;
+    padding: .3rem .6rem; border-radius: 6px; transition: all .15s;
+  }
+  .demo-1 .nav-sticky-css .links a:hover { color: #3b82f6; background: #eff6ff; }
+
+  .demo-1 .content { padding: 1rem 1.5rem; display: flex; flex-direction: column; gap: .8rem; }
+  .demo-1 .content .block {
+    background: white; border-radius: 10px; padding: 1rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.03); font-size: .85rem;
+  }
+  .demo-1 .content .block.highlight { background: #fefce8; border-left: 3px solid #f59e0b; }
+
+  /* ============================================
+     方案二：JS scroll + fixed + 样式变换
+     ============================================ */
+  .demo-2 { position: relative; }
+  .demo-2 .scroll-area {
+    height: 420px; overflow-y: auto; background: #f8fafc;
+    position: relative;
+  }
+  .demo-2 .nav-js {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 1.5rem; height: 56px;
+    background: transparent; color: white;
+    position: absolute; top: 0; left: 0; right: 0; z-index: 100;
+    transition: all .35s cubic-bezier(.4,0,.2,1);
+    border-bottom: 1px solid transparent;
+  }
+  /* 未滚动时：透明背景、白字 */
+  .demo-2 .nav-js .logo { font-weight: 900; font-size: 1.1rem; }
+  .demo-2 .nav-js .links { display: flex; gap: 1.2rem; list-style: none; }
+  .demo-2 .nav-js .links a {
+    color: rgba(255,255,255,.85); text-decoration: none; font-size: .85rem;
+    padding: .3rem .6rem; border-radius: 6px; transition: all .15s;
+  }
+
+  /* 吸顶状态：白底+黑字+阴影+高度收缩 */
+  .demo-2 .nav-js.sticky {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: white; color: #1e293b;
+    height: 52px;
+    box-shadow: 0 2px 16px rgba(0,0,0,.1);
+  }
+  .demo-2 .nav-js.sticky .links a { color: #475569; }
+  .demo-2 .nav-js.sticky .links a:hover { color: #3b82f6; background: #eff6ff; }
+
+  .demo-2 .hero {
+    height: 260px; background: linear-gradient(135deg, #1e1b4b, #312e81, #4338ca);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: white; text-align: center;
+  }
+  .demo-2 .hero h3 { font-size: 1.6rem; }
+  .demo-2 .content { padding: 1rem 1.5rem; display: flex; flex-direction: column; gap: .8rem; }
+  .demo-2 .content .block {
+    background: white; border-radius: 10px; padding: 1rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.03); font-size: .85rem;
+  }
+
+  /* ============================================
+     方案三：Intersection Observer
+     ============================================ */
+  .demo-3 .scroll-area {
+    height: 420px; overflow-y: auto; background: #f8fafc;
+  }
+  .demo-3 .sentinel { height: 1px; width: 100%; } /* 哨兵元素 */
+  .demo-3 .nav-observer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 1.5rem; height: 56px;
+    background: white; border-bottom: 1px solid #e2e8f0;
+    transition: all .35s ease;
+  }
+  .demo-3 .nav-observer.sticky {
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    background: #1e293b; color: white;
+  }
+  .demo-3 .nav-observer.sticky .links a { color: #cbd5e1; }
+  .demo-3 .nav-observer.sticky .links a:hover { color: #60a5fa; }
+  .demo-3 .nav-observer .logo { font-weight: 900; font-size: 1.1rem; }
+  .demo-3 .nav-observer .links { display: flex; gap: 1.2rem; list-style: none; }
+  .demo-3 .nav-observer .links a {
+    color: #475569; text-decoration: none; font-size: .85rem;
+    padding: .3rem .6rem; border-radius: 6px; transition: all .15s;
+  }
+  .demo-3 .content { padding: 1rem 1.5rem; display: flex; flex-direction: column; gap: .8rem; }
+  .demo-3 .content .block {
+    background: white; border-radius: 10px; padding: 1rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.03); font-size: .85rem;
+  }
+  .demo-3 .indicator {
+    padding: .5rem 1.5rem; font-size: .75rem; display: flex; gap: 1rem;
+    background: #f8fafc; border-top: 1px solid #e2e8f0;
+  }
+
+  /* ============================================
+     方案四：滚过Banner才吸顶 — 导航放在Banner内
+     ============================================ */
+  .demo-4 .scroll-area {
+    height: 450px; overflow-y: auto; background: #f8fafc;
+  }
+  /* Banner 父容器 — 必须不能有 overflow 限制 */
+  .demo-4 .banner-wrap {
+    height: 320px;
+    background: linear-gradient(135deg, #1e1b4b, #4338ca);
+    position: relative;
+    display: flex; flex-direction: column; justify-content: flex-end;
+  }
+  .demo-4 .banner-wrap .hero-content {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; color: white;
+  }
+  .demo-4 .banner-wrap .hero-content h3 { font-size: 1.5rem; }
+  /* 导航栏在Banner内部 */
+  .demo-4 .nav-in-banner {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255,255,255,.95);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 1.5rem; height: 52px;
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(0,0,0,.05);
+    transition: all .35s ease;
+  }
+  .demo-4 .nav-in-banner.active {
+    background: #1e293b; color: white;
+    box-shadow: 0 2px 16px rgba(0,0,0,.15);
+  }
+  .demo-4 .nav-in-banner .logo { font-weight: 900; font-size: 1.05rem; }
+  .demo-4 .nav-in-banner .links { display: flex; gap: 1rem; list-style: none; }
+  .demo-4 .nav-in-banner .links a {
+    color: #475569; text-decoration: none; font-size: .85rem;
+    padding: .3rem .6rem; border-radius: 6px; transition: all .2s;
+  }
+  .demo-4 .nav-in-banner.active .links a { color: #cbd5e1; }
+  .demo-4 .nav-in-banner.active .links a:hover { color: #60a5fa; }
+  .demo-4 .content { padding: 1rem 1.5rem; display: flex; flex-direction: column; gap: .8rem; }
+  .demo-4 .content .block {
+    background: white; border-radius: 10px; padding: 1rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.03); font-size: .85rem;
+  }
+  .demo-4 .status-row {
+    padding: .4rem 1.5rem; font-size: .7rem; color: #64748b;
+    display: flex; gap: 1.5rem; background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  /* ============================================
+     方案五：JS scroll + rAF节流 + 动态目标 + iOS修复
+     ============================================ */
+  .demo-5 .scroll-area {
+    height: 420px; overflow-y: auto; background: #f8fafc;
+  }
+  .demo-5 .nav-opt {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 1.5rem; height: 56px;
+    background: white; border-bottom: 1px solid #e2e8f0;
+    transition: all .3s ease;
+    position: relative; z-index: 100;
+  }
+  .demo-5 .nav-opt.sticky {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: #1e293b; color: white;
+    box-shadow: 0 2px 16px rgba(0,0,0,.12);
+    /* iOS Safari 闪烁修复：触发GPU加速 */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+  .demo-5 .nav-opt .logo { font-weight: 900; font-size: 1.05rem; }
+  .demo-5 .nav-opt .links { display: flex; gap: 1rem; list-style: none; }
+  .demo-5 .nav-opt .links a {
+    color: #475569; text-decoration: none; font-size: .85rem;
+    padding: .3rem .6rem; border-radius: 6px; transition: all .2s;
+  }
+  .demo-5 .nav-opt.sticky .links a { color: #cbd5e1; }
+  .demo-5 .nav-opt.sticky .links a:hover { color: #60a5fa; }
+  /* 占位元素 — 防止fixed后内容上跳 */
+  .demo-5 .sticky-placeholder { height: 0; transition: height .3s ease; }
+  .demo-5 .sticky-placeholder.active { height: 56px; }
+  .demo-5 .target-marker {
+    position: relative; height: 200px; display: flex;
+    align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    font-weight: 700; font-size: 1.1rem; color: #166534;
+    background-image: repeating-linear-gradient(
+      -45deg, transparent, transparent 15px,
+      rgba(22,101,52,.04) 15px, rgba(22,101,52,.04) 30px
+    );
+  }
+  .demo-5 .target-marker::after {
+    content: '▼ 滚动到此线吸顶 ▼'; position: absolute; bottom: 8px;
+    font-size: .7rem; opacity: .6;
+  }
+  .demo-5 .scrolled-past .target-marker {
+    opacity: .4;
+  }
+  .demo-5 .content { padding: 1rem 1.5rem; display: flex; flex-direction: column; gap: .8rem; }
+  .demo-5 .content .block {
+    background: white; border-radius: 10px; padding: 1rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.03); font-size: .85rem;
+  }
+  .demo-5 .perf-bar {
+    display: flex; align-items: center; gap: .5rem; padding: .4rem 1.5rem;
+    font-size: .7rem; background: #f8fafc; border-top: 1px solid #e2e8f0;
+  }
+  .demo-5 .perf-bar .fps-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: #22c55e;
+  }
+  .demo-5 .perf-bar .fps-dot.busy { background: #f59e0b; }
+
+  /* ===== 对比总结 ===== */
+  .summary {
+    max-width: 1000px; margin: 0 auto 3rem;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .summary .card {
+    background: #1e293b; border-radius: 12px; padding: 1.2rem;
+    border: 1px solid #334155; color: #e2e8f0;
+  }
+  .summary .card h4 { font-size: .95rem; margin-bottom: .5rem; }
+  .summary .card p { font-size: .8rem; color: #94a3b8; line-height: 1.6; }
+
+  /* ===== 代码区 ===== */
+  .code-section {
+    max-width: 1000px; margin: 0 auto 3rem;
+  }
+  .code-section h3 { margin-bottom: .8rem; font-size: 1.2rem; }
+  pre {
+    background: #0a0f1a; border-radius: 10px; padding: 1.2rem;
+    font-family: 'Consolas','Monaco',monospace; font-size: .78rem;
+    line-height: 1.7; color: #cbd5e1; overflow-x: auto;
+    border: 1px solid #1e293b;
+  }
+  pre .k { color: #93c5fd; }
+  pre .s { color: #86efac; }
+  pre .c { color: #64748b; font-style: italic; }
+  pre .t { color: #c084fc; }
+  pre .f { color: #fde68a; }
+
+  .code-tabs { display: flex; gap: .3rem; margin-bottom: -.5rem; }
+  .code-tabs button {
+    background: #1e293b; border: 1px solid #334155; color: #94a3b8;
+    padding: .4rem 1rem; border-radius: 8px 8px 0 0; cursor: pointer;
+    font-size: .78rem; border-bottom: none; transition: all .15s;
+  }
+  .code-tabs button.on { background: #0a0f1a; color: #93c5fd; }
+  .code-panel { display: none; }
+  .code-panel.on { display: block; }
+
+  .warning-box {
+    background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2);
+    border-radius: 10px; padding: .8rem 1rem; margin: 1rem 0;
+    font-size: .82rem; color: #fca5a5;
+  }
+</style>
+</head>
+<body>
+
+<header style="text-align:center;padding:2rem 1rem 1rem">
+  <h1 style="font-size:1.8rem">📍 吸顶导航栏 <span style="background:linear-gradient(135deg,#06b6d4,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent">三方案对比</span></h1>
+  <p style="color:#64748b;font-size:.9rem">在每个区域内向下滚动，观察导航栏行为差异</p>
+</header>
+
+<!-- ===== 方案一：纯 CSS ===== -->
+<div class="demo-section demo-1">
+  <div class="section-head">
+    <span>方案一：position: sticky（纯CSS）</span>
+    <span class="badge badge-css">✅ 最推荐</span>
+  </div>
+  <div class="scroll-area" id="scrollArea1">
+    <nav class="nav-sticky-css">
+      <div class="logo">🚀 CSS Sticky</div>
+      <ul class="links">
+        <li><a>首页</a></li><li><a>产品</a></li><li><a>关于</a></li><li><a>联系</a></li>
+      </ul>
+    </nav>
+    <div class="content">
+      <div class="block highlight">💡 向下滚动 → 导航栏"粘"在顶部</div>
+      <div class="block">📄 内容块 #1</div>
+      <div class="block">📄 内容块 #2</div>
+      <div class="block">📄 内容块 #3</div>
+      <div class="block">📄 内容块 #4 — 继续滚动...</div>
+      <div class="block">📄 内容块 #5</div>
+      <div class="block">📄 内容块 #6</div>
+      <div class="block">📄 内容块 #7</div>
+      <div class="block">📄 内容块 #8 — 导航始终吸附在顶部</div>
+    </div>
+  </div>
+  <div style="padding:.5rem 1.5rem;font-size:.75rem;color:#64748b">
+    📝 代码量：<strong style="color:#22c55e">仅3行CSS</strong> | 无JS | GPU加速
+  </div>
+</div>
+
+<!-- ===== 方案二：JS scroll ===== -->
+<div class="demo-section demo-2">
+  <div class="section-head">
+    <span>方案二：JS 监听 scroll（动态样式）</span>
+    <span class="badge badge-js">需JS</span>
+  </div>
+  <div class="scroll-area" id="scrollArea2">
+    <nav class="nav-js" id="navJS">
+      <div class="logo">⚡ JS Sticky</div>
+      <ul class="links">
+        <li><a>首页</a></li><li><a>产品</a></li><li><a>关于</a></li><li><a>联系</a></li>
+      </ul>
+    </nav>
+    <div class="hero">
+      <h3>🏔️ Hero 大图区</h3>
+      <p style="opacity:.7">导航初始透明，滚动后变白</p>
+    </div>
+    <div class="content">
+      <div class="block" style="background:#fefce8;border-left:3px solid #f59e0b">
+        💡 向下滚超 100px → 透明→白底 + 阴影 + 高度收缩 + 字变色
+      </div>
+      <div class="block">📄 内容块 A</div><div class="block">📄 内容块 B</div>
+      <div class="block">📄 内容块 C</div><div class="block">📄 内容块 D</div>
+      <div class="block">📄 内容块 E</div><div class="block">📄 内容块 F</div>
+    </div>
+  </div>
+  <div style="padding:.5rem 1.5rem;font-size:.75rem;color:#64748b">
+    📝 适用：需吸顶时<strong style="color:#f59e0b">动态改变样式</strong>（透明→白底、收缩高度、变色）
+  </div>
+</div>
+
+<!-- ===== 方案三：Intersection Observer ===== -->
+<div class="demo-section demo-3">
+  <div class="section-head">
+    <span>方案三：Intersection Observer（现代API）</span>
+    <span class="badge badge-observer">性能最优</span>
+  </div>
+  <div class="scroll-area" id="scrollArea3">
+    <div class="sentinel" id="sentinel3"></div>
+    <nav class="nav-observer" id="navObserver">
+      <div class="logo">🔭 Observer</div>
+      <ul class="links">
+        <li><a>首页</a></li><li><a>产品</a></li><li><a>关于</a></li><li><a>联系</a></li>
+      </ul>
+    </nav>
+    <div class="content">
+      <div class="block" style="background:#eff6ff;border-left:3px solid #3b82f6">
+        💡 向下滚动到哨兵元素不可见 → 导航栏自动吸顶（深色背景）
+      </div>
+      <div class="block">📄 内容块 ①</div><div class="block">📄 内容块 ②</div>
+      <div class="block">📄 内容块 ③</div><div class="block">📄 内容块 ④</div>
+      <div class="block">📄 内容块 ⑤</div><div class="block">📄 内容块 ⑥</div>
+    </div>
+  </div>
+  <div class="indicator">
+    <span>哨兵可见: <strong id="sentinelStatus">✅ 可见</strong></span>
+    <span>导航状态: <strong id="navObsStatus" style="color:#94a3b8">默认</strong></span>
+  </div>
+</div>
+
+<!-- ===== 方案四：滚过Banner才吸顶 ===== -->
+<div class="demo-section demo-4">
+  <div class="section-head">
+    <span>方案四：滚过Banner才吸顶（导航放在Banner内）</span>
+    <span class="badge badge-css">CSS sticky + getBoundingClientRect</span>
+  </div>
+  <div class="scroll-area" id="scrollArea4">
+    <div class="banner-wrap" id="bannerWrap4">
+      <div class="hero-content">
+        <h3>🌟 首屏大图 Banner</h3>
+        <p style="opacity:.7">导航栏在Banner内部，滚过Banner才吸顶</p>
+      </div>
+      <nav class="nav-in-banner" id="navInBanner">
+        <div class="logo">🚀 滚过Banner才吸顶</div>
+        <ul class="links">
+          <li><a>首页</a></li><li><a>产品</a></li><li><a>关于</a></li><li><a>联系</a></li>
+        </ul>
+      </nav>
+    </div>
+    <div class="content">
+      <div class="block" style="background:#eff6ff;border-left:3px solid #3b82f6">
+        💡 向下滚动 → Banner淡出 → 导航到Banner底部自动<strong>粘在视口顶部</strong>
+      </div>
+      <div class="block">📄 核心原理：导航是Banner子元素，position:sticky top:0 在父容器底部自然触发</div>
+      <div class="block">📄 内容块 #1</div>
+      <div class="block">📄 内容块 #2</div>
+      <div class="block">📄 内容块 #3</div>
+      <div class="block">📄 内容块 #4 — 导航已吸顶并变为深色</div>
+      <div class="block">📄 内容块 #5</div>
+      <div class="block">📄 内容块 #6</div>
+    </div>
+  </div>
+  <div class="status-row">
+    <span>Banner底部位置: <strong id="bannerBottomPos" style="color:#3b82f6">—</strong></span>
+    <span>导航状态: <strong id="navBannerStatus" style="color:#94a3b8">默认</strong></span>
+  </div>
+</div>
+
+<!-- ===== 方案五：JS scroll + rAF节流 + 动态目标 ===== -->
+<div class="demo-section demo-5">
+  <div class="section-head">
+    <span>方案五：JS scroll + rAF节流 + 动态目标 + iOS修复</span>
+    <span class="badge badge-js">生产级方案</span>
+  </div>
+  <div class="scroll-area" id="scrollArea5">
+    <nav class="nav-opt" id="navOpt">
+      <div class="logo">⚡ 生产级吸顶</div>
+      <ul class="links">
+        <li><a>首页</a></li><li><a>产品</a></li><li><a>关于</a></li><li><a>联系</a></li>
+      </ul>
+    </nav>
+    <div class="sticky-placeholder" id="stickyPlaceholder"></div>
+    <div class="target-marker" id="targetMarker">
+      🎯 目标位置（动态获取 = 动态offset值）
+    </div>
+    <div class="content">
+      <div class="block" style="background:#fefce8;border-left:3px solid #f59e0b">
+        💡 向下滚动 → 过目标线后导航吸顶 + 占位防跳 + rAF节流 + GPU加速
+      </div>
+      <div class="block">📄 内容块 A — 目标位置由JS动态计算</div>
+      <div class="block">📄 内容块 B — resize时自动重算</div>
+      <div class="block">📄 内容块 C</div>
+      <div class="block">📄 内容块 D</div>
+      <div class="block">📄 内容块 E</div>
+    </div>
+  </div>
+  <div class="perf-bar">
+    <span>rAF节流状态: <span class="fps-dot" id="rafDot"></span> <strong id="rafStatus">空闲</strong></span>
+    <span style="margin-left:1rem">目标位置: <strong id="targetPos" style="color:#3b82f6">—</strong></span>
+    <span style="margin-left:1rem">当前滚动: <strong id="currentScroll" style="color:#94a3b8">—</strong></span>
+    <span style="margin-left:auto;font-size:.65rem;color:#64748b">
+      🍎 transform:translateZ(0) · iOS Safari修复
+    </span>
+  </div>
+</div>
+
+<!-- ===== 避坑提示 ===== -->
+<div class="warning-box" style="max-width:1000px;margin:0 auto 2rem;">
+  <strong>⚠️ 避坑指南：</strong> position:sticky 不生效？请检查导航栏的<strong>所有祖先元素</strong>是否设了 overflow:hidden / overflow:auto / overflow:scroll —— 其中任何一个都会破坏粘性定位！
+</div>
+
+<!-- ===== 三方案对比卡片 ===== -->
+<div class="summary">
+  <div class="card">
+    <h4>1️⃣ CSS Sticky</h4>
+    <p>✅ 3行代码搞定<br>✅ 零JS，GPU加速<br>✅ 不脱离文档流<br>⚠️ 无法监听吸附状态<br>⚠️ 父级不能有overflow</p>
+  </div>
+  <div class="card">
+    <h4>2️⃣ JS Scroll</h4>
+    <p>✅ 动态改样式（透明→白底）<br>✅ 精确控制触发距离<br>⚠️ scroll事件需节流<br>⚠️ fixed脱离文档流<br>⚠️ 需手动补padding-top</p>
+  </div>
+  <div class="card">
+    <h4>3️⃣ Intersection Observer</h4>
+    <p>✅ 性能优于scroll事件<br>✅ 不阻塞主线程<br>✅ 无需节流防抖<br>⚠️ API较新，需polyfill<br>⚠️ 稍复杂</p>
+  </div>
+  <div class="card">
+    <h4>5️⃣ JS + rAF节流（生产级）</h4>
+    <p>✅ requestAnimationFrame防掉帧<br>✅ offsetTop动态目标<br>✅ 占位元素防内容上跳<br>✅ translateZ(0) iOS修复</p>
+  </div>
+</div>
+
+<!-- ===== 代码 ===== -->
+<div class="code-section">
+  <h3>📝 三种方案核心代码</h3>
+  <div class="code-tabs">
+    <button class="on" onclick="switchCode('css')">CSS Sticky</button>
+    <button onclick="switchCode('js')">JS Scroll</button>
+    <button onclick="switchCode('observer')">Intersection Observer</button>
+  </div>
+
+  <pre id="panel-css" class="code-panel on"><span class="c">/* === 方案一：纯 CSS，3行搞定 === */</span>
+<span class="t">.navbar</span> {
+  <span class="k">position</span>: sticky;
+  <span class="k">top</span>: 0;
+  <span class="k">z-index</span>: 1000;
+  <span class="k">background-color</span>: white;     <span class="c">/* 必须！否则内容透出 */</span>
+  <span class="k">box-shadow</span>: 0 2px 5px rgba(0,0,0,.1);
+}
+
+<span class="c">/* ⚠️ 确保所有祖先元素没有 overflow: hidden */</span>
+<span class="c">/* 否则 position:sticky 会失效！ */</span></pre>
+
+  <pre id="panel-js" class="code-panel"><span class="c">/* === 方案二：JS监听 + CSS class === */</span>
+<span class="c">// JS — 需节流（示例简化）</span>
+<span class="t">window</span>.<span class="f">addEventListener</span>(<span class="s">'scroll'</span>, () => {
+  <span class="k">const</span> navbar = <span class="t">document</span>.<span class="f">querySelector</span>(<span class="s">'.navbar'</span>);
+  <span class="k">if</span> (<span class="t">window</span>.scrollY > 100) {
+    navbar.<span class="t">classList</span>.<span class="f">add</span>(<span class="s">'sticky'</span>);
+  } <span class="k">else</span> {
+    navbar.<span class="t">classList</span>.<span class="f">remove</span>(<span class="s">'sticky'</span>);
+  }
+});
+
+<span class="c">/* CSS */</span>
+<span class="t">.navbar</span> { <span class="k">transition</span>: all 0.35s ease; }
+<span class="t">.navbar.sticky</span> {
+  <span class="k">position</span>: fixed; <span class="k">top</span>: 0; <span class="k">width</span>: 100%;
+  <span class="k">background</span>: white;
+  <span class="k">box-shadow</span>: 0 2px 16px rgba(0,0,0,.1);
+}
+<span class="c">/* 内容区需补 padding-top 避免上移 */</span>
+<span class="t">body</span> { <span class="k">padding-top</span>: 56px; }</pre>
+
+  <pre id="panel-observer" class="code-panel"><span class="c">/* === 方案三：Intersection Observer === */</span>
+<span class="c">// HTML 中放一个哨兵元素</span>
+<span class="c">// &lt;div class="sentinel"&gt;&lt;/div&gt; — 在导航栏上方</span>
+
+<span class="c">// JS — 无需节流，浏览器原生高效</span>
+<span class="k">const</span> observer = <span class="k">new</span> <span class="f">IntersectionObserver</span>(
+  ([entry]) => {
+    <span class="k">const</span> navbar = <span class="t">document</span>.<span class="f">querySelector</span>(<span class="s">'.navbar'</span>);
+    <span class="k">if</span> (!entry.<span class="t">isIntersecting</span>) {
+      navbar.<span class="t">classList</span>.<span class="f">add</span>(<span class="s">'sticky'</span>);
+    } <span class="k">else</span> {
+      navbar.<span class="t">classList</span>.<span class="f">remove</span>(<span class="s">'sticky'</span>);
+    }
+  },
+  { threshold: 0.1 }
+);
+observer.<span class="f">observe</span>(<span class="t">document</span>.<span class="f">querySelector</span>(<span class="s">'.sentinel'</span>));</pre>
+</div>
+
+<!-- ===== 方案四代码 ===== -->
+<div class="code-section">
+  <h3>📝 方案四：滚过Banner才吸顶核心代码</h3>
+  <pre><span class="c">&lt;!-- HTML：导航放在Banner内部 --&gt;</span>
+<span class="t">&lt;div</span> <span class="k">class</span>=<span class="s">"banner"</span><span class="t">&gt;</span>    <span class="c">&lt;!-- 必须是直接父容器 --&gt;</span>
+  <span class="t">&lt;h1&gt;</span>首屏大图<span class="t">&lt;/h1&gt;</span>
+  <span class="t">&lt;nav</span> <span class="k">class</span>=<span class="s">"navbar"</span><span class="t">&gt;</span>  <span class="c">&lt;!-- 子元素 --&gt;</span>
+    <span class="t">&lt;a&gt;</span>首页<span class="t">&lt;/a&gt;</span>
+    <span class="t">&lt;a&gt;</span>产品<span class="t">&lt;/a&gt;</span>
+    <span class="t">&lt;a&gt;</span>关于<span class="t">&lt;/a&gt;</span>
+  <span class="t">&lt;/nav&gt;</span>
+<span class="t">&lt;/div&gt;</span>
+
+<span class="c">/* CSS：核心仅3行 */</span>
+<span class="t">.banner</span> { <span class="k">height</span>: 400px; }    <span class="c">/* Banner有足够高度 */</span>
+<span class="t">.navbar</span> {
+  <span class="k">position</span>: sticky;           <span class="c">/* 相对父容器Banner */</span>
+  <span class="k">top</span>: 0;                    <span class="c">/* 到达父容器底部时吸附 */</span>
+  <span class="k">background</span>: white;         <span class="c">/* 必须设置背景色 */</span>
+  <span class="k">z-index</span>: 100;
+}
+
+<span class="c">/* JS：吸顶时动态改变样式（用getBoundingClientRect更精准） */</span>
+<span class="t">window</span>.<span class="f">addEventListener</span>(<span class="s">'scroll'</span>, () => {
+  <span class="k">const</span> banner = <span class="t">document</span>.<span class="f">querySelector</span>(<span class="s">'.banner'</span>);
+  <span class="k">const</span> navbar = <span class="t">document</span>.<span class="f">querySelector</span>(<span class="s">'.navbar'</span>);
+  <span class="k">const</span> bannerBottom = banner.<span class="f">getBoundingClientRect</span>().bottom;
+  navbar.<span class="t">classList</span>.<span class="f">toggle</span>(<span class="s">'active'</span>, bannerBottom <= 0);
+});</pre>
+</div>
+
+<script>
+// ===== 方案一：CSS sticky 阴影加粗（纯视觉反馈） =====
+const area1 = document.getElementById('scrollArea1');
+area1.addEventListener('scroll', () => {
+  area1.classList.toggle('scrolled', area1.scrollTop > 10);
+});
+
+// ===== 方案二：JS scroll 吸顶 + 样式变换 =====
+const area2 = document.getElementById('scrollArea2');
+const navJS = document.getElementById('navJS');
+area2.addEventListener('scroll', () => {
+  const scrolled = area2.scrollTop > 100;
+  navJS.classList.toggle('sticky', scrolled);
+});
+
+// ===== 方案三：Intersection Observer =====
+const navObserver = document.getElementById('navObserver');
+const obsTarget = document.getElementById('sentinel3');
+const sentinelStatus = document.getElementById('sentinelStatus');
+const navObsStatus = document.getElementById('navObsStatus');
+
+const observer = new IntersectionObserver(
+  ([entry]) => {
+    const hidden = !entry.isIntersecting;
+    navObserver.classList.toggle('sticky', hidden);
+    sentinelStatus.textContent = hidden ? '❌ 不可见' : '✅ 可见';
+    sentinelStatus.style.color = hidden ? '#ef4444' : '#22c55e';
+    navObsStatus.textContent = hidden ? '吸顶中（深色）' : '默认';
+    navObsStatus.style.color = hidden ? '#60a5fa' : '#94a3b8';
+  },
+  { threshold: 0 }
+);
+observer.observe(obsTarget);
+
+// ===== 方案四：滚过Banner才吸顶 =====
+const area4 = document.getElementById('scrollArea4');
+const navInBanner = document.getElementById('navInBanner');
+const bannerWrap4 = document.getElementById('bannerWrap4');
+
+area4.addEventListener('scroll', () => {
+  const bannerBottom = bannerWrap4.getBoundingClientRect().bottom;
+  // getBoundingClientRect() 相对于视口，需减去 navbar 高度判断
+  const triggered = bannerBottom <= navInBanner.offsetHeight;
+  navInBanner.classList.toggle('active', triggered);
+  document.getElementById('bannerBottomPos').textContent = Math.round(bannerBottom) + 'px';
+  const status = document.getElementById('navBannerStatus');
+  status.textContent = triggered ? '🔥 吸顶中（深色）' : 'Banner内（默认）';
+  status.style.color = triggered ? '#f59e0b' : '#94a3b8';
+});
+
+// ===== 方案五：JS scroll + rAF节流 + 动态目标 + iOS修复 =====
+const area5 = document.getElementById('scrollArea5');
+const navOpt = document.getElementById('navOpt');
+const placeholder = document.getElementById('stickyPlaceholder');
+const targetMarker = document.getElementById('targetMarker');
+
+function getTriggerPos() {
+  return targetMarker.offsetTop + targetMarker.offsetHeight;
+}
+
+// 显示动态目标位置
+document.getElementById('targetPos').textContent = getTriggerPos() + 'px';
+
+let ticking = false;
+area5.addEventListener('scroll', () => {
+  if (!ticking) {
+    requestAnimationFrame(() => {
+      const scrollTop = area5.scrollTop;
+      const triggerPos = getTriggerPos();
+      const shouldStick = scrollTop >= triggerPos;
+
+      navOpt.classList.toggle('sticky', shouldStick);
+      placeholder.classList.toggle('active', shouldStick);
+      area5.classList.toggle('scrolled-past', shouldStick);
+
+      document.getElementById('currentScroll').textContent = Math.round(scrollTop) + 'px';
+      document.getElementById('rafStatus').textContent = shouldStick ? '吸顶中' : '空闲';
+      document.getElementById('rafDot').classList.toggle('busy', shouldStick);
+
+      ticking = false;
+    });
+    ticking = true;
+  }
+});
+
+// resize时重新计算目标位置
+window.addEventListener('resize', () => {
+  document.getElementById('targetPos').textContent = getTriggerPos() + 'px';
+});
+
+// ===== 代码切换 =====
+function switchCode(name) {
+  document.querySelectorAll('.code-panel').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.code-tabs button').forEach(b => b.classList.remove('on'));
+  document.getElementById('panel-' + name).classList.add('on');
+}
+</script>
+</body>
+</html>

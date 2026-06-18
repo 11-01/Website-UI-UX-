@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>响应式导航条实战演示 | Responsive Navbar Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --nav-height: 60px;
+    --primary: #3b82f6;
+    --dark: #1e293b;
+  }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: #f1f5f9; color: #1e293b;
+  }
+
+  /* ===== 演示控制栏 ===== */
+  .toolbar {
+    position: sticky; top: 0; z-index: 999;
+    background: #0f172a; color: #e2e8f0;
+    padding: .8rem 1.5rem; display: flex;
+    align-items: center; gap: 1rem; flex-wrap: wrap;
+    border-bottom: 1px solid #1e293b;
+  }
+  .toolbar .logo { font-weight: 900; font-size: 1.1rem; margin-right: auto; }
+  .toolbar .logo span { background: linear-gradient(135deg, #3b82f6, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .toolbar button {
+    padding: .4rem 1rem; border: 1px solid #334155; background: #1e293b;
+    color: #cbd5e1; border-radius: 20px; cursor: pointer; font-size: .78rem;
+    transition: all .2s;
+  }
+  .toolbar button:hover { border-color: #3b82f6; color: white; }
+  .toolbar button.active { background: #3b82f6; border-color: #3b82f6; color: white; }
+  .toolbar label { font-size: .8rem; color: #64748b; display: flex; align-items: center; gap: .3rem; }
+  .toolbar input[type=checkbox] { accent-color: #3b82f6; }
+
+  /* ===== Demo区 ===== */
+  .demo-area { padding: 1.5rem; max-width: 1300px; margin: 0 auto; }
+
+  .demo-area h2 { margin: 2rem 0 1rem; font-size: 1.3rem; display: flex; align-items: center; gap: .5rem; }
+  .demo-area h2 .tag {
+    font-size: .7rem; padding: .2rem .6rem; border-radius: 12px;
+    background: #dbeafe; color: #3b82f6; font-weight: 400;
+  }
+
+  /* 模拟设备框 */
+  .phone-frame {
+    width: 375px; margin: 0 auto; background: white; border-radius: 24px;
+    overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,.15); max-height: 600px;
+    transition: width .4s ease;
+  }
+  .phone-frame.wide { width: 768px; }
+  .phone-frame.full { width: 100%; }
+  .phone-frame .frame-status {
+    background: #1a1a1a; color: white; padding: .4rem 1.2rem;
+    display: flex; justify-content: space-between; font-size: .65rem;
+  }
+  .phone-inner { overflow-y: auto; max-height: 520px; background: #f8fafc; }
+  .phone-inner .content {
+    padding: 1.5rem; display: flex; flex-direction: column; gap: .8rem;
+  }
+  .phone-inner .content .block {
+    background: white; border-radius: 10px; padding: 1rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  }
+
+  /* ========================================
+     Navbar 1: 基础响应式导航（Mobile-First）
+     ======================================== */
+  .nav-basic {
+    background: #1e293b; color: white;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 1.2rem; height: 56px; position: relative; z-index: 10;
+  }
+  .nav-basic .nav-brand { font-weight: 900; font-size: 1.1rem; display: flex; align-items: center; gap: .5rem; }
+  .nav-basic .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+  .nav-basic .nav-links a { color: #cbd5e1; text-decoration: none; font-size: .9rem; transition: color .2s; }
+  .nav-basic .nav-links a:hover { color: #3b82f6; }
+  .nav-basic .nav-links a.active-link { color: #3b82f6; font-weight: 600; }
+
+  /* 汉堡按钮 */
+  .nav-basic .hamburger {
+    display: none; flex-direction: column; gap: 5px; cursor: pointer;
+    background: none; border: none; padding: 8px; z-index: 20;
+    /* 触控优化：44×44最小区域 */
+    min-width: 44px; min-height: 44px;
+    touch-action: manipulation;
+    border-radius: 8px;
+  }
+  .nav-basic .hamburger:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+  .nav-basic .hamburger .bar {
+    width: 24px; height: 2px; background: white;
+    border-radius: 2px; transition: all .3s cubic-bezier(.4,0,.2,1);
+  }
+  .nav-basic .hamburger.active .bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-basic .hamburger.active .bar:nth-child(2) { opacity: 0; }
+  .nav-basic .hamburger.active .bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* 移动端：隐藏横向菜单 */
+  @media (max-width: 768px) {
+    .nav-basic .nav-links {
+      position: absolute; top: 56px; left: 0; right: 0;
+      background: #1e293b; flex-direction: column; gap: 0;
+      max-height: 0; overflow: hidden;
+      transition: max-height .35s cubic-bezier(.4,0,.2,1);
+      box-shadow: 0 8px 20px rgba(0,0,0,.3);
+    }
+    .nav-basic .nav-links.active { max-height: 300px; }
+    .nav-basic .nav-links a {
+      display: block; padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      /* 触控优化：大点击区域 */
+      min-height: 44px; display: flex; align-items: center;
+    }
+    .nav-basic .hamburger { display: flex; }
+  }
+
+  /* ========================================
+     Navbar 2: 搜索型导航 (Search-Centric)
+     ======================================== */
+  .nav-search {
+    background: white; border-bottom: 1px solid #e2e8f0;
+    display: flex; align-items: center; padding: .6rem 1.2rem;
+    gap: .8rem; height: 56px;
+  }
+  .nav-search .nav-brand { font-weight: 900; font-size: 1.1rem; flex-shrink: 0; }
+  .nav-search .search-box {
+    flex: 1; display: flex; align-items: center; background: #f1f5f9;
+    border-radius: 20px; padding: .5rem 1rem; max-width: 500px;
+    transition: all .3s;
+  }
+  .nav-search .search-box:focus-within { background: #e2e8f0; box-shadow: 0 0 0 2px rgba(59,130,246,.2); }
+  .nav-search .search-box input {
+    border: none; background: transparent; outline: none; flex: 1;
+    font-size: .9rem; min-height: 32px;
+  }
+  .nav-search .nav-actions { display: flex; gap: .8rem; align-items: center; }
+  .nav-search .icon-btn {
+    width: 40px; height: 40px; border: none; background: transparent;
+    cursor: pointer; border-radius: 50%; font-size: 1.1rem; display: flex;
+    align-items: center; justify-content: center;
+    transition: background .2s;
+    touch-action: manipulation;
+  }
+  .nav-search .icon-btn:hover { background: #f1f5f9; }
+
+  @media (max-width: 640px) {
+    .nav-search { flex-wrap: wrap; height: auto; }
+    .nav-search .search-box { order: 3; max-width: 100%; width: 100%; }
+  }
+
+  /* ========================================
+     Navbar 3: 粘性导航 + 下拉菜单
+     ======================================== */
+  .nav-sticky {
+    background: white; box-shadow: 0 1px 8px rgba(0,0,0,.06);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 1.5rem; height: 56px; position: sticky; top: 0; z-index: 100;
+  }
+  .nav-sticky .nav-brand { font-weight: 900; font-size: 1.1rem; }
+  .nav-sticky .nav-links { display: flex; gap: .3rem; list-style: none; }
+  .nav-sticky .nav-links > li { position: relative; }
+  .nav-sticky .nav-links > li > a {
+    display: block; padding: .5rem 1rem; border-radius: 8px;
+    text-decoration: none; color: #475569; font-size: .9rem; cursor: pointer;
+    transition: all .2s; white-space: nowrap;
+  }
+  .nav-sticky .nav-links > li > a:hover { background: #f1f5f9; color: #1e293b; }
+
+  /* 下拉菜单 */
+  .nav-sticky .dropdown {
+    position: absolute; top: 100%; left: 0; min-width: 180px;
+    background: white; border-radius: 10px; box-shadow: 0 12px 40px rgba(0,0,0,.12);
+    padding: .5rem; opacity: 0; visibility: hidden;
+    transform: translateY(-8px); transition: all .2s ease;
+  }
+  .nav-sticky .nav-links > li:hover .dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+  .nav-sticky .dropdown a {
+    display: block; padding: .6rem .8rem; text-decoration: none;
+    color: #475569; font-size: .85rem; border-radius: 6px;
+    transition: background .15s;
+  }
+  .nav-sticky .dropdown a:hover { background: #f1f5f9; }
+
+  @media (max-width: 768px) {
+    .nav-sticky .nav-links > li > a { padding: .4rem .6rem; font-size: .8rem; }
+  }
+
+  /* ========================================
+     Navbar 4: 侧滑抽屉式
+     ======================================== */
+  .nav-drawer-wrapper { position: relative; overflow: hidden; background: white; }
+  .nav-drawer-wrapper .nav-top {
+    background: #1e293b; color: white; display: flex; align-items: center;
+    justify-content: space-between; padding: 0 1.2rem; height: 56px;
+  }
+  .nav-drawer-wrapper .nav-top .menu-btn {
+    background: none; border: none; color: white; font-size: 1.3rem;
+    cursor: pointer; padding: 8px; min-width: 44px; min-height: 44px;
+    touch-action: manipulation; border-radius: 8px;
+  }
+  .nav-drawer-wrapper .drawer-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 50;
+    opacity: 0; visibility: hidden; transition: all .3s;
+  }
+  .nav-drawer-wrapper .drawer-overlay.open { opacity: 1; visibility: visible; }
+  .nav-drawer-wrapper .drawer {
+    position: fixed; top: 0; left: 0; width: 280px; height: 100vh;
+    background: #1e293b; z-index: 60;
+    transform: translateX(-100%); transition: transform .3s cubic-bezier(.4,0,.2,1);
+    padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: .3rem;
+  }
+  .nav-drawer-wrapper .drawer.open { transform: translateX(0); }
+  .nav-drawer-wrapper .drawer a {
+    color: #cbd5e1; text-decoration: none; padding: .8rem 1rem;
+    border-radius: 8px; font-size: .95rem;
+    transition: all .15s;
+  }
+  .nav-drawer-wrapper .drawer a:hover { background: rgba(255,255,255,.08); color: white; }
+  .nav-drawer-wrapper .drawer .close-btn {
+    align-self: flex-end; background: none; border: none; color: #94a3b8;
+    font-size: 1.5rem; cursor: pointer; padding: 8px;
+    min-width: 44px; min-height: 44px;
+  }
+
+  /* ===== Vue3 代码展示 ===== */
+  pre {
+    background: #0f172a; border-radius: 10px; padding: 1.2rem;
+    font-family: 'Consolas','Monaco',monospace; font-size: .82rem;
+    line-height: 1.7; color: #cbd5e1; overflow-x: auto;
+    border: 1px solid #1e293b;
+  }
+  pre .hl-key { color: #93c5fd; }
+  pre .hl-str { color: #86efac; }
+  pre .hl-tag { color: #c084fc; }
+  pre .hl-cmt { color: #64748b; font-style: italic; }
+  pre .hl-fn { color: #fde68a; }
+
+  .code-tabs { display: flex; gap: .3rem; margin-bottom: -.5rem; }
+  .code-tabs button {
+    background: #1e293b; border: 1px solid #334155; color: #94a3b8;
+    padding: .4rem 1rem; border-radius: 8px 8px 0 0; cursor: pointer;
+    font-size: .8rem; border-bottom: none;
+  }
+  .code-tabs button.active-tab { background: #0f172a; color: #93c5fd; }
+
+  .code-block { display: none; }
+  .code-block.active-tab { display: block; }
+
+  @media (max-width: 768px) {
+    pre { font-size: .7rem; padding: .8rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 工具栏 ===== -->
+<div class="toolbar">
+  <div class="logo">🧭 响应式 <span>Navbar</span> Demo</div>
+  <button onclick="switchDemo('basic')" class="active" data-nav="basic">基础响应式</button>
+  <button onclick="switchDemo('search')" data-nav="search">搜索型</button>
+  <button onclick="switchDemo('sticky')" data-nav="sticky">粘性+下拉</button>
+  <button onclick="switchDemo('drawer')" data-nav="drawer">侧滑抽屉</button>
+  <button onclick="switchDemo('vue')" data-nav="vue">Vue3 组件</button>
+</div>
+
+<div class="demo-area">
+
+  <!-- ===== Demo 1: 基础响应式 ===== -->
+  <section id="demo-basic">
+    <h2>📱 基础响应式导航 <span class="tag">Mobile-First</span> <span class="tag">汉堡菜单</span> <span class="tag">max-height过渡</span></h2>
+    <p style="color:#64748b;margin-bottom:1rem;font-size:.9rem">
+      ≤768px 出现汉堡菜单，点击展开/收起；&gt;768px 显示完整横向导航。支持键盘Tab遍历。
+    </p>
+
+    <div class="phone-frame" id="basicFrame">
+      <div class="frame-status"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="phone-inner">
+        <nav class="nav-basic" aria-label="Main Navigation">
+          <div class="nav-brand">🚀 ACME Inc</div>
+          <ul class="nav-links" id="basicMenu">
+            <li><a href="#" class="active-link">首页</a></li>
+            <li><a href="#">产品</a></li>
+            <li><a href="#">文档</a></li>
+            <li><a href="#">价格</a></li>
+            <li><a href="#">关于</a></li>
+          </ul>
+          <button class="hamburger" id="basicBurger"
+                  aria-label="Toggle menu" aria-expanded="false"
+                  aria-controls="basicMenu">
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+          </button>
+        </nav>
+        <div class="content">
+          <div class="block">👆 点击右侧汉堡按钮展开菜单</div>
+          <div class="block">📐 缩小窗口至768px以下可见效果</div>
+          <div class="block">⌨️ 按Tab键可遍历所有菜单项（无障碍）</div>
+          <div class="block">🎯 移动端菜单项padding≥16px，44×44触控区</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Demo 2: 搜索型 ===== -->
+  <section id="demo-search" style="display:none">
+    <h2>🔍 搜索型导航 <span class="tag">focus-within</span> <span class="tag">触控按钮</span> <span class="tag">自适应换行</span></h2>
+    <p style="color:#64748b;margin-bottom:1rem;font-size:.9rem">
+      居中搜索框+图标操作按钮，≤640px搜索框独立换行。按钮均为44×44px触控区域。
+    </p>
+
+    <div class="phone-frame" id="searchFrame">
+      <div class="frame-status"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="phone-inner">
+        <nav class="nav-search" aria-label="搜索导航">
+          <div class="nav-brand">🏪 潮玩商城</div>
+          <div class="search-box">
+            <span>🔍</span>
+            <input type="search" placeholder="搜索潮玩、盲盒、手办..." aria-label="搜索商品">
+          </div>
+          <div class="nav-actions">
+            <button class="icon-btn" aria-label="消息通知" title="消息">🔔</button>
+            <button class="icon-btn" aria-label="购物车" title="购物车">🛒</button>
+            <button class="icon-btn" aria-label="个人中心" title="我的">👤</button>
+          </div>
+        </nav>
+        <div class="content">
+          <div class="block">🔍 点击搜索框聚焦，边框变色反馈</div>
+          <div class="block">📐 缩窄至640px：搜索框换到下一行撑满</div>
+          <div class="block">👆 右侧图标按钮44×44px触控区域</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Demo 3: 粘性+下拉 ===== -->
+  <section id="demo-sticky" style="display:none">
+    <h2>📍 粘性导航 + 下拉菜单 <span class="tag">position:sticky</span> <span class="tag">hover展开</span> <span class="tag">动画过渡</span></h2>
+    <p style="color:#64748b;margin-bottom:1rem;font-size:.9rem">
+      粘性定位不占滚动空间，hover触发下拉菜单，动画平滑过渡。
+    </p>
+
+    <div class="phone-frame" id="stickyFrame">
+      <div class="frame-status"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="phone-inner">
+        <nav class="nav-sticky" aria-label="带下拉菜单的导航">
+          <div class="nav-brand">🏢 Enterprise</div>
+          <ul class="nav-links">
+            <li><a>首页</a></li>
+            <li>
+              <a>产品 ▾</a>
+              <div class="dropdown">
+                <a>云平台</a><a>数据分析</a><a>AI 服务</a><a>安全方案</a>
+              </div>
+            </li>
+            <li>
+              <a>资源 ▾</a>
+              <div class="dropdown">
+                <a>文档中心</a><a>API 参考</a><a>视频教程</a>
+              </div>
+            </li>
+            <li><a>定价</a></li>
+          </ul>
+        </nav>
+        <div class="content">
+          <div class="block">📍 导航栏 position:sticky，滚动时固定顶部</div>
+          <div class="block">▼ 鼠标悬停"产品"/"资源"展开下拉</div>
+          <div class="block">✨ opacity + transform 动画过渡</div>
+          <div class="block">⬇️</div>
+          <div class="block">⬇️ 滚动查看更多 ⬇️</div>
+          <div class="block">⬇️ 导航始终吸顶 ⬇️</div>
+          <div class="block">... 更多内容 ...</div>
+          <div class="block">... 更多内容 ...</div>
+          <div class="block">... 更多内容 ...</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Demo 4: 侧滑抽屉 ===== -->
+  <section id="demo-drawer" style="display:none">
+    <h2>🗂️ 侧滑抽屉式导航 <span class="tag">fixed定位</span> <span class="tag">遮罩层</span> <span class="tag">焦点管理</span></h2>
+    <p style="color:#64748b;margin-bottom:1rem;font-size:.9rem">
+      全屏遮罩+左侧滑出抽屉，关闭后焦点回到触发按钮。
+    </p>
+
+    <div class="phone-frame" id="drawerFrame">
+      <div class="frame-status"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="phone-inner">
+        <div class="nav-drawer-wrapper" id="drawerWrapper">
+          <div class="nav-top">
+            <button class="menu-btn" id="menuBtn" aria-label="打开菜单" aria-expanded="false" aria-controls="drawerMenu">☰</button>
+            <span>📱 应用名称</span>
+            <span style="width:44px"></span>
+          </div>
+          <div class="drawer-overlay" id="drawerOverlay"></div>
+          <div class="drawer" id="navDrawer" role="dialog" aria-label="导航菜单">
+            <button class="close-btn" id="closeDrawer" aria-label="关闭菜单">✕</button>
+            <a>🏠 首页</a><a>📊 仪表盘</a><a>📂 项目</a>
+            <a>📅 日历</a><a>📈 报表</a><a>⚙️ 设置</a>
+            <a>❓ 帮助</a>
+          </div>
+        </div>
+        <div class="content">
+          <div class="block">☰ 点击左上角按钮打开侧滑抽屉</div>
+          <div class="block">🖤 点击遮罩层或✕关闭</div>
+          <div class="block">🎯 关闭后焦点自动回到触发按钮</div>
+          <div class="block">⌨️ 按Esc键也可关闭（WCAG标准）</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Demo 5: Vue3 组件代码 ===== -->
+  <section id="demo-vue" style="display:none">
+    <h2>⚡ Vue3 组件化实现 <span class="tag">Composition API</span> <span class="tag">响应式数据</span> <span class="tag">路由集成</span></h2>
+
+    <div class="code-tabs">
+      <button class="active-tab" onclick="switchCodeTab('template')">📄 template</button>
+      <button onclick="switchCodeTab('script')">⚙️ script</button>
+      <button onclick="switchCodeTab('style')">🎨 style</button>
+    </div>
+
+    <pre id="code-template" class="code-block active-tab"><span class="hl-cmt">&lt;!-- Navbar.vue --&gt;</span>
+      <span class="hl-tag">&lt;template&gt;</span>
+        <span class="hl-tag">&lt;nav</span> <span class="hl-key">class</span>=<span class="hl-str">"navbar"</span> <span class="hl-key">role</span>=<span class="hl-str">"navigation"</span> <span class="hl-key">aria-label</span>=<span class="hl-str">"主导航"</span><span class="hl-tag">&gt;</span>
+          <span class="hl-tag">&lt;router-link</span> <span class="hl-key">to</span>=<span class="hl-str">"/"</span> <span class="hl-key">class</span>=<span class="hl-str">"brand"</span><span class="hl-tag">&gt;</span>🚀 Logo<span class="hl-tag">&lt;/router-link&gt;</span>
+
+          <span class="hl-tag">&lt;ul</span> <span class="hl-key">:class</span>=<span class="hl-str">"['nav-links', { active: isMenuOpen }]"</span><span class="hl-tag">&gt;</span>
+            <span class="hl-tag">&lt;li</span> <span class="hl-key">v-for</span>=<span class="hl-str">"item in menuItems"</span> <span class="hl-key">:key</span>=<span class="hl-str">"item.path"</span><span class="hl-tag">&gt;</span>
+              <span class="hl-tag">&lt;router-link</span> <span class="hl-key">:to</span>=<span class="hl-str">"item.path"</span>
+                <span class="hl-key">@click</span>=<span class="hl-str">"closeMenu"</span><span class="hl-tag">&gt;</span>
+                {{ item.text }}
+              <span class="hl-tag">&lt;/router-link&gt;</span>
+            <span class="hl-tag">&lt;/li&gt;</span>
+          <span class="hl-tag">&lt;/ul&gt;</span>
+
+          <span class="hl-tag">&lt;button</span>
+            <span class="hl-key">class</span>=<span class="hl-str">"hamburger"</span>
+            <span class="hl-key">@click</span>=<span class="hl-str">"toggleMenu"</span>
+            <span class="hl-key">:aria-expanded</span>=<span class="hl-str">"isMenuOpen"</span>
+            <span class="hl-key">aria-controls</span>=<span class="hl-str">"nav-menu"</span>
+            <span class="hl-key">aria-label</span>=<span class="hl-str">"切换菜单"</span>
+          <span class="hl-tag">&gt;</span>
+            <span class="hl-tag">&lt;span</span> <span class="hl-tag">/&gt;</span><span class="hl-tag">&lt;span</span> <span class="hl-tag">/&gt;</span><span class="hl-tag">&lt;span</span> <span class="hl-tag">/&gt;</span>
+          <span class="hl-tag">&lt;/button&gt;</span>
+        <span class="hl-tag">&lt;/nav&gt;</span>
+      <span class="hl-tag">&lt;/template&gt;</span></pre>
+
+    <pre id="code-script" class="code-block"><span class="hl-cmt">// Navbar.vue — Composition API</span>
+      <span class="hl-key">import</span> { ref, watch, onMounted, onUnmounted } <span class="hl-key">from</span> <span class="hl-str">'vue'</span>;
+      <span class="hl-key">import</span> { <span class="hl-fn">useRoute</span> } <span class="hl-key">from</span> <span class="hl-str">'vue-router'</span>;
+
+      <span class="hl-key">export default</span> {
+        <span class="hl-fn">setup</span>() {
+          <span class="hl-key">const</span> isMenuOpen = <span class="hl-fn">ref</span>(<span class="hl-key">false</span>);
+          <span class="hl-key">const</span> route = <span class="hl-fn">useRoute</span>();
+
+          <span class="hl-key">const</span> menuItems = [
+            { path: <span class="hl-str">'/'</span>,       text: <span class="hl-str">'首页'</span> },
+            { path: <span class="hl-str">'/products'</span>, text: <span class="hl-str">'产品'</span> },
+            { path: <span class="hl-str">'/docs'</span>,     text: <span class="hl-str">'文档'</span> },
+            { path: <span class="hl-str">'/about'</span>,    text: <span class="hl-str">'关于'</span> },
+          ];
+
+          <span class="hl-key">const</span> <span class="hl-fn">toggleMenu</span> = () => { isMenuOpen.<span class="hl-key">value</span> = !<span class="hl-key">isMenuOpen</span>.<span class="hl-key">value</span>; };
+          <span class="hl-key">const</span> <span class="hl-fn">closeMenu</span> = () => { isMenuOpen.<span class="hl-key">value</span> = <span class="hl-key">false</span>; };
+
+          <span class="hl-cmt">// 窗口resize时自动关闭菜单</span>
+          <span class="hl-key">const</span> <span class="hl-fn">onResize</span> = () => {
+            <span class="hl-key">if</span> (window.innerWidth > 768 && isMenuOpen.<span class="hl-key">value</span>) closeMenu();
+          };
+          <span class="hl-fn">onMounted</span>(() => window.addEventListener(<span class="hl-str">'resize'</span>, onResize));
+          <span class="hl-fn">onUnmounted</span>(() => window.removeEventListener(<span class="hl-str">'resize'</span>, onResize));
+
+          <span class="hl-cmt">// 路由切换时关闭菜单</span>
+          <span class="hl-fn">watch</span>(() => route.path, closeMenu);
+
+          <span class="hl-key">return</span> { isMenuOpen, menuItems, toggleMenu, closeMenu };
+        }
+      };</pre>
+
+    <pre id="code-style" class="code-block"><span class="hl-cmt">/* Navbar 样式 — Mobile-First */</span>
+      <span class="hl-tag">.navbar</span> {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 0 1.2rem; height: 56px; background: #1e293b; color: white;
+      }
+      <span class="hl-tag">.nav-links</span> { display: flex; gap: 1.5rem; list-style: none; }
+
+      <span class="hl-cmt">/* 移动端 <768px */</span>
+      <span class="hl-key">@media</span> (<span class="hl-key">max-width</span>: 768px) {
+        <span class="hl-tag">.nav-links</span> {
+          position: absolute; left: 0; right: 0; top: 56px;
+          background: #1e293b; flex-direction: column;
+          max-height: 0; overflow: hidden; transition: max-height .35s;
+        }
+        <span class="hl-tag">.nav-links.active</span> { max-height: 400px; }
+        <span class="hl-tag">.nav-links a</span> {
+          display: block; padding: 1rem 1.5rem; <span class="hl-cmt">/* 16px padding */</span>
+          min-height: 44px;
+        }
+      }</pre>
+  </section>
+
+</div>
+
+<script>
+// ===== Demo 1: 基础汉堡菜单 =====
+document.getElementById('basicBurger').addEventListener('click', function() {
+  const menu = document.getElementById('basicMenu');
+  const isActive = menu.classList.toggle('active');
+  this.classList.toggle('active');
+  this.setAttribute('aria-expanded', isActive);
+});
+
+// 点击菜单项关闭（移动端）
+document.querySelectorAll('#basicMenu a').forEach(a => {
+  a.addEventListener('click', () => {
+    document.getElementById('basicMenu').classList.remove('active');
+    document.getElementById('basicBurger').classList.remove('active');
+    document.getElementById('basicBurger').setAttribute('aria-expanded', 'false');
+  });
+});
+
+// 窗口变大时自动关闭
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768) {
+    document.getElementById('basicMenu').classList.remove('active');
+    document.getElementById('basicBurger').classList.remove('active');
+    document.getElementById('basicBurger').setAttribute('aria-expanded', 'false');
+  }
+});
+
+// ===== Demo 4: 侧滑抽屉 =====
+const menuBtn = document.getElementById('menuBtn');
+const closeDrawer = document.getElementById('closeDrawer');
+const navDrawer = document.getElementById('navDrawer');
+const drawerOverlay = document.getElementById('drawerOverlay');
+
+function openDrawer() {
+  navDrawer.classList.add('open');
+  drawerOverlay.classList.add('open');
+  menuBtn.setAttribute('aria-expanded', 'true');
+  closeDrawer.focus(); // 焦点移到关闭按钮
+}
+
+function closeDrawerFn() {
+  navDrawer.classList.remove('open');
+  drawerOverlay.classList.remove('open');
+  menuBtn.setAttribute('aria-expanded', 'false');
+  menuBtn.focus(); // 焦点回到触发按钮
+}
+
+menuBtn.addEventListener('click', openDrawer);
+closeDrawer.addEventListener('click', closeDrawerFn);
+drawerOverlay.addEventListener('click', closeDrawerFn);
+
+// Esc键关闭
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && navDrawer.classList.contains('open')) {
+    closeDrawerFn();
+  }
+});
+
+// ===== Demo 切换 =====
+function switchDemo(name) {
+  document.querySelectorAll('[id^="demo-"]').forEach(s => s.style.display = 'none');
+  document.getElementById('demo-' + name).style.display = '';
+  document.querySelectorAll('.toolbar button[data-nav]').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-nav="${name}"]`).classList.add('active');
+}
+
+function switchCodeTab(name) {
+  document.querySelectorAll('.code-block').forEach(b => b.classList.remove('active-tab'));
+  document.querySelectorAll('.code-tabs button').forEach(b => b.classList.remove('active-tab'));
+  document.getElementById('code-' + name).classList.add('active-tab');
+  document.querySelector(`[onclick="switchCodeTab('${name}')"]`).classList.add('active-tab');
+}
+</script>
+</body>
+</html>

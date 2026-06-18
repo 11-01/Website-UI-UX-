@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>网站UI按钮设计完全指南 | Website Button Design Guide</title>
+<style>
+/* ========== Reset & 全局变量 ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f172a;
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --surface: #f8fafc;
+  --text: #e2e8f0;
+  --text-dim: #94a3b8;
+  --text-dark: #1e293b;
+
+  --blue: #3b82f6;
+  --blue-hover: #2563eb;
+  --purple: #8b5cf6;
+  --green: #22c55e;
+  --red: #ef4444;
+  --orange: #f59e0b;
+  --cyan: #06b6d4;
+  --pink: #ec4899;
+  --teal: #14b8a6;
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
+  --shadow: 0 4px 16px rgba(0,0,0,.08);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,.12);
+}
+
+body {
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* ========== 头部 ========== */
+.hero {
+  text-align: center;
+  padding: 3rem 1.5rem 2rem;
+  background: linear-gradient(180deg, #0f172a 0%, #1a2332 100%);
+}
+.hero h1 {
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 900;
+  margin-bottom: .6rem;
+}
+.hero h1 span {
+  background: linear-gradient(135deg, #3b82f6, #a855f7, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero .subtitle {
+  font-size: 1rem;
+  color: var(--text-dim);
+  max-width: 700px;
+  margin: 0 auto;
+}
+.hero .meta-tags {
+  display: flex; justify-content: center; gap: .5rem; flex-wrap: wrap;
+  margin-top: 1rem;
+}
+.hero .meta-tags span {
+  font-size: .75rem;
+  padding: .25rem .75rem;
+  background: rgba(59,130,246,.1);
+  border: 1px solid rgba(59,130,246,.2);
+  border-radius: 20px;
+  color: #93c5fd;
+}
+
+/* ========== 导航目录 ========== */
+.toc {
+  max-width: 1200px; margin: 0 auto; padding: 1.5rem;
+  display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center;
+}
+.toc a {
+  padding: .5rem 1.2rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: .85rem;
+  transition: all .25s;
+}
+.toc a:hover {
+  border-color: var(--blue);
+  color: #bfdbfe;
+  background: rgba(59,130,246,.08);
+}
+
+/* ========== 内容区 ========== */
+.page {
+  max-width: 1200px; margin: 0 auto; padding: 0 1.5rem 4rem;
+}
+
+/* 每节卡片 */
+.section-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+.section-card .card-header {
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid var(--card-border);
+  display: flex; align-items: center; gap: .8rem;
+}
+.section-card .card-header .section-num {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 1rem; color: white; flex-shrink: 0;
+}
+.section-card .card-header h2 {
+  font-size: 1.3rem; font-weight: 700;
+}
+.section-card .card-header .en-label {
+  font-size: .75rem; color: var(--text-dim); margin-left: auto;
+}
+.section-card .card-body {
+  background: var(--surface);
+  color: var(--text-dark);
+  padding: 1.5rem;
+}
+
+/* 小节标题 */
+.sub-title {
+  font-size: .95rem; font-weight: 700; color: #475569;
+  margin-bottom: 1rem; padding-bottom: .5rem;
+  border-bottom: 2px solid #e2e8f0;
+  display: flex; align-items: center; gap: .5rem;
+}
+.sub-title::before {
+  content: '';
+  width: 4px; height: 18px; background: var(--blue);
+  border-radius: 2px;
+}
+
+/* 演示网格 */
+.demo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.demo-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1rem; }
+.demo-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+.demo-grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+
+/* 按钮展示小方块 */
+.btn-cell {
+  background: white; border-radius: var(--radius); padding: 1rem 1rem 1.2rem;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: .8rem;
+  border: 1px solid #f1f5f9;
+}
+.btn-cell .label {
+  font-size: .72rem; color: #94a3b8; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.btn-cell .label code { font-size: .68rem; background: #f1f5f9; padding: .1rem .4rem; border-radius: 3px; }
+
+/* 宽行展示格 */
+.row-cell {
+  background: white; border-radius: var(--radius); padding: 1.2rem;
+  box-shadow: var(--shadow-sm); border: 1px solid #f1f5f9;
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+}
+.row-cell .label {
+  font-size: .75rem; color: #94a3b8; font-weight: 600;
+  min-width: 80px; text-align: right; flex-shrink: 0;
+}
+
+/* ================================================================
+   一、视觉与样式设计 —— 各类按钮样式
+   ================================================================ */
+
+/* --- 形状变体 --- */
+.shape-rect {
+  padding: .6rem 1.5rem; background: var(--blue); color: white;
+  border: none; font-size: .85rem; font-weight: 600; cursor: pointer;
+  border-radius: 2px; /* 直角 */
+  transition: all .2s;
+}
+.shape-rect:hover { background: var(--blue-hover); }
+
+.shape-rounded {
+  padding: .6rem 1.5rem; background: var(--blue); color: white;
+  border: none; font-size: .85rem; font-weight: 600; cursor: pointer;
+  border-radius: var(--radius); /* 圆角 */
+  transition: all .2s;
+}
+.shape-rounded:hover { background: var(--blue-hover); }
+
+.shape-pill {
+  padding: .6rem 1.5rem; background: var(--blue); color: white;
+  border: none; font-size: .85rem; font-weight: 600; cursor: pointer;
+  border-radius: var(--radius-full); /* 胶囊 */
+  transition: all .2s;
+}
+.shape-pill:hover { background: var(--blue-hover); }
+
+.shape-circle {
+  width: 52px; height: 52px; background: var(--blue); color: white;
+  border: none; font-size: 1.2rem; cursor: pointer;
+  border-radius: 50%; /* 圆形 */
+  transition: all .2s;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.shape-circle:hover { background: var(--blue-hover); transform: scale(1.05); }
+
+/* --- 填充样式变体 --- */
+.btn-solid {
+  padding: .6rem 1.5rem; background: var(--blue); color: white;
+  border: none; border-radius: var(--radius); font-size: .85rem; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+}
+.btn-solid:hover { background: var(--blue-hover); box-shadow: 0 4px 16px rgba(59,130,246,.3); }
+
+.btn-outline {
+  padding: .6rem 1.5rem; background: transparent; color: var(--blue);
+  border: 2px solid var(--blue); border-radius: var(--radius); font-size: .85rem;
+  font-weight: 600; cursor: pointer; transition: all .2s;
+}
+.btn-outline:hover { background: var(--blue); color: white; }
+
+.btn-ghost {
+  padding: .6rem 1.5rem; background: transparent; color: var(--blue);
+  border: 2px solid transparent; border-radius: var(--radius); font-size: .85rem;
+  font-weight: 600; cursor: pointer; transition: all .2s;
+}
+.btn-ghost:hover { background: rgba(59,130,246,.08); }
+
+.btn-text {
+  padding: .6rem .8rem; background: transparent; color: var(--blue);
+  border: none; border-radius: var(--radius); font-size: .85rem; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+}
+.btn-text:hover { background: rgba(59,130,246,.06); text-decoration: underline; }
+
+.btn-soft {
+  padding: .6rem 1.5rem; background: rgba(59,130,246,.1); color: var(--blue);
+  border: none; border-radius: var(--radius); font-size: .85rem; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+}
+.btn-soft:hover { background: rgba(59,130,246,.18); }
+
+/* --- 尺寸层级 --- */
+.btn-xs  { padding: .3rem .7rem; font-size: .7rem; border-radius: 4px; }
+.btn-sm  { padding: .45rem 1rem; font-size: .78rem; border-radius: 6px; }
+.btn-md  { padding: .6rem 1.5rem; font-size: .85rem; border-radius: 8px; }
+.btn-lg  { padding: .8rem 2rem; font-size: .95rem; border-radius: 10px; }
+.btn-xl  { padding: 1rem 2.5rem; font-size: 1.1rem; border-radius: 12px; }
+.btn-base-blue { background: var(--blue); color: white; border: none; font-weight: 600; cursor: pointer; transition: all .2s; }
+.btn-base-blue:hover { background: var(--blue-hover); }
+
+/* --- 渐变按钮 --- */
+.btn-gradient-blue {
+  padding: .6rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: white; border: none; border-radius: var(--radius);
+  font-size: .85rem; font-weight: 600; cursor: pointer;
+  transition: all .3s;
+  box-shadow: 0 4px 16px rgba(59,130,246,.25);
+}
+.btn-gradient-blue:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(139,92,246,.35);
+}
+
+.btn-gradient-warm {
+  padding: .6rem 1.5rem;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: white; border: none; border-radius: var(--radius);
+  font-size: .85rem; font-weight: 600; cursor: pointer;
+  transition: all .3s;
+  box-shadow: 0 4px 16px rgba(245,158,11,.25);
+}
+.btn-gradient-warm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(239,68,68,.35);
+}
+
+.btn-gradient-teal {
+  padding: .6rem 1.5rem;
+  background: linear-gradient(135deg, #14b8a6, #06b6d4);
+  color: white; border: none; border-radius: var(--radius);
+  font-size: .85rem; font-weight: 600; cursor: pointer;
+  transition: all .3s;
+  box-shadow: 0 4px 16px rgba(20,184,166,.25);
+}
+.btn-gradient-teal:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(6,182,212,.35);
+}
+
+/* --- 霓虹发光按钮 --- */
+.btn-neon {
+  padding: .6rem 1.5rem;
+  background: transparent; color: #a78bfa;
+  border: 1.5px solid #7c3aed;
+  border-radius: var(--radius); font-size: .85rem; font-weight: 600;
+  cursor: pointer; transition: all .3s;
+  text-shadow: 0 0 8px rgba(167,139,250,.4);
+  box-shadow: 0 0 12px rgba(124,58,237,.15), inset 0 0 12px rgba(124,58,237,.05);
+}
+.btn-neon:hover {
+  background: rgba(124,58,237,.1);
+  border-color: #a78bfa;
+  color: #c4b5fd;
+  text-shadow: 0 0 16px rgba(167,139,250,.7);
+  box-shadow: 0 0 28px rgba(124,58,237,.3), inset 0 0 28px rgba(124,58,237,.1);
+}
+
+/* --- 3D 立体按钮 --- */
+.btn-3d {
+  padding: .6rem 1.5rem;
+  background: #3b82f6;
+  color: white; border: none;
+  border-radius: var(--radius); font-size: .85rem; font-weight: 600;
+  cursor: pointer; transition: all .15s;
+  border-bottom: 4px solid #1d4ed8;
+  box-shadow: 0 4px 10px rgba(59,130,246,.2);
+  transform: translateY(0);
+}
+.btn-3d:hover { background: #2563eb; border-bottom-color: #1e40af; }
+.btn-3d:active {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+  box-shadow: 0 1px 4px rgba(59,130,246,.15);
+}
+
+/* --- 图标按钮 --- */
+.btn-icon {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .6rem 1.2rem; background: var(--blue); color: white;
+  border: none; border-radius: var(--radius); font-size: .85rem;
+  font-weight: 600; cursor: pointer; transition: all .2s;
+}
+.btn-icon:hover { background: var(--blue-hover); }
+.btn-icon .icon { font-size: 1rem; }
+
+.btn-icon-only {
+  width: 40px; height: 40px; background: #f1f5f9; color: #64748b;
+  border: none; border-radius: 50%; font-size: 1rem; cursor: pointer;
+  transition: all .2s;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.btn-icon-only:hover { background: #e2e8f0; color: #1e293b; }
+
+/* --- 带计数/角标的按钮 --- */
+.btn-badge-wrap {
+  position: relative; display: inline-block;
+}
+.btn-badge-wrap .badge-dot {
+  position: absolute; top: -4px; right: -4px;
+  width: 10px; height: 10px;
+  background: var(--red); border-radius: 50%;
+  border: 2px solid white;
+}
+
+/* ================================================================
+   二、文案与语义传达
+   ================================================================ */
+
+.cta-compare {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+}
+@media (max-width: 640px) { .cta-compare { grid-template-columns: 1fr; } }
+
+.cta-col { background: white; border-radius: var(--radius); padding: 1.2rem; box-shadow: var(--shadow-sm); }
+.cta-col h4 { font-size: .85rem; font-weight: 700; margin-bottom: .8rem; color: #475569; }
+.cta-col.good h4 { color: var(--green); }
+.cta-col.bad h4 { color: var(--red); }
+.cta-col .btns-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+
+.btn-cta-good {
+  padding: .6rem 1.4rem; background: var(--green); color: white;
+  border: none; border-radius: var(--radius); font-size: .85rem; font-weight: 700;
+  cursor: pointer; transition: all .2s;
+}
+.btn-cta-good:hover { background: #16a34a; }
+
+.btn-cta-bad {
+  padding: .6rem 1.4rem; background: #94a3b8; color: white;
+  border: none; border-radius: var(--radius); font-size: .85rem; font-weight: 400;
+  cursor: pointer; transition: all .2s;
+}
+.btn-cta-bad:hover { background: #64748b; }
+
+/* 主次按钮层级 */
+.btn-primary {
+  padding: .6rem 1.5rem; background: var(--blue); color: white;
+  border: none; border-radius: var(--radius); font-size: .85rem; font-weight: 700;
+  cursor: pointer; transition: all .2s;
+  box-shadow: 0 2px 8px rgba(59,130,246,.2);
+}
+.btn-primary:hover { background: var(--blue-hover); box-shadow: 0 4px 16px rgba(59,130,246,.35); }
+
+.btn-secondary {
+  padding: .6rem 1.5rem; background: white; color: #475569;
+  border: 1.5px solid #d1d5db; border-radius: var(--radius);
+  font-size: .85rem; font-weight: 500; cursor: pointer; transition: all .2s;
+}
+.btn-secondary:hover { background: #f8fafc; border-color: #94a3b8; }
+
+.btn-danger {
+  padding: .6rem 1.5rem; background: var(--red); color: white;
+  border: none; border-radius: var(--radius); font-size: .85rem; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+}
+.btn-danger:hover { background: #dc2626; }
+
+.btn-link {
+  padding: .6rem .6rem; background: transparent; color: var(--blue);
+  border: none; font-size: .85rem; cursor: pointer; transition: all .2s;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.btn-link:hover { color: var(--blue-hover); }
+
+/* ================================================================
+   三、布局与位置
+   ================================================================ */
+
+/* 表单模拟 */
+.mock-form {
+  background: white; border-radius: var(--radius);
+  padding: 1.5rem; box-shadow: var(--shadow-sm);
+  max-width: 480px; margin: 0 auto;
+}
+.mock-form .form-row {
+  margin-bottom: 1rem;
+}
+.mock-form label {
+  display: block; font-size: .8rem; font-weight: 600; color: #475569; margin-bottom: .3rem;
+}
+.mock-form input, .mock-form textarea {
+  width: 100%; padding: .55rem .7rem; border: 1.5px solid #d1d5db;
+  border-radius: 6px; font-size: .85rem; font-family: inherit;
+  transition: border-color .2s;
+}
+.mock-form input:focus, .mock-form textarea:focus {
+  outline: none; border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+}
+.mock-form textarea { min-height: 70px; resize: vertical; }
+
+/* 底部固定按钮 */
+.fixed-bottom-bar {
+  position: sticky; bottom: 0;
+  background: white; border-top: 1px solid #e2e8f0;
+  padding: .8rem 1.2rem;
+  display: flex; gap: .8rem; justify-content: flex-end;
+  border-radius: 0 0 var(--radius) var(--radius);
+  box-shadow: 0 -4px 16px rgba(0,0,0,.06);
+  z-index: 2;
+}
+
+/* 居中CTA区 */
+.cta-center-block {
+  text-align: center; padding: 2rem 1rem;
+  background: linear-gradient(135deg, #eff6ff, #f5f3ff);
+  border-radius: var(--radius);
+}
+.cta-center-block h4 { font-size: 1rem; margin-bottom: .4rem; color: #1e293b; }
+.cta-center-block p { font-size: .8rem; color: #64748b; margin-bottom: 1rem; }
+
+/* ================================================================
+   四、交互与状态反馈
+   ================================================================ */
+
+/* 完整6状态按钮 */
+.btn-state-demo {
+  padding: .65rem 1.6rem; background: var(--blue); color: white;
+  border: none; border-radius: var(--radius); font-size: .85rem; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+  position: relative; overflow: hidden;
+}
+.btn-state-demo:hover { background: var(--blue-hover); box-shadow: 0 4px 16px rgba(59,130,246,.3); }
+.btn-state-demo:active { transform: scale(.96); background: #1d4ed8; }
+.btn-state-demo:focus-visible {
+  outline: 3px solid rgba(59,130,246,.4); outline-offset: 3px;
+}
+.btn-state-demo:disabled {
+  background: #94a3b8; color: #e2e8f0; cursor: not-allowed;
+  box-shadow: none; transform: none;
+}
+
+/* 加载中按钮 */
+.btn-loading {
+  padding: .65rem 1.6rem; background: var(--blue); color: white;
+  border: none; border-radius: var(--radius); font-size: .85rem; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+  display: inline-flex; align-items: center; gap: .5rem;
+}
+.btn-loading .spinner {
+  width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3);
+  border-top-color: white; border-radius: 50%;
+  animation: spin .6s linear infinite;
+}
+.btn-loading:hover { background: var(--blue-hover); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 成功状态按钮 */
+.btn-success-done {
+  padding: .65rem 1.6rem; background: var(--green); color: white;
+  border: none; border-radius: var(--radius); font-size: .85rem; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+  display: inline-flex; align-items: center; gap: .4rem;
+}
+
+/* --- 微交互特效按钮 --- */
+/* 水波纹 */
+.btn-ripple {
+  padding: .65rem 1.6rem; background: var(--purple); color: white;
+  border: none; border-radius: var(--radius); font-size: .85rem; font-weight: 600;
+  cursor: pointer; position: relative; overflow: hidden;
+  transition: background .3s;
+}
+.btn-ripple:hover { background: #7c3aed; }
+.btn-ripple::after {
+  content: ''; position: absolute;
+  top: 50%; left: 50%; width: 0; height: 0;
+  border-radius: 50%; background: rgba(255,255,255,.3);
+  transform: translate(-50%, -50%);
+  transition: width .6s, height .6s;
+}
+.btn-ripple:active::after {
+  width: 300px; height: 300px;
+}
+
+/* 悬停扫光 */
+.btn-shine {
+  padding: .65rem 1.6rem; background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white; border: none; border-radius: var(--radius);
+  font-size: .85rem; font-weight: 600; cursor: pointer;
+  position: relative; overflow: hidden;
+}
+.btn-shine::before {
+  content: ''; position: absolute; top: 0; left: -75%;
+  width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+  transform: skewX(-25deg);
+  transition: left .5s;
+}
+.btn-shine:hover::before { left: 125%; }
+
+/* 点击弹跳 */
+.btn-bounce {
+  padding: .65rem 1.6rem; background: var(--orange); color: white;
+  border: none; border-radius: var(--radius); font-size: .85rem; font-weight: 600;
+  cursor: pointer; transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+.btn-bounce:hover { transform: scale(1.04); }
+.btn-bounce:active { transform: scale(.88); }
+
+/* 边框画线 */
+.btn-draw {
+  padding: .65rem 1.6rem; background: transparent; color: var(--teal);
+  border: 2px solid transparent; border-radius: var(--radius);
+  font-size: .85rem; font-weight: 600; cursor: pointer;
+  position: relative; transition: all .3s;
+}
+.btn-draw::before, .btn-draw::after {
+  content: ''; position: absolute;
+  background: var(--teal); transition: all .3s ease;
+}
+.btn-draw::before { top: 0; left: 0; width: 0; height: 2px; }
+.btn-draw::after { bottom: 0; right: 0; width: 0; height: 2px; }
+.btn-draw:hover { color: #0d9488; }
+.btn-draw:hover::before, .btn-draw:hover::after { width: 100%; }
+
+/* 进度按钮 */
+.btn-progress {
+  padding: .65rem 1.6rem; background: #e2e8f0; color: #475569;
+  border: none; border-radius: var(--radius); font-size: .85rem; font-weight: 600;
+  cursor: pointer; position: relative; overflow: hidden;
+}
+.btn-progress .progress-fill {
+  position: absolute; top: 0; left: 0; height: 100%;
+  background: linear-gradient(90deg, rgba(59,130,246,.2), rgba(59,130,246,.35));
+  border-radius: var(--radius);
+  transition: width .5s ease;
+}
+.btn-progress .progress-text { position: relative; z-index: 1; }
+
+/* ================================================================
+   五、测试与工具辅助
+   ================================================================ */
+
+.gen-card {
+  background: white; border-radius: var(--radius); padding: 1.2rem;
+  box-shadow: var(--shadow-sm); text-align: center;
+  border: 1px solid #f1f5f9;
+}
+.gen-card h4 { font-size: .9rem; font-weight: 700; color: #1e293b; margin-bottom: .5rem; }
+.gen-card p { font-size: .75rem; color: #94a3b8; margin-bottom: 1rem; line-height: 1.5; }
+.gen-card .gen-btn {
+  padding: .5rem 1.2rem; border-radius: 20px; font-size: .8rem; font-weight: 600;
+  cursor: pointer; transition: all .2s; border: none; color: white;
+}
+
+.ab-compare {
+  display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem;
+  align-items: center;
+}
+@media (max-width: 640px) { .ab-compare { grid-template-columns: 1fr; } }
+.ab-compare .vs {
+  font-size: 1.5rem; font-weight: 900; color: #94a3b8;
+  text-align: center;
+}
+
+/* ========== 响应式 ========== */
+@media (max-width: 768px) {
+  .demo-grid { grid-template-columns: repeat(2, 1fr); }
+  .demo-grid-2, .demo-grid-3, .demo-grid-4 { grid-template-columns: 1fr; }
+  .page { padding: 0 1rem 3rem; }
+}
+
+@media (max-width: 480px) {
+  .demo-grid { grid-template-columns: 1fr; }
+  .row-cell { flex-direction: column; align-items: flex-start; }
+  .row-cell .label { text-align: left; }
+}
+
+/* ========== 页脚 ========== */
+.footer-note {
+  max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem;
+  text-align: center; color: var(--text-dim); font-size: .8rem;
+  border-top: 1px solid var(--card-border);
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== 头部 ==================== -->
+<header class="hero">
+  <h1><span>网站UI按钮设计完全指南</span></h1>
+  <p class="subtitle">
+    按钮不仅是视觉美化，更是引导用户行为、提升转化率的关键交互元素。
+    成功的按钮设计需要兼顾「清晰的意图传达」与「舒适的操作体验」。
+  </p>
+  <div class="meta-tags">
+    <span>视觉样式</span><span>文案语义</span><span>布局位置</span>
+    <span>交互反馈</span><span>数据驱动</span>
+  </div>
+</header>
+
+<!-- ==================== 目录导航 ==================== -->
+<nav class="toc">
+  <a href="#sec1">一、视觉与样式设计</a>
+  <a href="#sec2">二、文案与语义传达</a>
+  <a href="#sec3">三、布局与位置</a>
+  <a href="#sec4">四、交互与状态反馈</a>
+  <a href="#sec5">五、测试与工具辅助</a>
+</nav>
+
+<div class="page">
+
+<!-- ==================== 一、视觉与样式设计 ==================== -->
+<article class="section-card" id="sec1">
+  <div class="card-header">
+    <div class="section-num">1</div>
+    <h2>视觉与样式设计</h2>
+    <span class="en-label">Visual &amp; Style Design</span>
+  </div>
+  <div class="card-body">
+
+    <!-- 1.1 外观与形状 -->
+    <div class="sub-title">外观与形状 — 按钮必须"看起来像按钮"</div>
+    <div class="demo-grid">
+      <div class="btn-cell">
+        <span class="label">直角 <code>border-radius: 2px</code></span>
+        <button class="shape-rect">立即购买</button>
+        <span style="font-size:.7rem;color:#94a3b8">严谨、商务风</span>
+      </div>
+      <div class="btn-cell">
+        <span class="label">圆角 <code>border-radius: 10px</code></span>
+        <button class="shape-rounded">立即购买</button>
+        <span style="font-size:.7rem;color:#94a3b8">亲和、通用 ⭐推荐</span>
+      </div>
+      <div class="btn-cell">
+        <span class="label">胶囊 <code>border-radius: 9999px</code></span>
+        <button class="shape-pill">立即购买</button>
+        <span style="font-size:.7rem;color:#94a3b8">柔和、年轻化</span>
+      </div>
+      <div class="btn-cell">
+        <span class="label">圆形 <code>border-radius: 50%</code></span>
+        <button class="shape-circle">+</button>
+        <span style="font-size:.7rem;color:#94a3b8">图标按钮专用</span>
+      </div>
+    </div>
+
+    <!-- 1.2 填充样式 -->
+    <div class="sub-title">填充样式 — 五种经典变体</div>
+    <div class="demo-grid">
+      <div class="btn-cell">
+        <span class="label">实心 Solid</span>
+        <button class="btn-solid">主要操作</button>
+        <span style="font-size:.7rem;color:#94a3b8">最高视觉权重</span>
+      </div>
+      <div class="btn-cell">
+        <span class="label">描边 Outline</span>
+        <button class="btn-outline">次要操作</button>
+        <span style="font-size:.7rem;color:#94a3b8">中等视觉权重</span>
+      </div>
+      <div class="btn-cell">
+        <span class="label">幽灵 Ghost</span>
+        <button class="btn-ghost">辅助操作</button>
+        <span style="font-size:.7rem;color:#94a3b8">低视觉权重</span>
+      </div>
+      <div class="btn-cell">
+        <span class="label">文字 Text</span>
+        <button class="btn-text">更多 →</button>
+        <span style="font-size:.7rem;color:#94a3b8">最低视觉权重</span>
+      </div>
+      <div class="btn-cell">
+        <span class="label">柔和 Soft</span>
+        <button class="btn-soft">标签操作</button>
+        <span style="font-size:.7rem;color:#94a3b8">介于Ghost与Solid之间</span>
+      </div>
+    </div>
+
+    <!-- 1.3 尺寸层级 -->
+    <div class="sub-title">尺寸与空间 — 5级尺寸体系（8px栅格）</div>
+    <div class="row-cell" style="gap:1.2rem; justify-content: center;">
+      <button class="btn-base-blue btn-xs">XS 小</button>
+      <button class="btn-base-blue btn-sm">SM 较小</button>
+      <button class="btn-base-blue btn-md">MD 中</button>
+      <button class="btn-base-blue btn-lg">LG 大</button>
+      <button class="btn-base-blue btn-xl">XL 特大</button>
+    </div>
+    <div style="display:flex;gap:1rem;margin-top:.8rem;flex-wrap:wrap;justify-content:center;font-size:.7rem;color:#94a3b8;">
+      <span>XS: 表格行内操作</span>
+      <span>SM: 卡片次要按钮</span>
+      <span>MD: 默认尺寸 ⭐</span>
+      <span>LG: 表单提交</span>
+      <span>XL: Hero CTA</span>
+    </div>
+
+    <!-- 1.4 渐变 & 特效按钮 -->
+    <div class="sub-title">特效按钮 — 渐变 · 霓虹 · 3D立体</div>
+    <div class="demo-grid">
+      <div class="btn-cell">
+        <span class="label">蓝紫渐变</span>
+        <button class="btn-gradient-blue">✨ 立即体验</button>
+      </div>
+      <div class="btn-cell">
+        <span class="label">暖色渐变</span>
+        <button class="btn-gradient-warm">🔥 限时抢购</button>
+      </div>
+      <div class="btn-cell">
+        <span class="label">青蓝渐变</span>
+        <button class="btn-gradient-teal">🌊 了解更多</button>
+      </div>
+      <div class="btn-cell">
+        <span class="label">霓虹发光</span>
+        <button class="btn-neon">⚡ 进入控制台</button>
+      </div>
+      <div class="btn-cell">
+        <span class="label">3D 立体</span>
+        <button class="btn-3d">按下有手感</button>
+      </div>
+      <div class="btn-cell">
+        <span class="label">图标+文字</span>
+        <button class="btn-icon">
+          <span class="icon">🚀</span> 开始项目
+        </button>
+      </div>
+      <div class="btn-cell">
+        <span class="label">纯图标按钮</span>
+        <button class="btn-icon-only" title="收藏">⭐</button>
+        <button class="btn-icon-only" title="分享" style="margin-left:4px;">📤</button>
+        <button class="btn-icon-only" title="更多" style="margin-left:4px;">⋯</button>
+      </div>
+      <div class="btn-cell">
+        <span class="label">角标提醒</span>
+        <span class="btn-badge-wrap">
+          <button class="btn-icon">
+            <span class="icon">🔔</span> 消息
+          </button>
+          <span class="badge-dot"></span>
+        </span>
+      </div>
+    </div>
+
+  </div>
+</article>
+
+<!-- ==================== 二、文案与语义传达 ==================== -->
+<article class="section-card" id="sec2">
+  <div class="card-header">
+    <div class="section-num">2</div>
+    <h2>文案与语义传达</h2>
+    <span class="en-label">Copywriting &amp; Semantics</span>
+  </div>
+  <div class="card-body">
+
+    <!-- 2.1 好文案 vs 差文案 -->
+    <div class="sub-title">文案清晰明确 — 用户应知道点击后会发生什么</div>
+    <div class="cta-compare">
+      <div class="cta-col bad">
+        <h4>❌ 模糊文案</h4>
+        <div class="btns-row">
+          <button class="btn-cta-bad">点击这里</button>
+          <button class="btn-cta-bad">提交</button>
+          <button class="btn-cta-bad">确定</button>
+          <button class="btn-cta-bad">继续</button>
+        </div>
+        <p style="font-size:.72rem;color:#94a3b8;margin-top:.6rem;">
+          用户无法预判结果，缺乏行动动机
+        </p>
+      </div>
+      <div class="cta-col good">
+        <h4>✅ 动词引导 + 利益点</h4>
+        <div class="btns-row">
+          <button class="btn-cta-good">🎁 立即领取</button>
+          <button class="btn-cta-good">📝 提交订单</button>
+          <button class="btn-cta-good">✅ 确认支付</button>
+          <button class="btn-cta-good">📖 查看详情</button>
+        </div>
+        <p style="font-size:.72rem;color:#94a3b8;margin-top:.6rem;">
+          动词开头、明确结果、加入利益暗示
+        </p>
+      </div>
+    </div>
+
+    <!-- 2.2 常用CTA动词 -->
+    <div class="sub-title">常用CTA动词清单</div>
+    <div style="display:flex;flex-wrap:wrap;gap:.5rem;">
+      <span style="background:#eff6ff;color:#2563eb;padding:.3rem .8rem;border-radius:20px;font-size:.78rem;font-weight:600;">立即领取</span>
+      <span style="background:#f0fdf4;color:#16a34a;padding:.3rem .8rem;border-radius:20px;font-size:.78rem;font-weight:600;">免费试用</span>
+      <span style="background:#fefce8;color:#ca8a04;padding:.3rem .8rem;border-radius:20px;font-size:.78rem;font-weight:600;">去支付</span>
+      <span style="background:#f5f3ff;color:#7c3aed;padding:.3rem .8rem;border-radius:20px;font-size:.78rem;font-weight:600;">查看详情</span>
+      <span style="background:#fdf2f8;color:#db2777;padding:.3rem .8rem;border-radius:20px;font-size:.78rem;font-weight:600;">加入购物车</span>
+      <span style="background:#ecfdf5;color:#0d9488;padding:.3rem .8rem;border-radius:20px;font-size:.78rem;font-weight:600;">立即开通</span>
+      <span style="background:#f8fafc;color:#475569;padding:.3rem .8rem;border-radius:20px;font-size:.78rem;font-weight:600;">下载白皮书</span>
+      <span style="background:#fff7ed;color:#ea580c;padding:.3rem .8rem;border-radius:20px;font-size:.78rem;font-weight:600;">预约演示</span>
+      <span style="background:#f1f5f9;color:#334155;padding:.3rem .8rem;border-radius:20px;font-size:.78rem;font-weight:600;">开始使用</span>
+      <span style="background:#fef2f2;color:#dc2626;padding:.3rem .8rem;border-radius:20px;font-size:.78rem;font-weight:600;">限时抢购</span>
+    </div>
+
+    <!-- 2.3 主次关系 -->
+    <div class="sub-title">突出主次关系 — 一个页面只应有一个核心操作</div>
+    <div class="row-cell" style="gap:1rem;justify-content:center;">
+      <button class="btn-primary">✨ 主要操作（Primary）</button>
+      <button class="btn-secondary">次要操作（Secondary）</button>
+      <button class="btn-ghost" style="color:#94a3b8;">取消</button>
+    </div>
+    <p style="font-size:.72rem;color:#94a3b8;text-align:center;margin-top:.6rem;">
+      视觉权重：Primary &gt; Secondary &gt; Ghost &gt; Link · 同一组按钮中只有一个 Primary
+    </p>
+
+    <!-- 2.4 危险操作 -->
+    <div class="sub-title">危险操作与可逆操作</div>
+    <div class="row-cell" style="gap:1rem;justify-content:center;">
+      <button class="btn-danger">⚠️ 删除账户</button>
+      <button class="btn-secondary">取消</button>
+      <span style="font-size:.75rem;color:#94a3b8;">← 危险操作用红色，并给予"取消"出口</span>
+    </div>
+
+  </div>
+</article>
+
+<!-- ==================== 三、布局与位置 ==================== -->
+<article class="section-card" id="sec3">
+  <div class="card-header">
+    <div class="section-num">3</div>
+    <h2>布局与位置</h2>
+    <span class="en-label">Layout &amp; Position</span>
+  </div>
+  <div class="card-body">
+
+    <!-- 3.1 表单按钮 -->
+    <div class="sub-title">符合用户预期 — 表单提交按钮在底部</div>
+    <div class="mock-form">
+      <h4 style="font-size:.9rem;margin-bottom:1rem;color:#1e293b;">📋 用户注册表单</h4>
+      <div class="form-row">
+        <label>用户名</label>
+        <input type="text" placeholder="请输入用户名" value="张三">
+      </div>
+      <div class="form-row">
+        <label>邮箱</label>
+        <input type="email" placeholder="请输入邮箱" value="zhangsan@example.com">
+      </div>
+      <div class="form-row">
+        <label>备注</label>
+        <textarea placeholder="选填"></textarea>
+      </div>
+      <div style="display:flex;gap:.8rem;justify-content:flex-end;margin-top:1.2rem;">
+        <button class="btn-secondary">取消</button>
+        <button class="btn-primary">✅ 注册账户</button>
+      </div>
+      <p style="font-size:.68rem;color:#94a3b8;margin-top:.8rem;text-align:right;">
+        主要操作在右侧（或视阅读方向）· 取消在左 · 间距≥8px
+      </p>
+    </div>
+
+    <!-- 3.2 底部固定按钮（移动端常用） -->
+    <div class="sub-title">底部固定按钮 — 移动端商品详情页常见模式</div>
+    <div class="mock-form" style="position:relative;padding-bottom:0;">
+      <div style="min-height:100px;padding:1rem 0;">
+        <p style="font-size:.8rem;color:#475569;">¥<strong style="font-size:1.5rem;color:#dc2626;">299.00</strong> <span style="color:#94a3b8;text-decoration:line-through;">¥599.00</span></p>
+        <p style="font-size:.72rem;color:#94a3b8;margin-top:.3rem;">商品描述内容区域……</p>
+      </div>
+      <div class="fixed-bottom-bar" style="position:relative;">
+        <button class="btn-secondary" style="flex-shrink:0;">🛒 购物车</button>
+        <button class="btn-primary" style="flex:1;">⚡ 立即购买</button>
+      </div>
+    </div>
+
+    <!-- 3.3 居中CTA -->
+    <div class="sub-title">引导页居中CTA</div>
+    <div class="cta-center-block">
+      <h4>准备好开始了吗？</h4>
+      <p>免费试用 30 天，无需信用卡</p>
+      <button class="btn-gradient-blue" style="font-size:.95rem;padding:.75rem 2rem;">
+        🚀 免费开始使用
+      </button>
+      <p style="font-size:.7rem;color:#94a3b8;margin-top:.6rem;">已有账户？<button class="btn-link">立即登录</button></p>
+    </div>
+
+    <!-- 3.4 按钮顺序逻辑 -->
+    <div class="sub-title">按钮顺序逻辑（对话弹窗模式）</div>
+    <div class="demo-grid-2">
+      <div class="row-cell">
+        <span class="label">弹窗确认</span>
+        <div style="display:flex;gap:.6rem;">
+          <button class="btn-secondary">取消</button>
+          <button class="btn-primary">确认删除</button>
+        </div>
+        <span style="font-size:.7rem;color:#94a3b8;">次要在前，主要在后</span>
+      </div>
+      <div class="row-cell">
+        <span class="label">步骤条导航</span>
+        <div style="display:flex;gap:.6rem;">
+          <button class="btn-outline">← 上一步</button>
+          <button class="btn-primary">下一步 →</button>
+        </div>
+        <span style="font-size:.7rem;color:#94a3b8;">回退在左，前进在右</span>
+      </div>
+    </div>
+
+  </div>
+</article>
+
+<!-- ==================== 四、交互与状态反馈 ==================== -->
+<article class="section-card" id="sec4">
+  <div class="card-header">
+    <div class="section-num">4</div>
+    <h2>交互与状态反馈</h2>
+    <span class="en-label">Interaction &amp; State Feedback</span>
+  </div>
+  <div class="card-body">
+
+    <!-- 4.1 六种状态一览 -->
+    <div class="sub-title">完善的状态设计 — 六种状态缺一不可</div>
+    <div class="demo-grid-3">
+      <div class="btn-cell">
+        <span class="label">默认 Normal</span>
+        <button class="btn-state-demo">提交订单</button>
+      </div>
+      <div class="btn-cell" style="background:#f0f7ff;">
+        <span class="label">悬停 Hover</span>
+        <button class="btn-state-demo" style="background:#2563eb;box-shadow:0 4px 16px rgba(59,130,246,.3);">提交订单</button>
+        <span style="font-size:.68rem;color:#3b82f6;">鼠标移入</span>
+      </div>
+      <div class="btn-cell">
+        <span class="label">按下 Active</span>
+        <button class="btn-state-demo" style="background:#1d4ed8;transform:scale(.96);">提交订单</button>
+        <span style="font-size:.68rem;color:#3b82f6;">鼠标按下</span>
+      </div>
+      <div class="btn-cell">
+        <span class="label">聚焦 Focus</span>
+        <button class="btn-state-demo" style="outline:3px solid rgba(59,130,246,.4);outline-offset:3px;">提交订单</button>
+        <span style="font-size:.68rem;color:#3b82f6;">键盘Tab聚焦</span>
+      </div>
+      <div class="btn-cell">
+        <span class="label">加载中 Loading</span>
+        <button class="btn-loading" disabled>
+          <span class="spinner"></span> 提交中...
+        </button>
+        <span style="font-size:.68rem;color:#3b82f6;">处理中，防重复点击</span>
+      </div>
+      <div class="btn-cell">
+        <span class="label">禁用 Disabled</span>
+        <button class="btn-state-demo" disabled>提交订单</button>
+        <span style="font-size:.68rem;color:#94a3b8;">条件不满足时</span>
+      </div>
+    </div>
+
+    <!-- 4.2 微交互特效 -->
+    <div class="sub-title">微交互与动效 — 克制而有效的反馈</div>
+    <div class="demo-grid-4">
+      <div class="btn-cell">
+        <span class="label">水波纹 Ripple</span>
+        <button class="btn-ripple">点击试试</button>
+        <span style="font-size:.68rem;color:#94a3b8;">Material 风格</span>
+      </div>
+      <div class="btn-cell">
+        <span class="label">悬停扫光 Shine</span>
+        <button class="btn-shine">悬停看看</button>
+        <span style="font-size:.68rem;color:#94a3b8;">吸引注意力</span>
+      </div>
+      <div class="btn-cell">
+        <span class="label">弹性缩放 Bounce</span>
+        <button class="btn-bounce">点我弹跳</button>
+        <span style="font-size:.68rem;color:#94a3b8;">活泼有趣</span>
+      </div>
+      <div class="btn-cell">
+        <span class="label">边框画线 Draw</span>
+        <button class="btn-draw">悬停描边</button>
+        <span style="font-size:.68rem;color:#94a3b8;">优雅勾勒</span>
+      </div>
+    </div>
+
+    <!-- 4.3 加载与成功状态流转 -->
+    <div class="sub-title">状态流转示例 — 从点击到完成</div>
+    <div class="row-cell" style="justify-content:center;gap:1.5rem;">
+      <div style="text-align:center;">
+        <button class="btn-primary">提交订单</button>
+        <p style="font-size:.68rem;color:#94a3b8;margin-top:.3rem;">① 默认状态</p>
+      </div>
+      <span style="color:#94a3b8;font-size:1.2rem;">→</span>
+      <div style="text-align:center;">
+        <button class="btn-loading" disabled>
+          <span class="spinner"></span> 提交中...
+        </button>
+        <p style="font-size:.68rem;color:#3b82f6;margin-top:.3rem;">② 加载中 · 禁用重复点击</p>
+      </div>
+      <span style="color:#94a3b8;font-size:1.2rem;">→</span>
+      <div style="text-align:center;">
+        <button class="btn-success-done" disabled>
+          ✅ 提交成功
+        </button>
+        <p style="font-size:.68rem;color:#22c55e;margin-top:.3rem;">③ 成功反馈 · 1.5s后消失</p>
+      </div>
+    </div>
+
+    <!-- 4.4 进度按钮 -->
+    <div class="sub-title">进度按钮 — 长任务反馈</div>
+    <div class="row-cell" style="justify-content:center;">
+      <button class="btn-progress" style="width:200px;">
+        <span class="progress-fill" style="width:60%;"></span>
+        <span class="progress-text">上传中 60%</span>
+      </button>
+      <span style="font-size:.75rem;color:#94a3b8;">按钮即进度条，空间紧凑</span>
+    </div>
+
+  </div>
+</article>
+
+<!-- ==================== 五、测试与工具辅助 ==================== -->
+<article class="section-card" id="sec5">
+  <div class="card-header">
+    <div class="section-num">5</div>
+    <h2>测试与工具辅助</h2>
+    <span class="en-label">Testing &amp; Tooling</span>
+  </div>
+  <div class="card-body">
+
+    <!-- 5.1 A/B 测试概念 -->
+    <div class="sub-title">数据驱动优化 — A/B 测试对比示例</div>
+    <div class="ab-compare">
+      <div class="gen-card" style="border:2px solid #f1f5f9;">
+        <h4>🅰️ 方案 A</h4>
+        <button class="btn-solid" style="background:#3b82f6;margin-bottom:.5rem;">免费试用</button>
+        <p>蓝色 · 动词 · 中等尺寸</p>
+        <span style="font-size:.7rem;background:#fef2f2;color:#dc2626;padding:.15rem .5rem;border-radius:10px;">转化率 3.2%</span>
+      </div>
+      <div class="vs">VS</div>
+      <div class="gen-card" style="border:2px solid #22c55e;background:#f0fdf4;">
+        <h4>🅱️ 方案 B（胜出 🏆）</h4>
+        <button class="btn-gradient-warm" style="font-size:.9rem;padding:.7rem 2rem;margin-bottom:.5rem;">🎁 免费领取 7 天会员</button>
+        <p>暖色渐变 · 动词+利益 · 大尺寸</p>
+        <span style="font-size:.7rem;background:#dcfce7;color:#16a34a;padding:.15rem .5rem;border-radius:10px;">转化率 5.8% ↑81%</span>
+      </div>
+    </div>
+    <p style="font-size:.72rem;color:#94a3b8;text-align:center;margin-top:1rem;">
+      💡 建议测试维度：文案（动词 vs 名词）· 颜色（冷色 vs 暖色）· 尺寸 · 位置 · 形状
+    </p>
+
+    <!-- 5.2 在线工具 -->
+    <div class="sub-title">善用生成工具 — 一键获取CSS代码</div>
+    <div class="demo-grid-3">
+      <div class="gen-card">
+        <h4>🎨 Gradient Buttons</h4>
+        <p>丰富的渐变按钮样式，可视化调参，一键复制CSS</p>
+        <button class="gen-btn" style="background:linear-gradient(135deg,#667eea,#764ba2);"
+          onclick="window.open('https://gradientbuttons.colorion.co/','_blank')">
+          打开工具 →
+        </button>
+      </div>
+      <div class="gen-card">
+        <h4>💎 UI Buttons</h4>
+        <p>多种风格的按钮集合，含悬停动效，支持直接复制HTML/CSS</p>
+        <button class="gen-btn" style="background:linear-gradient(135deg,#f093fb,#f5576c);"
+          onclick="window.open('https://ui-buttons.web.app/','_blank')">
+          打开工具 →
+        </button>
+      </div>
+      <div class="gen-card">
+        <h4>⚡ CSS Buttons</h4>
+        <p>纯CSS按钮动画库，含霓虹、3D、边框动画等各种特效</p>
+        <button class="gen-btn" style="background:linear-gradient(135deg,#4facfe,#00f2fe);"
+          onclick="window.open('https://cssbuttons.app/','_blank')">
+          打开工具 →
+        </button>
+      </div>
+    </div>
+
+    <!-- 5.3 设计检查清单 -->
+    <div class="sub-title">按钮设计自查清单 ✅</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:.8rem;">
+      <div style="display:flex;align-items:flex-start;gap:.4rem;font-size:.8rem;color:#475569;">
+        <span style="color:#22c55e;flex-shrink:0;">☑</span>
+        <span>按钮是否具有足够的视觉可点击性（至少44×44px触摸区）？</span>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:.4rem;font-size:.8rem;color:#475569;">
+        <span style="color:#22c55e;flex-shrink:0;">☑</span>
+        <span>CTA按钮是否与背景形成≥4.5:1的对比度？</span>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:.4rem;font-size:.8rem;color:#475569;">
+        <span style="color:#22c55e;flex-shrink:0;">☑</span>
+        <span>文案是否以动词开头、清晰告知点击后的结果？</span>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:.4rem;font-size:.8rem;color:#475569;">
+        <span style="color:#22c55e;flex-shrink:0;">☑</span>
+        <span>同一页面是否只有一个Primary按钮？</span>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:.4rem;font-size:.8rem;color:#475569;">
+        <span style="color:#22c55e;flex-shrink:0;">☑</span>
+        <span>是否覆盖了6种状态（Normal/Hover/Active/Focus/Loading/Disabled）？</span>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:.4rem;font-size:.8rem;color:#475569;">
+        <span style="color:#22c55e;flex-shrink:0;">☑</span>
+        <span>加载中状态是否阻止了重复提交？</span>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:.4rem;font-size:.8rem;color:#475569;">
+        <span style="color:#22c55e;flex-shrink:0;">☑</span>
+        <span>危险操作（删除/注销）是否有二次确认？</span>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:.4rem;font-size:.8rem;color:#475569;">
+        <span style="color:#22c55e;flex-shrink:0;">☑</span>
+        <span>全局按钮样式是否保持一致（颜色/圆角/字号/间距）？</span>
+      </div>
+    </div>
+
+  </div>
+</article>
+
+</div><!-- .page -->
+
+<!-- ==================== 页脚 ==================== -->
+<footer class="footer-note">
+  <p>网站UI按钮设计完全指南 · 涵盖视觉样式、文案语义、布局位置、交互反馈、测试工具五大维度</p>
+  <p style="margin-top:.3rem;">设计原则参考：Material Design 3 · Ant Design 5 · Human Interface Guidelines</p>
+</footer>
+
+</body>
+</html>

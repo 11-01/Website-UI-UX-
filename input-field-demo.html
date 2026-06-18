@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>网站UI输入框设计指南 | Input Field Design Guide</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f172a;--card-bg:#1e293b;--card-border:#334155;--surface:#f8fafc;--text:#e2e8f0;--text-dim:#94a3b8;--text-dark:#1e293b;--blue:#3b82f6;--green:#22c55e;--red:#ef4444;--orange:#f59e0b;--radius:10px;--radius-lg:16px}
+body{font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.hero{text-align:center;padding:3rem 1.5rem 2rem;background:linear-gradient(180deg,#0f172a 0%,#1a2332 100%)}
+.hero h1{font-size:clamp(1.8rem,4vw,3rem);font-weight:900;margin-bottom:.6rem}
+.hero h1 span{background:linear-gradient(135deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .subtitle{font-size:1rem;color:var(--text-dim);max-width:700px;margin:0 auto}
+.hero .meta-tags{display:flex;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
+.hero .meta-tags span{font-size:.75rem;padding:.25rem .75rem;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:20px;color:#93c5fd}
+
+.page{max-width:1200px;margin:0 auto;padding:0 1.5rem 4rem}
+.section-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);margin-bottom:2rem;overflow:hidden}
+.section-card .card-header{padding:1.2rem 1.5rem;border-bottom:1px solid var(--card-border);display:flex;align-items:center;gap:.8rem}
+.section-card .card-header .section-num{width:36px;height:36px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;color:white;flex-shrink:0}
+.section-card .card-header h2{font-size:1.3rem;font-weight:700}
+.section-card .card-header .en-label{font-size:.75rem;color:var(--text-dim);margin-left:auto}
+.section-card .card-body{background:var(--surface);color:var(--text-dark);padding:1.5rem}
+
+.sub-title{font-size:.95rem;font-weight:700;color:#475569;margin-bottom:1rem;margin-top:1.5rem;padding-bottom:.5rem;border-bottom:2px solid #e2e8f0;display:flex;align-items:center;gap:.5rem}
+.sub-title:first-child{margin-top:0}
+.sub-title::before{content:'';width:4px;height:18px;background:var(--blue);border-radius:2px}
+
+.demo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.2rem}
+.code-block{background:#1e293b;color:#e2e8f0;border-radius:8px;padding:.9rem 1.1rem;font-family:'JetBrains Mono','Fira Code','Consolas',monospace;font-size:.76rem;line-height:1.7;overflow-x:auto;margin:.6rem 0}
+.code-block .tag{color:#f472b6}.code-block .attr{color:#67e8f9}.code-block .val{color:#a5d6ff}.code-block .comment{color:#64748b}.code-block .prop{color:#fde68a}.code-block .kw{color:#f472b6}
+
+.tip-box{display:flex;align-items:flex-start;gap:.6rem;padding:.8rem 1rem;border-radius:8px;font-size:.8rem;margin:.8rem 0}
+.tip-box.info{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
+.tip-box.success{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.tip-box.warn{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+.tip-box .icon{font-size:1rem;flex-shrink:0}
+
+.plan-card{background:white;border-radius:var(--radius);padding:1.2rem;box-shadow:0 1px 6px rgba(0,0,0,.03);border:1px solid #f1f5f9}
+.plan-card h4{font-size:.9rem;margin-bottom:.5rem}
+
+/* ===== 输入框样式 ===== */
+.form-group{margin-bottom:1rem}
+.form-group label{display:block;font-size:.8rem;font-weight:600;color:#475569;margin-bottom:.3rem}
+.form-group .hint{font-size:.7rem;color:#94a3b8;margin-top:.25rem}
+
+/* 基础输入框 */
+.input-base{
+  width:100%;padding:.55rem .75rem;font-size:.85rem;font-family:inherit;
+  border:1.5px solid #d1d5db;border-radius:8px;color:#1e293b;
+  background:white;transition:all .25s;outline:none;
+}
+.input-base:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+.input-base::placeholder{color:#cbd5e1}
+.input-base:disabled{background:#f8fafc;color:#94a3b8;cursor:not-allowed}
+
+/* 错误状态 */
+.input-error{border-color:var(--red)!important}
+.input-error:focus{box-shadow:0 0 0 3px rgba(239,68,68,.1)!important}
+
+/* 成功状态 */
+.input-success{border-color:var(--green)!important}
+.input-success:focus{box-shadow:0 0 0 3px rgba(34,197,94,.1)!important}
+
+/* 浮动标签 */
+.float-label-group{position:relative;margin-bottom:1rem}
+.float-label-group input{
+  width:100%;padding:.85rem .75rem .4rem;font-size:.85rem;font-family:inherit;
+  border:1.5px solid #d1d5db;border-radius:8px;color:#1e293b;
+  background:white;transition:all .25s;outline:none;
+}
+.float-label-group input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+.float-label-group label{
+  position:absolute;left:.75rem;top:50%;transform:translateY(-50%);
+  font-size:.85rem;color:#94a3b8;pointer-events:none;
+  transition:all .25s;background:white;padding:0 .25rem;
+}
+.float-label-group input:focus + label,
+.float-label-group input:not(:placeholder-shown) + label{
+  top:0;transform:translateY(-30%);font-size:.7rem;color:var(--blue);font-weight:600;
+}
+
+/* 前后置标签 */
+.affix-group{display:flex;align-items:stretch}
+.affix-group .prefix,.affix-group .suffix{
+  display:flex;align-items:center;padding:.55rem .75rem;
+  background:#f1f5f9;border:1.5px solid #d1d5db;
+  font-size:.8rem;color:#64748b;
+}
+.affix-group .prefix{border-radius:8px 0 0 8px;border-right:none}
+.affix-group .suffix{border-radius:0 8px 8px 0;border-left:none}
+.affix-group input{
+  flex:1;padding:.55rem .75rem;font-size:.85rem;font-family:inherit;
+  border:1.5px solid #d1d5db;color:#1e293b;background:white;
+  transition:all .25s;outline:none;min-width:0;
+}
+.affix-group input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.1);z-index:1;position:relative}
+.affix-group .prefix + input{border-radius:0;border-left:none}
+.affix-group input + .suffix{border-left:none}
+.affix-group input:first-child{border-radius:8px 0 0 8px}
+.affix-group input:last-child{border-radius:0 8px 8px 0}
+
+/* 可清空输入框 */
+.clearable-wrap{position:relative;display:block}
+.clearable-wrap input{padding-right:2.2rem}
+.clearable-wrap .clear-btn{
+  position:absolute;right:.4rem;top:50%;transform:translateY(-50%);
+  width:24px;height:24px;border:none;background:none;color:#94a3b8;
+  cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;transition:all .15s;
+}
+.clearable-wrap .clear-btn:hover{background:#f1f5f9;color:#475569}
+
+/* 搜索框 */
+.search-group{position:relative}
+.search-group .search-icon{
+  position:absolute;left:.7rem;top:50%;transform:translateY(-50%);
+  font-size:.9rem;color:#94a3b8;
+}
+.search-group input{
+  width:100%;padding:.55rem .75rem .55rem 2.2rem;
+  font-size:.85rem;font-family:inherit;
+  border:1.5px solid #d1d5db;border-radius:24px;color:#1e293b;
+  background:white;transition:all .25s;outline:none;
+}
+.search-group input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+
+/* 文本框 */
+.textarea-base{
+  width:100%;padding:.55rem .75rem;font-size:.85rem;font-family:inherit;
+  border:1.5px solid #d1d5db;border-radius:8px;color:#1e293b;
+  background:white;transition:all .25s;outline:none;
+  resize:vertical;min-height:80px;
+}
+.textarea-base:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+
+@media(max-width:640px){.demo-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1><span>网站UI输入框设计指南</span></h1>
+  <p class="subtitle">兼顾视觉设计（UI）、用户体验（UX）与前端代码实现的全方位输入框指南。</p>
+  <div class="meta-tags"><span>浮动标签</span><span>状态反馈</span><span>前后缀</span><span>验证</span><span>安全防护</span></div>
+</header>
+
+<div class="page">
+
+<!-- ===== 一、标签与尺寸 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">1</div><h2>标签、尺寸与排版</h2><span class="en-label">Label & Size</span></div>
+  <div class="card-body">
+    <div class="demo-grid">
+      <!-- 标签方式 -->
+      <div class="plan-card"><h4>📌 顶部标签（推荐）</h4>
+        <div class="form-group"><label for="ex1">邮箱地址</label><input class="input-base" id="ex1" type="email" placeholder="name@example.com"></div>
+        <p style="font-size:.72rem;color:#16a34a;">✅ 始终可见，不会消失。最佳无障碍体验。</p></div>
+      <div class="plan-card"><h4>🏷️ 浮动标签</h4>
+        <div class="float-label-group"><input id="ex2" type="email" placeholder=" "><label for="ex2">邮箱地址</label></div>
+        <p style="font-size:.72rem;color:#94a3b8;">输入时标签上移，节省空间但需确保标签始终可读。</p></div>
+      <div class="plan-card"><h4>⚠️ 仅占位符（不推荐）</h4>
+        <div class="form-group"><input class="input-base" type="email" placeholder="请输入邮箱地址"></div>
+        <p style="font-size:.72rem;color:#dc2626;">❌ 输入后消失，用户容易忘记字段要求。</p></div>
+      <!-- 尺寸 -->
+      <div class="plan-card"><h4>📐 尺寸层级</h4>
+        <input class="input-base" style="padding:.3rem .5rem;font-size:.72rem;margin-bottom:.4rem;" value="小号 XS · 弹窗/表格内" readonly>
+        <input class="input-base" style="margin-bottom:.4rem;" value="中号 MD · 默认尺寸 ⭐" readonly>
+        <input class="input-base" style="padding:.7rem .9rem;font-size:.95rem;" value="大号 LG · 移动端/重要字段" readonly>
+        <p style="font-size:.7rem;color:#94a3b8;margin-top:.3rem;">高度建议 32px~40px · 字号 14px~16px</p></div>
+    </div>
+  </div>
+</article>
+
+<!-- ===== 二、状态反馈 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">2</div><h2>状态反馈与样式</h2><span class="en-label">State Feedback</span></div>
+  <div class="card-body">
+    <div class="demo-grid">
+      <div class="plan-card"><h4>默认 Default</h4><input class="input-base" placeholder="请输入内容"></div>
+      <div class="plan-card"><h4>聚焦 Focus</h4><input class="input-base" value="已获得焦点" style="border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.1);"></div>
+      <div class="plan-card"><h4>✅ 成功 Success</h4><input class="input-base input-success" value="格式正确"><span class="hint" style="color:var(--green);">✓ 邮箱格式正确</span></div>
+      <div class="plan-card"><h4>❌ 错误 Error</h4><input class="input-base input-error" value="abc@incomplete"><span class="hint" style="color:var(--red);">✗ 邮箱格式不完整，缺少 .com 等后缀</span></div>
+      <div class="plan-card"><h4>🔒 禁用 Disabled</h4><input class="input-base" value="不可编辑" disabled></div>
+      <div class="plan-card"><h4>只读 Readonly</h4><input class="input-base" value="只读数据 (readonly)" readonly style="background:#fefce8;"></div>
+    </div>
+    <div class="tip-box info"><span class="icon">💡</span><span>错误提示应"贴身"放在出错字段旁边，用醒目颜色标识，给出<strong>具体错误原因</strong>和正确示例。绝不能清空用户已填写的正确内容。</span></div>
+  </div>
+</article>
+
+<!-- ===== 三、输入框变体 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">3</div><h2>常用输入框变体</h2><span class="en-label">Input Variants</span></div>
+  <div class="card-body">
+    <div class="demo-grid">
+      <div class="plan-card"><h4>💰 前缀/后缀标签</h4>
+        <div class="affix-group"><span class="prefix">¥</span><input value="299.00"><span class="suffix">元</span></div>
+        <p style="font-size:.7rem;color:#94a3b8;margin-top:.3rem;">适合金额、权重、单位等场景。</p></div>
+      <div class="plan-card"><h4>🔍 搜索框</h4>
+        <div class="search-group"><span class="search-icon">🔍</span><input class="input-base" value="" style="padding-left:2.2rem;border-radius:24px;" placeholder="搜索文章、标签..."></div>
+        <p style="font-size:.7rem;color:#94a3b8;margin-top:.3rem;">圆角药丸形状 + 搜索图标辨识度高。</p></div>
+      <div class="plan-card"><h4>✕ 可清空输入框</h4>
+        <div class="clearable-wrap"><input class="input-base" id="clearDemo" value="一键清空"><button class="clear-btn" onclick="document.getElementById('clearDemo').value='';document.getElementById('clearDemo').focus();">✕</button></div>
+        <p style="font-size:.7rem;color:#94a3b8;margin-top:.3rem;">长输入框提供一键清空按钮方便修改。</p></div>
+      <div class="plan-card"><h4>📝 多行文本框</h4>
+        <textarea class="textarea-base" placeholder="请输入详细描述...">这是一段示例文本。文本框适合输入较长的内容，支持垂直拖拽调整大小。</textarea>
+        <p style="font-size:.7rem;color:#94a3b8;margin-top:.3rem;">min-height ≥ 80px，resize: vertical。</p></div>
+    </div>
+  </div>
+</article>
+
+<!-- ===== 四、移动端适配 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">4</div><h2>移动端适配与 HTML5 type 属性</h2><span class="en-label">Mobile & HTML5</span></div>
+  <div class="card-body">
+    <div class="demo-grid">
+      <div class="plan-card"><h4>📱 正确使用 type 调起对应键盘</h4>
+        <div class="form-group"><label for="m1">邮箱 (type="email")</label><input class="input-base" id="m1" type="email" placeholder="@ 键盘"></div>
+        <div class="form-group"><label for="m2">电话 (type="tel")</label><input class="input-base" id="m2" type="tel" placeholder="数字键盘"></div>
+        <div class="form-group"><label for="m3">数字 (type="number")</label><input class="input-base" id="m3" type="number" placeholder="数字+小数点"></div>
+      </div>
+      <div class="plan-card"><h4>🔒 HTML5 内置验证属性</h4>
+        <div class="code-block"><span class="comment">&lt;!-- 必填字段 --&gt;</span><br><span class="tag">&lt;input</span> <span class="attr">required</span><span class="tag">&gt;</span><br><br><span class="comment">&lt;!-- 正则模式 --&gt;</span><br><span class="tag">&lt;input</span> <span class="attr">pattern</span>=<span class="val">"[0-9]{6}"</span> <span class="attr">title</span>=<span class="val">"6位数字"</span><span class="tag">&gt;</span><br><br><span class="comment">&lt;!-- 长度限制 --&gt;</span><br><span class="tag">&lt;input</span> <span class="attr">minlength</span>=<span class="val">"6"</span> <span class="attr">maxlength</span>=<span class="val">"20"</span><span class="tag">&gt;</span></div>
+        <p style="font-size:.7rem;color:#94a3b8;">结合 JS 实时校验提供更好的用户体验。</p></div>
+    </div>
+    <div class="tip-box warn"><span class="icon">⚠️</span><span>小屏幕下输入框应设置 <code>width: 100%</code> 自适应。字号 ≥ 16px 可防止 iOS Safari 自动缩放页面。</span></div>
+  </div>
+</article>
+
+<!-- ===== 五、安全与进阶 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">5</div><h2>安全防护与进阶功能</h2><span class="en-label">Security & Advanced</span></div>
+  <div class="card-body">
+    <div class="demo-grid">
+      <div class="plan-card" style="border-left:4px solid var(--red);"><h4>🛡️ XSS 防护 - 输入转义</h4>
+        <div class="code-block"><span class="kw">function</span> <span class="fn">sanitize</span>(<span class="prop">input</span>) {<br>&nbsp;&nbsp;<span class="kw">const</span> div = <span class="tag">document</span>.<span class="fn">createElement</span>(<span class="val">'div'</span>);<br>&nbsp;&nbsp;div.<span class="prop">textContent</span> = input;<br>&nbsp;&nbsp;<span class="kw">return</span> div.<span class="prop">innerHTML</span>;<br>}</div>
+        <p style="font-size:.72rem;color:#475569;">使用 <code>textContent</code> 赋值而非 <code>innerHTML</code>，自动转义恶意脚本。</p></div>
+      <div class="plan-card" style="border-left:4px solid var(--blue);"><h4>🧠 智能提示与格式化</h4>
+        <p style="font-size:.78rem;color:#475569;">输入邮箱"@"后自动提示常用域名（@qq.com、@gmail.com）；输入手机号/信用卡号时自动添加空格分隔。</p></div>
+      <div class="plan-card" style="border-left:4px solid var(--green);"><h4>♿ 无障碍 (A11y)</h4>
+        <p style="font-size:.78rem;color:#475569;">色彩对比度 ≥ 4.5:1（WCAG AA）。使用 <code>&lt;label for="id"&gt;</code> 关联输入框。错误信息使用 <code>aria-describedby</code>。支持纯键盘 Tab 导航。</p></div>
+      <div class="plan-card" style="border-left:4px solid var(--orange);"><h4>🧩 企业级组件库</h4>
+        <p style="font-size:.78rem;color:#475569;">Ant Design · TDesign · Bootstrap 已内置响应式、无障碍和状态交互规范。推荐在企业项目中使用，保证一致性并大幅提升开发效率。</p></div>
+    </div>
+  </div>
+</article>
+
+</div>
+</body>
+</html>

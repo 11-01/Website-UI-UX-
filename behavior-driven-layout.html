@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行为驱动布局 — 交互式演示 | Behavior-Driven Layout</title>
+<style>
+  /* ===== CSS变量 —— 布局指令的载体（零重排关键） ===== */
+  :root {
+    --nav-position: static;        /* 导航模式: static | sticky */
+    --card-cols: 3;                /* 卡片列数 */
+    --sidebar-order: 1;            /* 侧栏位置 */
+    --main-order: 2;
+    --font-scale: 1;               /* 字号缩放 */
+    --card-gap: 1.2rem;            /* 卡片间距 */
+    --hero-height: 320px;          /* 首屏高度 */
+    --show-sidebar: block;         /* 侧栏显隐 */
+    --show-hero: block;
+    --btn-size: 1;                 /* 按钮大小缩放 */
+    --density: normal;             /* 信息密度: compact | normal | relaxed */
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #0f172a; color: #e2e8f0; line-height: 1.6;
+  }
+
+  /* ===== 主布局容器 ===== */
+  .app { display: flex; min-height: 100vh; }
+
+  /* ===== 左侧：模拟网站 ===== */
+  .site-panel {
+    flex: 1; display: flex; flex-direction: column;
+    background: #f1f5f9; color: #1e293b; min-width: 0;
+  }
+
+  /* 导航栏 —— 位置由CSS变量控制 */
+  .site-nav {
+    background: #1e293b; color: white; padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px; position: var(--nav-position); top: 0; z-index: 100;
+    transition: all .4s ease;
+    font-size: calc(0.9rem * var(--font-scale));
+  }
+  .site-nav .logo { font-weight: 900; font-size: calc(1.1rem * var(--font-scale)); }
+  .site-nav .nav-links { display: flex; gap: 1.5rem; }
+  .site-nav .nav-links a {
+    color: #cbd5e1; text-decoration: none; cursor: pointer;
+    transition: color .2s; padding: .3rem .6rem; border-radius: 6px;
+  }
+  .site-nav .nav-links a:hover { color: #3b82f6; background: rgba(59,130,246,.1); }
+  .site-nav .nav-links a.hot { color: #f59e0b; font-weight: 700; }
+
+  /* 首屏Hero */
+  .hero {
+    display: var(--show-hero);
+    height: var(--hero-height); background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    transition: height .5s ease; overflow: hidden;
+    font-size: calc(1rem * var(--font-scale));
+  }
+  .hero h2 { font-size: calc(2rem * var(--font-scale)); font-weight: 900; }
+  .hero .cta {
+    margin-top: 1rem; padding: calc(.7rem * var(--btn-size)) calc(2rem * var(--btn-size));
+    background: white; color: #3b82f6; border: none; border-radius: 30px;
+    font-size: calc(1rem * var(--btn-size)); font-weight: 700; cursor: pointer;
+    transition: all .3s;
+  }
+  .hero .cta:hover { transform: scale(1.05); box-shadow: 0 8px 25px rgba(0,0,0,.2); }
+
+  /* 内容区主区域 */
+  .content-wrapper {
+    display: flex; flex: 1; padding: 1.5rem; gap: 1.5rem;
+    transition: all .4s ease;
+  }
+  .sidebar {
+    order: var(--sidebar-order); width: 240px;
+    background: white; border-radius: 12px; padding: 1.5rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,.05);
+    display: var(--show-sidebar); flex-shrink: 0;
+    font-size: calc(0.9rem * var(--font-scale));
+    transition: all .4s ease;
+  }
+  .sidebar h4 { margin-bottom: 1rem; font-size: calc(1rem * var(--font-scale)); }
+  .sidebar .side-item {
+    padding: .6rem .8rem; margin: .3rem 0; border-radius: 8px;
+    cursor: pointer; transition: all .2s; border-left: 3px solid transparent;
+  }
+  .sidebar .side-item:hover { background: #f1f5f9; }
+  .sidebar .side-item.popular { border-left-color: #f59e0b; background: #fffbeb; font-weight: 600; }
+  .main-content {
+    order: var(--main-order); flex: 1; min-width: 0;
+    font-size: calc(1rem * var(--font-scale));
+  }
+  .main-content h3 { margin-bottom: 1rem; font-size: calc(1.3rem * var(--font-scale)); }
+
+  /* 卡片网格 —— 列数由CSS变量控制 */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--card-cols), 1fr);
+    gap: var(--card-gap);
+    transition: all .4s ease;
+  }
+  .card {
+    background: white; border-radius: 12px; padding: 1.2rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,.04); cursor: pointer;
+    transition: all .3s; position: relative; overflow: hidden;
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,.08); }
+  .card .card-badge {
+    position: absolute; top: 10px; right: 10px;
+    padding: .15rem .6rem; border-radius: 20px; font-size: .7rem;
+    font-weight: 700; background: #dbeafe; color: #3b82f6;
+  }
+  .card .card-badge.hot { background: #fef3c7; color: #d97706; }
+  .card h4 { font-size: calc(1rem * var(--font-scale)); margin-bottom: .3rem; }
+  .card p { font-size: calc(.85rem * var(--font-scale)); color: #64748b; }
+
+  /* 紧凑模式覆盖 */
+  body.compact .card { padding: .6rem .8rem; }
+  body.compact .card h4 { font-size: .85rem; }
+  body.compact .card p { font-size: .75rem; }
+  body.relaxed .card { padding: 1.8rem; }
+  body.relaxed .card h4 { font-size: 1.15rem; }
+  body.relaxed .card p { font-size: .95rem; }
+
+  /* ===== 右侧：行为监控面板 ===== */
+  .monitor {
+    width: 380px; background: #1e293b; border-left: 1px solid #334155;
+    padding: 1.5rem; display: flex; flex-direction: column; gap: 1.2rem;
+    overflow-y: auto; font-size: .85rem; flex-shrink: 0;
+  }
+  .monitor h3 { font-size: 1.1rem; display: flex; align-items: center; gap: .5rem; }
+  .monitor h3 .dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+
+  .metric-card {
+    background: #0f172a; border-radius: 10px; padding: 1rem;
+    border: 1px solid #1e293b;
+  }
+  .metric-card .label { color: #94a3b8; font-size: .75rem; text-transform: uppercase; letter-spacing: .5px; margin-bottom: .5rem; }
+  .metric-card .value { font-size: 1.8rem; font-weight: 900; }
+  .metric-card .value.up { color: #22c55e; }
+  .metric-card .value.warn { color: #f59e0b; }
+
+  /* 热点图 */
+  .heatmap { display: flex; gap: .3rem; align-items: flex-end; height: 60px; }
+  .heatmap .bar { flex: 1; background: #3b82f6; border-radius: 4px 4px 0 0; transition: all .4s; min-width: 16px; position: relative; }
+  .heatmap .bar.high { background: #f59e0b; }
+  .heatmap .bar .bar-label { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font-size: .6rem; color: #94a3b8; white-space: nowrap; }
+
+  /* 日志流 */
+  .log-stream {
+    flex: 1; min-height: 150px; max-height: 250px;
+    overflow-y: auto; background: #0f172a; border-radius: 10px;
+    padding: .8rem; font-family: 'Consolas', 'Monaco', monospace;
+    font-size: .75rem; border: 1px solid #1e293b;
+  }
+  .log-stream .log-entry {
+    padding: .3rem 0; border-bottom: 1px solid rgba(255,255,255,.03);
+    animation: fadeIn .3s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateX(10px); } to { opacity:1; transform:translateX(0); } }
+  .log-stream .log-entry.click { color: #60a5fa; }
+  .log-stream .log-entry.scroll { color: #a78bfa; }
+  .log-stream .log-entry.hover { color: #34d399; }
+  .log-stream .log-entry.layout { color: #f59e0b; font-weight: 700; }
+
+  /* 控制按钮 */
+  .controls { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .controls button {
+    padding: .5rem 1rem; border: 1px solid #334155; background: #1e293b;
+    color: #e2e8f0; border-radius: 8px; cursor: pointer; font-size: .8rem;
+    transition: all .2s;
+  }
+  .controls button:hover { border-color: #3b82f6; background: #1e3a5f; }
+  .controls button.danger { border-color: #7f1d1d; color: #fca5a5; }
+  .controls button.danger:hover { background: #7f1d1d; }
+
+  /* 响应式 */
+  @media (max-width: 1024px) {
+    .app { flex-direction: column; }
+    .monitor { width: 100%; max-height: 40vh; }
+    :root { --card-cols: 2; }
+  }
+  @media (max-width: 640px) {
+    :root { --card-cols: 1; --show-sidebar: none; --hero-height: 200px; }
+    .content-wrapper { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== 左侧：模拟真实网站 ===== -->
+  <div class="site-panel" id="sitePanel">
+    <!-- 导航 -->
+    <nav class="site-nav" id="siteNav">
+      <div class="logo">🚀 智序科技</div>
+      <div class="nav-links">
+        <a data-nav="home" class="hot">首页</a>
+        <a data-nav="products">产品</a>
+        <a data-nav="docs">文档</a>
+        <a data-nav="blog">博客</a>
+        <a data-nav="about">关于</a>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="hero" id="heroBanner">
+      <h2>让数据驱动每一次布局决策</h2>
+      <p style="opacity:.85">Behavior-Driven Layout Engine</p>
+      <button class="cta" id="ctaBtn">🚀 免费开始使用</button>
+    </div>
+
+    <!-- 内容区 -->
+    <div class="content-wrapper">
+      <aside class="sidebar" id="sidebar">
+        <h4>📂 内容分类</h4>
+        <div class="side-item popular" data-side="ai">🤖 AI 智能</div>
+        <div class="side-item" data-side="web">🌐 Web 开发</div>
+        <div class="side-item" data-side="data">📊 数据分析</div>
+        <div class="side-item" data-side="design">🎨 UI 设计</div>
+        <div class="side-item" data-side="devops">⚙️ DevOps</div>
+        <div class="side-item" data-side="mobile">📱 移动开发</div>
+      </aside>
+
+      <main class="main-content" id="mainContent">
+        <h3>📰 推荐内容</h3>
+        <div class="card-grid" id="cardGrid">
+          <div class="card" data-card="1"><span class="card-badge hot">热门</span><h4>Vue3 组合式 API 实战</h4><p>深入理解响应式原理与最佳实践</p></div>
+          <div class="card" data-card="2"><span class="card-badge">新</span><h4>CSS Container Queries 指南</h4><p>超越媒体查询的组件级响应式</p></div>
+          <div class="card" data-card="3"><span class="card-badge hot">热门</span><h4>WebSocket 实时通信架构</h4><p>构建低延迟的实时数据推送系统</p></div>
+          <div class="card" data-card="4"><span class="card-badge">新</span><h4>2026 前端性能优化清单</h4><p>Core Web Vitals 全面达标策略</p></div>
+          <div class="card" data-card="5"><span class="card-badge">推荐</span><h4>TypeScript 5.x 新特性</h4><p>装饰器、const 类型参数详解</p></div>
+          <div class="card" data-card="6"><span class="card-badge">推荐</span><h4>Rust + WASM 前端实践</h4><p>用 Rust 加速前端计算密集型任务</p></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ===== 右侧：行为监控面板 ===== -->
+  <div class="monitor" id="monitor">
+    <h3><span class="dot"></span> 行为采集引擎</h3>
+
+    <!-- 实时指标 -->
+    <div class="metric-card">
+      <div class="label">📊 总交互次数</div>
+      <div class="value" id="totalInteractions">0</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="label">🔥 热点区域热力图</div>
+      <div class="heatmap" id="heatmap">
+        <div class="bar" style="height:20%"><span class="bar-label">导航</span></div>
+        <div class="bar" style="height:20%"><span class="bar-label">Hero</span></div>
+        <div class="bar" style="height:20%"><span class="bar-label">侧栏</span></div>
+        <div class="bar" style="height:20%"><span class="bar-label">卡片1</span></div>
+        <div class="bar" style="height:20%"><span class="bar-label">卡片2</span></div>
+        <div class="bar" style="height:20%"><span class="bar-label">卡片3</span></div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="label">📈 滚动深度</div>
+      <div class="value" id="scrollDepth">0%</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="label">🖱️ 当前活跃区域</div>
+      <div class="value" id="activeZone" style="font-size:1rem">—</div>
+    </div>
+
+    <!-- 布局状态 -->
+    <div class="metric-card">
+      <div class="label">🎛️ 当前布局指令</div>
+      <div id="layoutState" style="font-size:.8rem;color:#94a3b8;line-height:1.8">
+        --card-cols: 3<br>--nav-position: static<br>--show-sidebar: block
+      </div>
+    </div>
+
+    <!-- 事件日志 -->
+    <div class="label" style="margin-bottom:-.8rem">📝 实时事件流</div>
+    <div class="log-stream" id="logStream">
+      <div class="log-entry layout">⚡ 引擎就绪，等待用户行为...</div>
+    </div>
+
+    <!-- 控制按钮 -->
+    <div class="controls">
+      <button onclick="simulatePowerUser()">👤 模拟重度用户</button>
+      <button onclick="simulateNewUser()">🆕 模拟新用户</button>
+      <button onclick="simulateMobile()">📱 模拟移动端</button>
+      <button onclick="resetLayout()" class="danger">🔄 恢复默认布局</button>
+    </div>
+
+    <div style="font-size:.7rem;color:#64748b;text-align:center;margin-top:auto">
+      💡 在左侧网站中点击、滚动，观察行为如何驱动布局变化
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// 行为采集引擎 (Behavior Tracking Engine)
+// ============================================================
+
+// 热点计数器
+const hotspots = {
+  nav: 0, hero: 0, sidebar: 0,
+  'card-1': 0, 'card-2': 0, 'card-3': 0,
+};
+
+let totalInteractions = 0;
+let scrollDepthMax = 0;
+const BEHAVIOR_HISTORY = []; // 最近行为栈（用于判断用户类型）
+
+// 日志输出
+function log(type, msg) {
+  const stream = document.getElementById('logStream');
+  const entry = document.createElement('div');
+  entry.className = `log-entry ${type}`;
+  const time = new Date().toLocaleTimeString();
+  entry.textContent = `[${time}] ${msg}`;
+  stream.prepend(entry);
+  if (stream.children.length > 100) stream.removeChild(stream.lastChild);
+}
+
+// 更新热点图
+function updateHeatmap() {
+  const bars = document.querySelectorAll('.heatmap .bar');
+  const keys = Object.keys(hotspots);
+  const max = Math.max(...Object.values(hotspots), 1);
+  bars.forEach((bar, i) => {
+    const pct = (hotspots[keys[i]] / max) * 100;
+    bar.style.height = Math.max(pct, 8) + '%';
+    bar.classList.toggle('high', pct > 50);
+  });
+}
+
+// 更新指标面板
+function updateMetrics() {
+  document.getElementById('totalInteractions').textContent = totalInteractions;
+  document.getElementById('scrollDepth').textContent = scrollDepthMax + '%';
+  updateHeatmap();
+  updateLayoutState();
+}
+
+// 更新布局状态显示
+function updateLayoutState() {
+  const root = getComputedStyle(document.documentElement);
+  document.getElementById('layoutState').innerHTML = `
+    --card-cols: ${root.getPropertyValue('--card-cols').trim()}<br>
+    --nav-position: ${root.getPropertyValue('--nav-position').trim()}<br>
+    --show-sidebar: ${root.getPropertyValue('--show-sidebar').trim()}<br>
+    --font-scale: ${root.getPropertyValue('--font-scale').trim()}<br>
+    --hero-height: ${root.getPropertyValue('--hero-height').trim()}
+  `;
+}
+
+// ============================================================
+// 事件监听 — 采集用户行为信号
+// ============================================================
+
+// 点击事件
+document.getElementById('sitePanel').addEventListener('click', (e) => {
+  totalInteractions++;
+  let zone = 'other';
+
+  if (e.target.closest('.site-nav')) { zone = 'nav'; hotspots.nav++; }
+  else if (e.target.closest('.hero')) { zone = 'hero'; hotspots.hero++; }
+  else if (e.target.closest('.sidebar')) { zone = 'sidebar'; hotspots.sidebar++; }
+  else if (e.target.closest('.card')) {
+    const card = e.target.closest('.card');
+    const cardId = card.dataset.card;
+    zone = `卡片-${cardId}`;
+    hotspots[`card-${cardId}`]++;
+    // 标记卡片热度
+    card.style.border = '2px solid #f59e0b';
+    setTimeout(() => { card.style.border = ''; }, 800);
+  }
+
+  BEHAVIOR_HISTORY.push({ type: 'click', zone, time: Date.now() });
+  document.getElementById('activeZone').textContent = zone;
+  log('click', `点击 → ${zone} (总交互: ${totalInteractions})`);
+  updateMetrics();
+  analyzeAndAdjust();
+});
+
+// 悬停跟踪（防抖）
+let hoverTimer;
+document.getElementById('sitePanel').addEventListener('mouseover', (e) => {
+  clearTimeout(hoverTimer);
+  hoverTimer = setTimeout(() => {
+    let zone = '内容区';
+    if (e.target.closest('.site-nav')) zone = '导航栏';
+    else if (e.target.closest('.hero')) zone = 'Hero区';
+    else if (e.target.closest('.sidebar')) zone = '侧栏';
+    else if (e.target.closest('.card')) zone = '卡片' + e.target.closest('.card').dataset.card;
+
+    document.getElementById('activeZone').textContent = zone;
+    log('hover', `悬停 → ${zone}`);
+  }, 300);
+});
+
+// 滚动深度跟踪
+let scrollTicking = false;
+document.getElementById('sitePanel').addEventListener('scroll', () => {
+  if (!scrollTicking) {
+    requestAnimationFrame(() => {
+      const panel = document.getElementById('sitePanel');
+      const scrollTop = panel.scrollTop;
+      const scrollHeight = panel.scrollHeight - panel.clientHeight;
+      const depth = Math.round((scrollTop / scrollHeight) * 100);
+
+      if (depth > scrollDepthMax) {
+        scrollDepthMax = depth;
+        BEHAVIOR_HISTORY.push({ type: 'scroll', depth, time: Date.now() });
+        log('scroll', `滚动深度 ${depth}% ${depth > 75 ? '— 高参与度!' : ''}`);
+        updateMetrics();
+        analyzeAndAdjust();
+      }
+      scrollTicking = false;
+    });
+    scrollTicking = true;
+  }
+});
+
+// 可见性变化（模拟场景切换）
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    log('layout', '📴 用户离开页面（可能切换应用）');
+  } else {
+    log('layout', '👁️ 用户回到页面');
+    analyzeAndAdjust();
+  }
+});
+
+// ============================================================
+// 分析决策引擎 (Analysis & Decision Engine)
+// ============================================================
+
+function analyzeAndAdjust() {
+  // 仅保留最近30秒的行为
+  const now = Date.now();
+  const recent = BEHAVIOR_HISTORY.filter(b => now - b.time < 30000);
+  if (recent.length < 3) return;
+
+  const clickCount = recent.filter(b => b.type === 'click').length;
+  const cardClicks = recent.filter(b => b.zone?.startsWith('卡片')).length;
+  const scrollDeep = scrollDepthMax > 60;
+
+  // 规则1：重度内容消费者 → 增加卡片密度
+  if (cardClicks >= 4 && clickCount >= 8) {
+    applyLayout('power_user');
+    log('layout', '🧠 检测到重度用户 → 启用紧凑模式，侧栏右置，导航固定');
+  }
+
+  // 规则2：深度滚动者 → 导航吸顶
+  if (scrollDeep && scrollDepthMax > 50) {
+    applyLayout('sticky_nav');
+    log('layout', '📌 深度浏览者 → 导航栏吸顶固定');
+  }
+
+  // 规则3：初次轻度浏览 → 放松模式
+  if (totalInteractions >= 3 && totalInteractions <= 6 && scrollDepthMax < 30) {
+    applyLayout('relaxed');
+    log('layout', '🌿 轻度浏览 → 启用放松模式，增大间距');
+  }
+}
+
+// ============================================================
+// 布局指令下发 & 零重排响应 (CSS Variables)
+// ============================================================
+
+function applyLayout(mode) {
+  const root = document.documentElement;
+  const body = document.body;
+
+  switch (mode) {
+    case 'power_user':
+      // 重度用户：紧凑、高密度、侧栏右置、导航吸顶
+      root.style.setProperty('--card-cols', '4');
+      root.style.setProperty('--card-gap', '.6rem');
+      root.style.setProperty('--nav-position', 'sticky');
+      root.style.setProperty('--sidebar-order', '2');
+      root.style.setProperty('--main-order', '1');
+      root.style.setProperty('--hero-height', '180px');
+      root.style.setProperty('--font-scale', '.9');
+      root.style.setProperty('--show-sidebar', 'block');
+      body.classList.add('compact');
+      body.classList.remove('relaxed');
+      hotspotNavItem('products'); // 将高频入口前置
+      break;
+
+    case 'relaxed':
+      // 新用户：宽松排版，大间距，默认布局
+      root.style.setProperty('--card-cols', '2');
+      root.style.setProperty('--card-gap', '2rem');
+      root.style.setProperty('--nav-position', 'static');
+      root.style.setProperty('--sidebar-order', '1');
+      root.style.setProperty('--main-order', '2');
+      root.style.setProperty('--hero-height', '400px');
+      root.style.setProperty('--font-scale', '1.1');
+      body.classList.add('relaxed');
+      body.classList.remove('compact');
+      break;
+
+    case 'sticky_nav':
+      root.style.setProperty('--nav-position', 'sticky');
+      root.style.setProperty('--hero-height', '220px');
+      break;
+
+    case 'mobile':
+      root.style.setProperty('--card-cols', '1');
+      root.style.setProperty('--show-sidebar', 'none');
+      root.style.setProperty('--hero-height', '200px');
+      root.style.setProperty('--font-scale', '1.05');
+      root.style.setProperty('--btn-size', '1.2');
+      root.style.setProperty('--nav-position', 'sticky');
+      break;
+
+    case 'default':
+      root.style.setProperty('--card-cols', '3');
+      root.style.setProperty('--card-gap', '1.2rem');
+      root.style.setProperty('--nav-position', 'static');
+      root.style.setProperty('--sidebar-order', '1');
+      root.style.setProperty('--main-order', '2');
+      root.style.setProperty('--hero-height', '320px');
+      root.style.setProperty('--font-scale', '1');
+      root.style.setProperty('--btn-size', '1');
+      root.style.setProperty('--show-sidebar', 'block');
+      body.classList.remove('compact', 'relaxed');
+      resetNavHot();
+      break;
+  }
+
+  updateLayoutState();
+}
+
+// 高频入口前置标记
+function hotspotNavItem(key) {
+  resetNavHot();
+  const link = document.querySelector(`[data-nav="${key}"]`);
+  if (link) link.classList.add('hot');
+}
+
+function resetNavHot() {
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('hot'));
+}
+
+// ============================================================
+// 模拟函数
+// ============================================================
+
+function simulatePowerUser() {
+  log('layout', '🎮 模拟重度用户行为...');
+  // 模拟快速连续点击
+  const cards = document.querySelectorAll('.card');
+  for (let i = 0; i < 6; i++) {
+    setTimeout(() => {
+      if (cards[i % cards.length]) cards[i % cards.length].click();
+    }, i * 150);
+  }
+  // 模拟深滚动
+  const panel = document.getElementById('sitePanel');
+  panel.scrollTo({ top: panel.scrollHeight, behavior: 'smooth' });
+  scrollDepthMax = 85;
+  setTimeout(() => { analyzeAndAdjust(); updateMetrics(); }, 1200);
+}
+
+function simulateNewUser() {
+  log('layout', '🆕 模拟新用户行为...');
+  BEHAVIOR_HISTORY.length = 0;
+  totalInteractions = 3;
+  scrollDepthMax = 20;
+  hotspots.nav = 2; hotspots.hero = 1;
+  applyLayout('relaxed');
+  updateMetrics();
+}
+
+function simulateMobile() {
+  log('layout', '📱 模拟移动端...');
+  applyLayout('mobile');
+}
+
+function resetLayout() {
+  log('layout', '🔄 恢复默认布局');
+  BEHAVIOR_HISTORY.length = 0;
+  totalInteractions = 0;
+  scrollDepthMax = 0;
+  Object.keys(hotspots).forEach(k => hotspots[k] = 0);
+  applyLayout('default');
+  updateMetrics();
+  document.getElementById('activeZone').textContent = '—';
+}
+
+// 初始化
+updateMetrics();
+log('layout', '⚡ 行为采集引擎就绪 — 请在左侧网站中点击/滚动');
+</script>
+</body>
+</html>

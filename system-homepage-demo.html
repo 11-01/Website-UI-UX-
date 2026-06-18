@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>系统首页设计演示 | B端 vs C端</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #0a0a0f; color: #e2e8f0;
+  }
+
+  /* 顶栏 */
+  .top-bar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(15,23,42,.95); backdrop-filter: blur(12px);
+    padding: .5rem 1.5rem; display: flex; align-items: center; gap: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  .top-bar .logo { font-weight: 900; font-size: 1rem; margin-right: auto; }
+  .top-bar button {
+    padding: .35rem .9rem; border: 1px solid #334155; background: #1e293b;
+    color: #94a3b8; border-radius: 6px; cursor: pointer; font-size: .75rem;
+    transition: all .15s;
+  }
+  .top-bar button:hover { border-color: #3b82f6; color: #e2e8f0; }
+  .top-bar button.on { background: #3b82f6; border-color: #3b82f6; color: white; }
+
+  .page { max-width: 1400px; margin: 0 auto; padding: 1rem; }
+  .section { display: none; }
+  .section.on { display: block; }
+
+  /* ============================================
+     B端 Dashboard
+     ============================================ */
+  .b-layout {
+    display: flex; min-height: calc(100vh - 100px);
+  }
+  .b-sidebar {
+    width: 220px; background: #1e293b; flex-shrink: 0;
+    border-radius: 10px; padding: 1rem 0; margin-right: 1rem;
+  }
+  .b-sidebar .bs-item {
+    padding: .6rem 1.2rem; font-size: .82rem; color: #94a3b8;
+    cursor: pointer; display: flex; align-items: center; gap: .5rem;
+  }
+  .b-sidebar .bs-item:hover { background: rgba(255,255,255,.04); color: #e2e8f0; }
+  .b-sidebar .bs-item.active { background: rgba(59,130,246,.1); color: #60a5fa; border-left: 3px solid #3b82f6; }
+
+  .b-main { flex: 1; min-width: 0; }
+  .b-main .b-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1rem;
+  }
+  .b-main .b-header h2 { font-size: 1.3rem; font-weight: 700; }
+
+  /* Bento Grid */
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(3, 100px);
+    gap: .8rem;
+  }
+  .bento-item {
+    background: #1e293b; border: 1px solid #334155;
+    border-radius: 10px; padding: 1rem; display: flex;
+    flex-direction: column; justify-content: center;
+    transition: all .2s; cursor: pointer; position: relative;
+  }
+  .bento-item:hover { border-color: #3b82f6; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(59,130,246,.08); }
+  .bento-item .bi-label { font-size: .65rem; color: #94a3b8; text-transform: uppercase; letter-spacing: .5px; margin-bottom: .3rem; }
+  .bento-item .bi-val { font-size: 1.6rem; font-weight: 900; }
+  .bento-item .bi-sub { font-size: .68rem; color: #64748b; margin-top: .2rem; }
+
+  /* 不同尺寸 */
+  .bi-w2 { grid-column: span 2; } .bi-w3 { grid-column: span 3; } .bi-w4 { grid-column: span 4; }
+  .bi-h2 { grid-row: span 2; }
+
+  /* KPI配色 */
+  .bi-blue .bi-val { color: #60a5fa; }
+  .bi-green .bi-val { color: #4ade80; }
+  .bi-yellow .bi-val { color: #fcd34d; }
+  .bi-red .bi-val { color: #f87171; }
+
+  /* 快捷入口 */
+  .quick-actions { display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .quick-action {
+    padding: .5rem 1.2rem; background: #1e293b; border: 1px solid #334155;
+    border-radius: 20px; font-size: .78rem; color: #cbd5e1; cursor: pointer;
+    transition: all .15s; display: flex; align-items: center; gap: .4rem;
+  }
+  .quick-action:hover { border-color: #3b82f6; color: white; background: #1e3a5f; }
+
+  /* 迷你图表 */
+  .mini-spark { display: flex; align-items: flex-end; gap: 3px; height: 30px; margin-top: .3rem; }
+  .mini-spark .spk-bar {
+    flex: 1; background: #3b82f6; border-radius: 2px 2px 0 0; opacity: .6;
+    min-width: 4px;
+  }
+
+  /* ============================================
+     C端首页
+     ============================================ */
+  .c-layout {
+    background: #f8fafc; color: #1e293b; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,.1);
+  }
+  .c-nav {
+    background: white; border-bottom: 1px solid #e2e8f0;
+    padding: .7rem 1.5rem; display: flex; align-items: center; gap: 1.5rem;
+  }
+  .c-nav .cn-logo { font-weight: 900; font-size: 1.1rem; }
+  .c-nav .cn-links { display: flex; gap: 1rem; }
+  .c-nav .cn-links a { color: #475569; text-decoration: none; font-size: .85rem; }
+  .c-nav .cn-actions { margin-left: auto; display: flex; gap: .5rem; }
+  .c-nav .cn-actions button {
+    padding: .4rem 1rem; border-radius: 6px; border: none; cursor: pointer;
+    font-size: .78rem;
+  }
+  .c-nav .cn-actions .btn-login { background: white; border: 1px solid #d1d5db; }
+  .c-nav .cn-actions .btn-signup { background: #3b82f6; color: white; }
+
+  /* Hero */
+  .c-hero {
+    padding: 4rem 2rem; text-align: center;
+    background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 50%, #fdf2f8 100%);
+    position: relative; overflow: hidden;
+  }
+  .c-hero::before {
+    content: ''; position: absolute;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(59,130,246,.08), transparent);
+    border-radius: 50%; top: -50px; right: -50px;
+  }
+  .c-hero h2 { font-size: 2rem; font-weight: 900; position: relative; margin-bottom: .8rem; }
+  .c-hero p { color: #64748b; font-size: 1rem; position: relative; margin-bottom: 1.5rem; }
+  .c-hero .cta-btn {
+    padding: .8rem 2.5rem; background: #3b82f6; color: white;
+    border: none; border-radius: 30px; font-size: .95rem; font-weight: 700;
+    cursor: pointer; position: relative; transition: all .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .c-hero .cta-btn:hover { transform: scale(1.05); box-shadow: 0 8px 25px rgba(59,130,246,.3); }
+
+  /* 分类导航 */
+  .c-categories {
+    padding: 1.5rem 2rem; display: flex; gap: 1rem; flex-wrap: wrap;
+    justify-content: center;
+  }
+  .c-cat {
+    padding: .6rem 1.5rem; background: white; border: 1px solid #e2e8f0;
+    border-radius: 20px; font-size: .82rem; cursor: pointer; transition: all .2s;
+  }
+  .c-cat:hover { border-color: #3b82f6; color: #3b82f6; }
+  .c-cat.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+
+  /* Feed流 */
+  .c-feed {
+    padding: 1rem 2rem 2rem; display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .c-feed .feed-card {
+    background: white; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0,0,0,.04); cursor: pointer;
+    transition: all .25s;
+  }
+  .c-feed .feed-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,.08); }
+  .c-feed .feed-card .fc-img {
+    height: 140px; display: flex; align-items: center; justify-content: center;
+    font-size: 2rem;
+  }
+  .c-feed .feed-card .fc-body { padding: .8rem; }
+  .c-feed .feed-card .fc-body h4 { font-size: .85rem; margin-bottom: .3rem; }
+  .c-feed .feed-card .fc-body p { font-size: .72rem; color: #94a3b8; }
+
+  /* ===== 四大原则条 ===== */
+  .principles {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem; margin-top: 2rem;
+  }
+  .principle {
+    background: #1e293b; border: 1px solid #334155;
+    border-radius: 10px; padding: 1.2rem; font-size: .82rem;
+  }
+  .principle .p-num { font-size: 1.5rem; font-weight: 900; margin-bottom: .3rem; }
+  .principle .p-num.p1 { color: #fca5a5; }
+  .principle .p-num.p2 { color: #93c5fd; }
+  .principle .p-num.p3 { color: #fcd34d; }
+  .principle .p-num.p4 { color: #4ade80; }
+  .principle .p-desc { color: #94a3b8; line-height: 1.5; font-size: .75rem; }
+
+  @media (max-width: 800px) {
+    .bento-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: auto; }
+    .b-sidebar { display: none; }
+    .bi-w2, .bi-w3, .bi-w4 { grid-column: span 2; }
+  }
+  @media (max-width: 500px) {
+    .bento-grid { grid-template-columns: 1fr 1fr; }
+    .c-nav .cn-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="logo">🏠 系统首页设计</div>
+  <button class="on" onclick="switchView('b')">📊 B端 Dashboard</button>
+  <button onclick="switchView('c')">🌟 C端 内容门户</button>
+</div>
+
+<div class="page">
+
+  <!-- ===== B端 ===== -->
+  <div class="section on" id="sec-b">
+    <div class="b-layout">
+      <!-- 侧边栏 -->
+      <nav class="b-sidebar">
+        <div class="bs-item active">📊 工作台</div>
+        <div class="bs-item">👥 用户管理</div>
+        <div class="bs-item">📦 订单管理</div>
+        <div class="bs-item">📈 数据分析</div>
+        <div class="bs-item">⚙️ 系统设置</div>
+      </nav>
+
+      <div class="b-main">
+        <div class="b-header">
+          <h2>📊 工作台 Dashboard</h2>
+          <span style="font-size:.75rem;color:#94a3b8">最后更新：3秒前</span>
+        </div>
+
+        <!-- 快捷入口 -->
+        <div class="quick-actions">
+          <div class="quick-action">➕ 新建订单</div>
+          <div class="quick-action">✅ 审批流程</div>
+          <div class="quick-action">👤 添加客户</div>
+          <div class="quick-action">📋 导出报表</div>
+        </div>
+
+        <!-- Bento Grid -->
+        <div class="bento-grid">
+          <div class="bento-item bi-w2 bi-blue">
+            <div class="bi-label">📊 今日销售额</div>
+            <div class="bi-val">¥847,200</div>
+            <div class="bi-sub">↑ 12.5% 较昨日</div>
+            <div class="mini-spark">
+              <div class="spk-bar" style="height:60%"></div><div class="spk-bar" style="height:80%"></div>
+              <div class="spk-bar" style="height:50%"></div><div class="spk-bar" style="height:90%"></div>
+              <div class="spk-bar" style="height:70%"></div><div class="spk-bar" style="height:100%"></div>
+            </div>
+          </div>
+          <div class="bento-item bi-w2 bi-green">
+            <div class="bi-label">👥 新增用户</div>
+            <div class="bi-val">1,284</div>
+            <div class="bi-sub">↑ 8.3% 较昨日</div>
+          </div>
+          <div class="bento-item bi-w2 bi-yellow">
+            <div class="bi-label">📦 待处理订单</div>
+            <div class="bi-val">23</div>
+            <div class="bi-sub">⚠️ 3个已超时</div>
+          </div>
+          <div class="bento-item bi-w2 bi-red">
+            <div class="bi-label">⚠️ 系统告警</div>
+            <div class="bi-val">2</div>
+            <div class="bi-sub">内存使用率 87%</div>
+          </div>
+          <!-- 宽模块 -->
+          <div class="bento-item bi-w4 bi-h2" style="justify-content:flex-start">
+            <div class="bi-label">📈 月度销售趋势</div>
+            <div style="flex:1;display:flex;align-items:flex-end;gap:4px;padding-top:.5rem">
+              <div style="flex:1;background:#3b82f6;height:40%;border-radius:3px 3px 0 0;opacity:.5"></div>
+              <div style="flex:1;background:#3b82f6;height:55%;border-radius:3px 3px 0 0;opacity:.5"></div>
+              <div style="flex:1;background:#3b82f6;height:45%;border-radius:3px 3px 0 0;opacity:.5"></div>
+              <div style="flex:1;background:#3b82f6;height:70%;border-radius:3px 3px 0 0;opacity:.5"></div>
+              <div style="flex:1;background:#3b82f6;height:65%;border-radius:3px 3px 0 0;opacity:.5"></div>
+              <div style="flex:1;background:#3b82f6;height:85%;border-radius:3px 3px 0 0;opacity:.7"></div>
+              <div style="flex:1;background:#3b82f6;height:90%;border-radius:3px 3px 0 0;opacity:.7"></div>
+              <div style="flex:1;background:#3b82f6;height:100%;border-radius:3px 3px 0 0;opacity:.9"></div>
+            </div>
+            <div style="font-size:.65rem;color:#64748b;display:flex;justify-content:space-between;margin-top:.3rem">
+              <span>1月</span><span>8月</span>
+            </div>
+          </div>
+          <div class="bento-item bi-w4" style="justify-content:flex-start">
+            <div class="bi-label">📋 待办提醒</div>
+            <div style="font-size:.75rem;color:#cbd5e1;margin-top:.3rem">🔴 合同 #8842 待审批 · 2小时前</div>
+            <div style="font-size:.75rem;color:#cbd5e1">🟡 库存预警：SKU-2231 低于安全线</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== C端 ===== -->
+  <div class="section" id="sec-c">
+    <div class="c-layout">
+      <!-- 导航 -->
+      <nav class="c-nav">
+        <div class="cn-logo">🌟 Brand</div>
+        <div class="cn-links"><a>首页</a><a>探索</a><a>产品</a><a>关于</a></div>
+        <div class="cn-actions">
+          <button class="btn-login">登录</button>
+          <button class="btn-signup">免费注册</button>
+        </div>
+      </nav>
+
+      <!-- Hero -->
+      <div class="c-hero">
+        <h2>让你的创意<br>闪耀整个世界</h2>
+        <p>Design, Build, Ship — 一站式创意平台</p>
+        <button class="cta-btn">🚀 免费开始使用</button>
+      </div>
+
+      <!-- 分类导航 -->
+      <div class="c-categories">
+        <span class="c-cat active">全部</span>
+        <span class="c-cat">设计</span>
+        <span class="c-cat">开发</span>
+        <span class="c-cat">AI工具</span>
+        <span class="c-cat">教程</span>
+        <span class="c-cat">资源</span>
+        <span class="c-cat">社区</span>
+      </div>
+
+      <!-- Feed流 -->
+      <div class="c-feed">
+        <div class="feed-card">
+          <div class="fc-img" style="background:linear-gradient(135deg,#dbeafe,#ede9fe)">🎨</div>
+          <div class="fc-body"><h4>2026 UI设计趋势</h4><p>12,384 阅读 · 4.9 ⭐</p></div>
+        </div>
+        <div class="feed-card">
+          <div class="fc-img" style="background:linear-gradient(135deg,#dcfce7,#fef3c7)">⚡</div>
+          <div class="fc-body"><h4>Vue3 性能优化指南</h4><p>8,521 阅读 · 4.8 ⭐</p></div>
+        </div>
+        <div class="feed-card">
+          <div class="fc-img" style="background:linear-gradient(135deg,#fce7f3,#fef3c7)">🤖</div>
+          <div class="fc-body"><h4>AI Chat 实战教程</h4><p>15,203 阅读 · 4.7 ⭐</p></div>
+        </div>
+        <div class="feed-card">
+          <div class="fc-img" style="background:linear-gradient(135deg,#e0f2fe,#dcfce7)">📐</div>
+          <div class="fc-body"><h4>设计系统搭建实录</h4><p>6,847 阅读 · 4.9 ⭐</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 四大原则 ===== -->
+  <div class="principles">
+    <div class="principle">
+      <div class="p-num p1">01</div>
+      <div style="font-weight:700;margin-bottom:.3rem">信息层级清晰</div>
+      <div class="p-desc">F型/Z型阅读路径，最重要数据放在左上角视觉焦点，次要信息依次排列</div>
+    </div>
+    <div class="principle">
+      <div class="p-num p2">02</div>
+      <div style="font-weight:700;margin-bottom:.3rem">千人千面可定制</div>
+      <div class="p-desc">不同角色关注不同指标，支持拖拽调整模块显示/隐藏/排序</div>
+    </div>
+    <div class="principle">
+      <div class="p-num p3">03</div>
+      <div style="font-weight:700;margin-bottom:.3rem">性能秒开</div>
+      <div class="p-desc">懒加载+骨架屏+缓存，首页聚合大量数据和图表，必须"秒开"</div>
+    </div>
+    <div class="principle">
+      <div class="p-num p4">04</div>
+      <div style="font-weight:700;margin-bottom:.3rem">全局导航锚点</div>
+      <div class="p-desc">与顶部/侧边导航配合，时刻告知"我在哪"+"能去哪"</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function switchView(view) {
+  document.querySelectorAll('.top-bar button').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('on'));
+  document.querySelector(`.top-bar button:nth-child(${view === 'b' ? '2' : '3'})`).classList.add('on');
+  document.getElementById('sec-' + view).classList.add('on');
+}
+</script>
+</body>
+</html>

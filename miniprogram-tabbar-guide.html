@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小程序 Tab Bar 样式实战参考 | MiniProgram TabBar Guide</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #0f172a; color: #e2e8f0; line-height: 1.6;
+  }
+
+  .page { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+  h1 { font-size: 2.2rem; text-align: center; margin: 2rem 0; }
+  h1 span { background: linear-gradient(135deg, #22c55e, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  h2 { font-size: 1.5rem; margin: 3rem 0 1rem; padding-bottom: .5rem; border-bottom: 2px solid #1e293b; }
+
+  /* 卡片 */
+  .card {
+    background: #1e293b; border-radius: 12px; padding: 1.5rem; margin: 1rem 0;
+    border: 1px solid #334155;
+  }
+  .card h3 { font-size: 1.1rem; margin-bottom: .8rem; display: flex; align-items: center; gap: .5rem; }
+
+  /* 代码块 */
+  pre {
+    background: #0a0f1a; border: 1px solid #1e293b; border-radius: 8px;
+    padding: 1.2rem; overflow-x: auto; font-family: 'Consolas','Monaco',monospace;
+    font-size: .85rem; line-height: 1.7; color: #cbd5e1;
+  }
+  pre .key { color: #93c5fd; }
+  pre .str { color: #86efac; }
+  pre .num { color: #fde68a; }
+  pre .cmt { color: #64748b; font-style: italic; }
+
+  /* 模拟手机 */
+  .phone-demo {
+    width: 375px; margin: 1rem auto; background: white; border-radius: 30px;
+    overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    color: #1e293b; font-size: .85rem;
+  }
+  .phone-demo .status-bar {
+    background: #1a1a1a; color: white; padding: .5rem 1.5rem;
+    display: flex; justify-content: space-between; font-size: .7rem;
+  }
+  .phone-demo .nav-bar {
+    padding: .8rem 1.2rem; display: flex; align-items: center;
+    justify-content: center; position: relative; font-weight: 600; font-size: 1rem;
+  }
+  .phone-demo .nav-bar .back { position: absolute; left: 1rem; color: inherit; }
+  .phone-demo .nav-bar .capsule {
+    position: absolute; right: .8rem; display: flex; gap: .3rem;
+  }
+  .phone-demo .nav-bar .capsule span {
+    width: 28px; height: 18px; background: rgba(255,255,255,.3);
+    border-radius: 20px; border: 1px solid rgba(255,255,255,.5);
+  }
+  .phone-demo .content {
+    min-height: 350px; padding: 1rem; background: #f5f5f5;
+  }
+  .phone-demo .content .placeholder {
+    background: white; border-radius: 10px; padding: 1rem; margin: .5rem 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  }
+
+  /* 原生底部TabBar模拟 */
+  .tabbar-native {
+    display: flex; background: white; border-top: 1px solid #e5e5e5;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .tabbar-native .tab-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: .4rem 0 .3rem; cursor: pointer; transition: all .2s;
+    position: relative;
+  }
+  .tabbar-native .tab-item .tab-icon {
+    width: 24px; height: 24px; margin-bottom: 2px;
+    background: #94a3b8; border-radius: 4px;
+  }
+  .tabbar-native .tab-item.active .tab-icon { background: #FF6B35; }
+  .tabbar-native .tab-item .tab-label { font-size: .65rem; color: #94a3b8; }
+  .tabbar-native .tab-item.active .tab-label { color: #FF6B35; font-weight: 600; }
+
+  /* 自定义TabBar — 异形图标 */
+  .tabbar-custom {
+    display: flex; background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    padding-bottom: env(safe-area-inset-bottom, 0); align-items: flex-end;
+    position: relative;
+  }
+  .tabbar-custom .tab-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: .5rem 0 .3rem; cursor: pointer; transition: all .2s;
+  }
+  .tabbar-custom .tab-item .tab-icon { font-size: 1.3rem; margin-bottom: 2px; }
+  .tabbar-custom .tab-item .tab-label { font-size: .6rem; color: #64748b; }
+  .tabbar-custom .tab-item.active .tab-label { color: #f59e0b; }
+  .tabbar-custom .center-btn {
+    width: 56px; height: 56px; background: linear-gradient(135deg, #f59e0b, #ef4444);
+    border-radius: 50%; position: absolute; top: -28px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; color: white; box-shadow: 0 4px 16px rgba(239,68,68,.4);
+    z-index: 10;
+  }
+
+  /* 顶部TabBar */
+  .tabbar-top {
+    display: flex; background: white; border-bottom: 1px solid #e5e5e5;
+    overflow-x: auto;
+  }
+  .tabbar-top .tab-item {
+    padding: .7rem 1rem; font-size: .85rem; color: #64748b;
+    cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent;
+    transition: all .2s;
+  }
+  .tabbar-top .tab-item.active { color: #FF6B35; border-bottom-color: #FF6B35; font-weight: 600; }
+
+  /* 网格对比 */
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 768px) { .compare-grid { grid-template-columns: 1fr; } }
+
+  .tag {
+    display: inline-block; padding: .15rem .6rem; border-radius: 20px;
+    font-size: .75rem; font-weight: 600;
+  }
+  .tag-green { background: rgba(34,197,94,.15); color: #4ade80; }
+  .tag-blue { background: rgba(59,130,246,.15); color: #93c5fd; }
+  .tag-orange { background: rgba(245,158,11,.15); color: #fcd34d; }
+
+  /* iOS/Android 边框方案对照 */
+  .hairline-demo { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
+  .hairline-demo .hl-box {
+    flex: 1; min-width: 180px; padding: 1.5rem; text-align: center;
+    border-radius: 10px; border: 1px solid #334155; position: relative;
+  }
+  .hairline-demo .hl-box .line {
+    height: 1px; background: #64748b; margin: .8rem 0;
+  }
+  .hairline-demo .hl-box .line.rpx { height: 1rpx; }
+  .hairline-demo .hl-box .line.half { transform: scaleY(0.5); }
+  .hairline-demo .hl-box .line.quarter { transform: scaleY(0.25); }
+  .hairline-demo .hl-box .label { font-size: .8rem; color: #94a3b8; margin-top: .5rem; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>📱 小程序 Tab Bar <span>样式实战参考</span></h1>
+
+<!-- ===== 一、原生 Tab Bar ===== -->
+<h2>一、原生 Tab Bar 配置</h2>
+
+<div class="compare-grid">
+  <!-- 底部 Tab Bar -->
+  <div>
+    <div class="card">
+      <h3><span class="tag tag-green">底部</span> Bottom Tab Bar</h3>
+      <p style="color:#94a3b8;font-size:.85rem;margin-bottom:1rem">图标+文字，2~5个tab，最常用</p>
+      <div class="phone-demo">
+        <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="nav-bar" style="background:#FF6B35;color:white;">🏪 潮玩店地图导览</div>
+        <div class="content">
+          <div class="placeholder">📍 附近潮玩店 · 3家</div>
+          <div class="placeholder">🏪 泡泡玛特 · 距你 1.2km</div>
+          <div class="placeholder">🎯 52TOYS · 距你 2.5km</div>
+        </div>
+        <div class="tabbar-native">
+          <div class="tab-item active"><div class="tab-icon"></div><span class="tab-label">首页</span></div>
+          <div class="tab-item"><div class="tab-icon"></div><span class="tab-label">地图</span></div>
+          <div class="tab-item"><div class="tab-icon"></div><span class="tab-label">发现</span></div>
+          <div class="tab-item"><div class="tab-icon"></div><span class="tab-label">我的</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 顶部 Tab Bar -->
+  <div>
+    <div class="card">
+      <h3><span class="tag tag-blue">顶部</span> Top Tab Bar</h3>
+      <p style="color:#94a3b8;font-size:.85rem;margin-bottom:1rem">仅文本，无图标，适合分类筛选</p>
+      <div class="phone-demo">
+        <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="nav-bar" style="background:#FF6B35;color:white;">🏪 潮玩店地图导览</div>
+        <div class="tabbar-top">
+          <div class="tab-item active">全部</div>
+          <div class="tab-item">泡泡玛特</div>
+          <div class="tab-item">52TOYS</div>
+          <div class="tab-item">盲盒</div>
+          <div class="tab-item">手办</div>
+          <div class="tab-item">限定</div>
+        </div>
+        <div class="content">
+          <div class="placeholder">🧸 泡泡玛特 Molly系列</div>
+          <div class="placeholder">🎨 52TOYS 胖哒幼</div>
+          <div class="placeholder">🎁 限定盲盒 · 新品首发</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- app.json 配置 -->
+<div class="card">
+  <h3>📝 app.json 原生底部 TabBar 配置示例</h3>
+  <pre>
+{
+  <span class="cmt">// 页面路径（所有tab页必须在此声明）</span>
+  <span class="key">"pages"</span>: [
+    <span class="str">"pages/index/index"</span>,
+    <span class="str">"pages/map/map"</span>,
+    <span class="str">"pages/discover/discover"</span>,
+    <span class="str">"pages/mine/mine"</span>
+  ],
+  <span class="key">"window"</span>: {
+    <span class="key">"navigationBarBackgroundColor"</span>: <span class="str">"#FF6B35"</span>,
+    <span class="key">"navigationBarTitleText"</span>: <span class="str">"潮玩店地图导览"</span>
+  },
+  <span class="cmt">// 👇 原生 Tab Bar 配置</span>
+  <span class="key">"tabBar"</span>: {
+    <span class="key">"color"</span>: <span class="str">"#999999"</span>,              <span class="cmt">// 未选中文字颜色</span>
+    <span class="key">"selectedColor"</span>: <span class="str">"#FF6B35"</span>,         <span class="cmt">// 选中文字颜色</span>
+    <span class="key">"backgroundColor"</span>: <span class="str">"#ffffff"</span>,       <span class="cmt">// 背景色</span>
+    <span class="key">"borderStyle"</span>: <span class="str">"white"</span>,             <span class="cmt">// 上边框色: black | white</span>
+    <span class="key">"position"</span>: <span class="str">"bottom"</span>,               <span class="cmt">// bottom | top</span>
+    <span class="key">"list"</span>: [
+      {
+        <span class="key">"pagePath"</span>: <span class="str">"pages/index/index"</span>,
+        <span class="key">"text"</span>: <span class="str">"首页"</span>,
+        <span class="key">"iconPath"</span>: <span class="str">"static/icons/home.png"</span>,         <span class="cmt">// 40kb以内, 81×81px</span>
+        <span class="key">"selectedIconPath"</span>: <span class="str">"static/icons/home-active.png"</span>
+      },
+      {
+        <span class="key">"pagePath"</span>: <span class="str">"pages/map/map"</span>,
+        <span class="key">"text"</span>: <span class="str">"地图"</span>,
+        <span class="key">"iconPath"</span>: <span class="str">"static/icons/map.png"</span>,
+        <span class="key">"selectedIconPath"</span>: <span class="str">"static/icons/map-active.png"</span>
+      },
+      {
+        <span class="key">"pagePath"</span>: <span class="str">"pages/discover/discover"</span>,
+        <span class="key">"text"</span>: <span class="str">"发现"</span>,
+        <span class="key">"iconPath"</span>: <span class="str">"static/icons/discover.png"</span>,
+        <span class="key">"selectedIconPath"</span>: <span class="str">"static/icons/discover-active.png"</span>
+      },
+      {
+        <span class="key">"pagePath"</span>: <span class="str">"pages/mine/mine"</span>,
+        <span class="key">"text"</span>: <span class="str">"我的"</span>,
+        <span class="key">"iconPath"</span>: <span class="str">"static/icons/mine.png"</span>,
+        <span class="key">"selectedIconPath"</span>: <span class="str">"static/icons/mine-active.png"</span>
+      }
+    ]
+  }
+}</pre>
+</div>
+
+<!-- ===== 数量/视觉/交互规范 ===== -->
+<h2>📏 数量 · 视觉 · 交互规范</h2>
+
+<div class="compare-grid">
+  <!-- 数量限制 -->
+  <div>
+    <div class="card">
+      <h3>🔢 数量限制</h3>
+      <table style="width:100%;font-size:.8rem;border-collapse:collapse">
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem .3rem;color:#94a3b8">底部 Tab</td>
+          <td style="padding:.5rem .3rem"><strong>2~5个</strong></td>
+          <td style="padding:.5rem .3rem;color:#94a3b8;font-size:.75rem">推荐≤4</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem .3rem;color:#94a3b8">顶部 Tab</td>
+          <td style="padding:.5rem .3rem"><strong>5~7个</strong></td>
+          <td style="padding:.5rem .3rem;color:#94a3b8;font-size:.75rem">分类浏览</td>
+        </tr>
+        <tr>
+          <td colspan="3" style="padding:.5rem .3rem;color:#ef4444;font-size:.75rem">
+            ⚠️ 一个页面不应出现一组以上的标签分页栏
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>🎨 视觉规范</h3>
+      <ul style="font-size:.8rem;margin-left:1.2rem;color:#94a3b8;line-height:1.8">
+        <li>图标尺寸：<strong style="color:#fde68a">81×81px</strong> (@3x) 本地PNG</li>
+        <li>图标风格：线性简洁，避免复杂渐变</li>
+        <li>文字长度：<strong style="color:#fde68a">≤4个汉字</strong></li>
+        <li>色彩对比：未选中(灰阶) vs 选中(主色填充)</li>
+        <li>顶部Tab：仅文本，用<strong style="color:#fde68a">下划线</strong>或<strong style="color:#fde68a">字重</strong>区分选中态</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 交互规范 -->
+  <div>
+    <div class="card">
+      <h3>🖱️ 交互规范</h3>
+      <pre style="font-size:.78rem;padding:.8rem">
+<span class="cmt">// ✅ 正确：Tab之间切换用 switchTab</span>
+wx.<span class="key">switchTab</span>({ url: <span class="str">'/pages/index/index'</span> });
+
+<span class="cmt">// ❌ 错误：不能用 navigateTo / redirectTo</span>
+wx.navigateTo({ url: <span class="str">'/pages/index/index'</span> });
+
+<span class="cmt">// ⚠️ 切换触发 onShow，不是 onLoad</span>
+Page({
+  <span class="key">onShow</span>() { <span class="cmt">// 数据刷新写这里</span>
+    this.fetchUnreadCount();
+  }
+});
+
+<span class="cmt">// 🔴 动态角标</span>
+wx.<span class="key">setTabBarBadge</span>({ index: <span class="num">2</span>, text: <span class="str">'3'</span> });
+wx.<span class="key">showTabBarRedDot</span>({ index: <span class="num">1</span> });</pre>
+    </div>
+    <div class="card">
+      <h3>📤 跨Tab传参</h3>
+      <p style="font-size:.8rem;color:#94a3b8;margin-bottom:.5rem">
+        switchTab <strong style="color:#f59e0b">不支持URL传参</strong>，替代方案：
+      </p>
+      <pre style="font-size:.78rem;padding:.8rem">
+<span class="cmt">// 方案A：全局变量</span>
+<span class="key">const</span> app = getApp();
+app.globalData.selectedShop = shopId;
+
+<span class="cmt">// 方案B：本地存储</span>
+wx.<span class="key">setStorageSync</span>(<span class="str">'targetShop'</span>, shopId);
+
+<span class="cmt">// 方案C：事件总线</span>
+emitter.<span class="key">emit</span>(<span class="str">'shop:selected'</span>, shopId);</pre>
+    </div>
+    <div style="padding:.5rem 1rem;background:rgba(59,130,246,.08);border-radius:8px;font-size:.78rem">
+      <strong>♿ 无障碍</strong>：为每个Tab配置 <code style="color:#93c5fd">accessibility: { label: "首页" }</code>，支持读屏软件朗读
+    </div>
+  </div>
+</div>
+
+<!-- ===== 二、自定义 Tab Bar ===== -->
+<h2>二、自定义 Tab Bar 实现</h2>
+
+<div class="card">
+  <h3><span class="tag tag-orange">自定义</span> 何时使用自定义 Tab Bar？</h3>
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;margin:1rem 0">
+    <div style="flex:1;min-width:200px;padding:1rem;background:#0f172a;border-radius:8px">
+      <strong>✅ 适用场景</strong>
+      <ul style="margin:.5rem 0 0 1.2rem;color:#94a3b8">
+        <li>异形/凸起中间按钮</li>
+        <li>红点/数字角标提示</li>
+        <li>渐变背景 / 毛玻璃效果</li>
+        <li>动态切换Tab（如登录前后）</li>
+        <li>特殊动效（点击粒子/水波纹）</li>
+      </ul>
+    </div>
+    <div style="flex:1;min-width:200px;padding:1rem;background:#0f172a;border-radius:8px">
+      <strong>❌ 不推荐场景</strong>
+      <ul style="margin:.5rem 0 0 1.2rem;color:#94a3b8">
+        <li>常规4-5个tab的简单导航</li>
+        <li>对性能有极致要求</li>
+        <li>开发周期紧张、快速上线</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 自定义TabBar效果 -->
+<div class="phone-demo" style="margin-bottom:2rem">
+  <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+  <div class="nav-bar" style="background:#0f172a;color:white;">
+    <span class="back">←</span>潮玩店地图
+    <div class="capsule"><span></span><span></span></div>
+  </div>
+  <div class="content" style="background:#1a1a2e;color:white;">
+    <div class="placeholder" style="background:#16213e;color:white;">
+      <strong>🔥 热门潮玩店</strong><br>
+      <span style="font-size:.75rem;color:#94a3b8">泡泡玛特 × 海贼王联名限定</span>
+    </div>
+  </div>
+  <div class="tabbar-custom">
+    <div class="tab-item active"><span class="tab-icon">🏠</span><span class="tab-label">首页</span></div>
+    <div class="tab-item"><span class="tab-icon">🗺️</span><span class="tab-label">地图</span></div>
+    <div class="center-btn">＋</div>
+    <div class="tab-item" style="visibility:hidden"><span class="tab-icon">🔔</span><span class="tab-label">消息</span></div>
+    <div class="tab-item"><span class="tab-icon">🔔</span><span class="tab-label">消息</span></div>
+    <div class="tab-item"><span class="tab-icon">👤</span><span class="tab-label">我的</span></div>
+  </div>
+</div>
+
+<!-- 自定义组件代码 -->
+<div class="card">
+  <h3>📝 自定义 Tab Bar 组件代码</h3>
+  <pre>
+<span class="cmt">// ===== components/custom-tab-bar/index.wxml =====</span>
+&lt;view class="tab-bar"&gt;
+  &lt;view wx:for="{{list}}" wx:key="index"
+        class="tab-item {{item.selected ? 'active' : ''}}"
+        bindtap="switchTab" data-index="{{index}}"&gt;
+    &lt;image src="{{item.selected ? item.selectedIconPath : item.iconPath}}"
+           class="tab-icon" /&gt;
+    &lt;text class="tab-text"&gt;{{item.text}}&lt;/text&gt;
+    <span class="cmt">&lt;!-- 红点角标 --&gt;</span>
+    &lt;view wx:if="{{item.badge}}" class="badge"&gt;{{item.badge}}&lt;/view&gt;
+  &lt;/view&gt;
+  <span class="cmt">&lt;!-- 中间异形凸起按钮 --&span>
+  &lt;view class="center-btn" bindtap="onCenterTap"&gt;
+    &lt;image src="/static/icons/add.png" class="center-icon" /&gt;
+  &lt;/view&gt;
+&lt;/view&gt;
+
+<span class="cmt">// ===== components/custom-tab-bar/index.wxss =====</span>
+.tab-bar {
+  display: flex; align-items: flex-end;
+  background: linear-gradient(180deg, #1e293b, #0f172a);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.center-btn {
+  width: 112rpx; height: 112rpx;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  border-radius: 50%; position: absolute; top: -56rpx;
+  left: 50%; transform: translateX(-50%);
+  box-shadow: 0 8rpx 32rpx rgba(239,68,68,.4);
+}
+
+<span class="cmt">// ===== components/custom-tab-bar/index.js =====</span>
+Component({
+  data: {
+    selected: 0,
+    list: [
+      { pagePath: "/pages/index/index", text: "首页",
+        iconPath: "/static/icons/home.png",
+        selectedIconPath: "/static/icons/home-active.png" },
+      { pagePath: "/pages/map/map", text: "地图",
+        iconPath: "/static/icons/map.png",
+        selectedIconPath: "/static/icons/map-active.png" },
+      { pagePath: "/pages/mine/mine", text: "我的",
+        iconPath: "/static/icons/mine.png",
+        selectedIconPath: "/static/icons/mine-active.png",
+        badge: "3" }
+    ]
+  },
+  methods: {
+    switchTab(e) {
+      const { index, item } = e.currentTarget.dataset;
+      wx.switchTab({ url: item.pagePath });
+    },
+    onCenterTap() {
+      wx.navigateTo({ url: '/pages/publish/publish' });
+    }
+  }
+});
+
+<span class="cmt">// ===== app.json 中注册（全局配置custom:true）=====</span>
+{
+  "tabBar": {
+    "custom": true,
+    "list": [...]  <span class="cmt">// 仍需声明list用于编译，但渲染由自定义组件接管</span>
+  }
+}</pre>
+</div>
+
+<!-- ===== 三、iOS/Android 边框适配 ===== -->
+<h2>三、iOS / Android 边框一致性方案</h2>
+
+<div class="card">
+  <h3>📏 问题：Tab Bar 上边框在不同设备上粗细不一致</h3>
+  <p style="color:#94a3b8;margin-bottom:1rem">
+    原因：iOS 和 Android 的 DPR（设备像素比）和渲染引擎不同，<br>
+    导致 <code>border-top: 1px</code> 在高DPI屏幕上可能显示为2px甚至更粗。
+  </p>
+
+  <h4 style="margin:1rem 0 .5rem">✅ 三种解决方案对比</h4>
+  <div class="hairline-demo">
+    <div class="hl-box">
+      <strong style="color:#f59e0b">方案A：1rpx</strong>
+      <div style="height:1px;background:#64748b;margin:.8rem 0"></div>
+      <div class="label">直接使用 1rpx<br>在大部分设备上可达到物理1px</div>
+    </div>
+    <div class="hl-box">
+      <strong style="color:#22c55e">✅ 方案B：scaleY(0.5)</strong>
+      <div style="height:1px;background:#64748b;margin:.8rem 0;transform:scaleY(0.5)"></div>
+      <div class="label">伪元素 + scaleY(0.5)<br>最精确，所有设备一致</div>
+    </div>
+    <div class="hl-box">
+      <strong style="color:#3b82f6">方案C：0.5px</strong>
+      <div style="height:0.5px;background:#64748b;margin:.8rem 0"></div>
+      <div class="label">直接 0.5px<br>部分Android不识别(视为0)</div>
+    </div>
+  </div>
+
+  <pre>
+<span class="cmt">/* ✅ 推荐写法：伪元素 + scaleY(0.5) 实现精确半像素边框 */</span>
+.tab-bar {
+  position: relative;
+}
+.tab-bar::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;                        <span class="cmt">/* 先用1px */</span>
+  background: rgba(0, 0, 0, 0.1);
+  transform: scaleY(0.5);             <span class="cmt">/* 再缩放50%，变成精确0.5物理像素 */</span>
+  transform-origin: 0 0;
+}
+
+<span class="cmt">/* 备选方案（简单场景可用） */</span>
+.tab-bar {
+  border-top: 1rpx solid rgba(0, 0, 0, 0.1);  <span class="cmt">/* rpx自动适配 */</span>
+}</pre>
+</div>
+
+<!-- ===== 四、NavigationBar 自定义 ===== -->
+<h2>四、顶部导航栏 (NavigationBar) 自定义</h2>
+
+<div class="compare-grid">
+  <div>
+    <div class="card">
+      <h3>默认样式</h3>
+      <div class="phone-demo">
+        <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="nav-bar" style="background:#FF6B35;color:white;">
+          ← 返回 &nbsp; 潮玩店地图导览
+          <div class="capsule"><span></span><span></span></div>
+        </div>
+        <div class="content">
+          <div class="placeholder">标准导航栏 — 包含返回按钮、标题、胶囊按钮</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <h3>自定义样式 (navigationStyle: custom)</h3>
+      <div class="phone-demo">
+        <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+        <div style="background:linear-gradient(135deg,#0f172a,#1e1b4b);color:white;padding:.8rem 1.2rem;display:flex;align-items:center;position:relative">
+          <span>←</span>
+          <span style="text-align:center;flex:1;font-weight:600">沉浸式品牌首页</span>
+          <div style="display:flex;gap:.3rem">
+            <span style="width:28px;height:18px;background:rgba(255,255,255,.3);border-radius:20px;border:1px solid rgba(255,255,255,.5)"></span>
+            <span style="width:28px;height:18px;background:rgba(255,255,255,.3);border-radius:20px;border:1px solid rgba(255,255,255,.5)"></span>
+          </div>
+        </div>
+        <div class="content" style="background:#0f172a;color:white">
+          <div style="text-align:center;padding:2rem 0">
+            <div style="font-size:2rem">🏪</div>
+            <div style="font-size:1.2rem;font-weight:900">潮玩地图</div>
+            <p style="font-size:.75rem;color:#94a3b8">发现你身边的潮玩宝藏</p>
+          </div>
+          <div class="placeholder" style="background:#1e293b;color:white">
+            自定义导航栏常用于：沉浸式首页、海报分享页、品牌专题
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 五、选型建议 ===== -->
+<div class="card" style="margin-top:3rem">
+  <h3>🎯 选型决策速查表</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+    <thead>
+      <tr style="border-bottom:1px solid #334155">
+        <th style="text-align:left;padding:.6rem">场景</th>
+        <th style="text-align:left;padding:.6rem">推荐方案</th>
+        <th style="text-align:left;padding:.6rem">理由</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid #1e293b">
+        <td style="padding:.6rem">常规企业应用</td>
+        <td style="padding:.6rem"><span class="tag tag-green">原生底部</span></td>
+        <td style="padding:.6rem;color:#94a3b8">性能最优，符合用户习惯</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e293b">
+        <td style="padding:.6rem">内容分类筛选</td>
+        <td style="padding:.6rem"><span class="tag tag-blue">原生顶部</span></td>
+        <td style="padding:.6rem;color:#94a3b8">轻量文本切换，开发简单</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e293b">
+        <td style="padding:.6rem">品牌调性强烈</td>
+        <td style="padding:.6rem"><span class="tag tag-orange">自定义TabBar</span></td>
+        <td style="padding:.6rem;color:#94a3b8">自由控制渐变/异形/动效</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e293b">
+        <td style="padding:.6rem">中间发布按钮</td>
+        <td style="padding:.6rem"><span class="tag tag-orange">自定义TabBar</span></td>
+        <td style="padding:.6rem;color:#94a3b8">凸起异形按钮只能自定义实现</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e293b">
+        <td style="padding:.6rem">红点/角标通知</td>
+        <td style="padding:.6rem"><span class="tag tag-orange">自定义TabBar</span></td>
+        <td style="padding:.6rem;color:#94a3b8">原生不支持动态角标</td>
+      </tr>
+      <tr>
+        <td style="padding:.6rem">沉浸式首页</td>
+        <td style="padding:.6rem">navigationStyle: custom</td>
+        <td style="padding:.6rem;color:#94a3b8">隐藏导航栏，全屏设计</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p style="text-align:center;padding:3rem 0;color:#64748b;font-size:.8rem">
+  📱 小程序 Tab Bar 样式实战参考 | 基于潮玩店地图导览项目 | 2026
+</p>
+
+</div>
+</body>
+</html>

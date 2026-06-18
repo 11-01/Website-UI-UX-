@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智序科技 — 企业数字化转型伙伴 | Web首页演示</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary: #3b82f6;
+    --dark: #0f172a;
+    --nav-h: 64px;
+  }
+
+  body {
+    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    color: #1e293b; line-height: 1.6; overflow-x: hidden;
+  }
+
+  /* ===== 导航栏 — 3-5个核心栏目，文字直白 ===== */
+  .navbar {
+    position: sticky; top: 0; z-index: 1000;
+    background: rgba(255,255,255,.95); backdrop-filter: blur(12px);
+    height: var(--nav-h); display: flex; align-items: center;
+    padding: 0 2rem; border-bottom: 1px solid #f1f5f9;
+    transition: box-shadow .3s;
+    font-size: .9rem;
+  }
+  .navbar.scrolled { box-shadow: 0 1px 8px rgba(0,0,0,.04); }
+  .navbar .logo {
+    font-weight: 900; font-size: 1.15rem; margin-right: 3rem;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .navbar .logo .icon {
+    width: 32px; height: 32px; background: var(--primary);
+    border-radius: 8px; color: white; display: flex;
+    align-items: center; justify-content: center; font-size: .9rem;
+  }
+  .navbar .nav-links { display: flex; gap: 1.5rem; flex: 1; }
+  .navbar .nav-links a {
+    color: #475569; text-decoration: none; font-weight: 500;
+    transition: color .15s; position: relative;
+  }
+  .navbar .nav-links a:hover { color: var(--primary); }
+  .navbar .nav-links a::after {
+    content: ''; position: absolute; bottom: -4px; left: 0; width: 0;
+    height: 2px; background: var(--primary); border-radius: 1px;
+    transition: width .25s ease;
+  }
+  .navbar .nav-links a:hover::after { width: 100%; }
+  .navbar .cta-btn {
+    padding: .5rem 1.5rem; background: var(--primary); color: white;
+    border: none; border-radius: 8px; font-weight: 600; cursor: pointer;
+    font-size: .85rem; transition: all .2s;
+  }
+  .navbar .cta-btn:hover { background: #2563eb; transform: translateY(-1px); }
+  .navbar .burger { display: none; background: none; border: none; font-size: 1.3rem; cursor: pointer; padding: 8px; }
+
+  /* ===== Hero — 3秒价值传递 ===== */
+  .hero {
+    padding: 5rem 2rem; text-align: center; position: relative; overflow: hidden;
+    background: linear-gradient(180deg, #f8fafc 0%, #eff6ff 50%, #f8fafc 100%);
+  }
+  .hero::before {
+    content: ''; position: absolute; width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(59,130,246,.06), transparent);
+    border-radius: 50%; top: -200px; left: 50%; transform: translateX(-50%);
+  }
+  .hero .hero-content { position: relative; max-width: 700px; margin: 0 auto; }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900;
+    line-height: 1.2; margin-bottom: 1rem;
+  }
+  .hero h1 span {
+    background: linear-gradient(135deg, var(--primary), #8b5cf6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero p {
+    font-size: 1.1rem; color: #64748b; margin-bottom: 2rem; max-width: 500px;
+    margin-left: auto; margin-right: auto;
+  }
+  .hero .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .hero .hero-btns .btn-primary {
+    padding: .8rem 2.2rem; background: var(--primary); color: white;
+    border: none; border-radius: 10px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: all .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .hero .hero-btns .btn-primary:hover { transform: scale(1.04); box-shadow: 0 8px 25px rgba(59,130,246,.3); }
+  .hero .hero-btns .btn-outline {
+    padding: .8rem 2.2rem; background: white; color: var(--primary);
+    border: 2px solid var(--primary); border-radius: 10px;
+    font-size: 1rem; font-weight: 700; cursor: pointer; transition: all .2s;
+  }
+  .hero .hero-btns .btn-outline:hover { background: #eff6ff; }
+
+  /* ===== 视觉重心 — 大图区 ===== */
+  .visual-hero {
+    max-width: 900px; margin: -1rem auto 0; padding: 0 2rem 3rem; position: relative; z-index: 1;
+  }
+  .visual-hero .dashboard-mock {
+    background: white; border-radius: 16px; overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,.06), 0 2px 8px rgba(0,0,0,.04);
+    border: 1px solid #e2e8f0;
+  }
+  .visual-hero .dashboard-mock .dm-top {
+    background: #1e293b; color: white; padding: .7rem 1.2rem;
+    display: flex; gap: .6rem; align-items: center; font-size: .78rem;
+  }
+  .visual-hero .dashboard-mock .dm-top .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .visual-hero .dashboard-mock .dm-body {
+    padding: 1.5rem; display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+  .visual-hero .dashboard-mock .dm-body .dm-card {
+    background: #f8fafc; border-radius: 10px; padding: 1rem; text-align: center;
+  }
+  .visual-hero .dashboard-mock .dm-body .dm-card .val {
+    font-size: 1.4rem; font-weight: 900; color: var(--primary);
+  }
+  .visual-hero .dashboard-mock .dm-body .dm-card .lbl {
+    font-size: .7rem; color: #94a3b8; margin-top: .2rem;
+  }
+  @media (max-width: 640px) {
+    .visual-hero .dashboard-mock .dm-body { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ===== F型内容区 ===== */
+  .section {
+    max-width: 1100px; margin: 0 auto; padding: 4rem 2rem;
+  }
+  .section h2 { font-size: 1.6rem; font-weight: 900; margin-bottom: .5rem; text-align: center; }
+  .section .sec-sub { text-align: center; color: #64748b; font-size: .9rem; margin-bottom: 2.5rem; }
+
+  /* 功能卡片网格 */
+  .feature-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+  }
+  .feat-card {
+    background: white; border: 1px solid #f1f5f9; border-radius: 14px;
+    padding: 1.8rem; transition: all .3s; cursor: pointer;
+    box-shadow: 0 1px 6px rgba(0,0,0,.02);
+  }
+  .feat-card:hover {
+    border-color: var(--primary); transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(59,130,246,.06);
+  }
+  .feat-card .fc-icon { font-size: 2rem; margin-bottom: .8rem; }
+  .feat-card h4 { font-size: 1rem; margin-bottom: .4rem; }
+  .feat-card p { font-size: .82rem; color: #64748b; line-height: 1.6; }
+
+  /* CTA区 */
+  .cta-section {
+    background: linear-gradient(135deg, var(--dark), #1e293b);
+    color: white; text-align: center; padding: 4rem 2rem; margin-top: 2rem;
+  }
+  .cta-section h2 { color: white; font-size: 1.8rem; }
+  .cta-section p { color: #94a3b8; margin: .8rem 0 1.5rem; }
+  .cta-section .btn-primary {
+    padding: .8rem 2.5rem; background: white; color: var(--dark);
+    border: none; border-radius: 10px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: all .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .cta-section .btn-primary:hover { transform: scale(1.05); box-shadow: 0 8px 30px rgba(255,255,255,.15); }
+
+  /* ===== 响应式 ===== */
+  @media (max-width: 768px) {
+    .navbar .nav-links { display: none; }
+    .navbar .burger { display: block; }
+    .navbar .cta-btn { margin-left: auto; }
+    .hero { padding: 3rem 1rem; }
+    .section { padding: 2.5rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 导航栏 ===== -->
+<nav class="navbar" id="navbar">
+  <div class="logo"><div class="icon">Z</div>智序科技</div>
+  <div class="nav-links">
+    <a href="#features">产品</a>
+    <a href="#solutions">解决方案</a>
+    <a href="#pricing">定价</a>
+    <a href="#about">关于我们</a>
+  </div>
+  <button class="burger">☰</button>
+  <button class="cta-btn">免费试用</button>
+</nav>
+
+<!-- ===== Hero — 3秒价值传递 ===== -->
+<section class="hero">
+  <div class="hero-content">
+    <h1>用<span>智能数据</span><br>驱动每一次决策</h1>
+    <p>
+      智序科技 — 为企业提供一站式数据分析与智能决策平台。<br>
+      从数据接入到洞察呈现，只需3分钟。
+    </p>
+    <div class="hero-btns">
+      <button class="btn-primary">🚀 免费开始使用</button>
+      <button class="btn-outline">📞 预约演示</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 视觉重心 — 产品大图 ===== -->
+<div class="visual-hero">
+  <div class="dashboard-mock">
+    <div class="dm-top">
+      <span class="dot" style="background:#ef4444"></span>
+      <span class="dot" style="background:#f59e0b"></span>
+      <span class="dot" style="background:#22c55e"></span>
+      <span style="margin-left:.5rem">Dashboard · 实时数据看板</span>
+    </div>
+    <div class="dm-body">
+      <div class="dm-card"><div class="val">¥847K</div><div class="lbl">今日营收</div></div>
+      <div class="dm-card"><div class="val">12,846</div><div class="lbl">活跃用户</div></div>
+      <div class="dm-card"><div class="val">99.7%</div><div class="lbl">系统可用率</div></div>
+      <div class="dm-card"><div class="val">23</div><div class="lbl">待处理任务</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== F型内容 — 功能模块 ===== -->
+<section class="section" id="features">
+  <h2>为什么选择智序科技？</h2>
+  <p class="sec-sub">四大核心能力，助力企业数字化转型</p>
+  <div class="feature-grid">
+    <div class="feat-card">
+      <div class="fc-icon">📊</div>
+      <h4>实时数据分析</h4>
+      <p>毫秒级数据刷新，支持50+数据源接入，自定义Dashboard布局，满足各角色需求。</p>
+    </div>
+    <div class="feat-card">
+      <div class="fc-icon">🤖</div>
+      <h4>AI 智能洞察</h4>
+      <p>机器学习自动识别异常趋势，主动推送预警。让数据"主动开口"，而非被动查看。</p>
+    </div>
+    <div class="feat-card">
+      <div class="fc-icon">🔒</div>
+      <h4>企业级安全</h4>
+      <p>银行级AES-256加密，SOC 2 Type II认证，细粒度RBAC权限控制，审计日志全覆盖。</p>
+    </div>
+    <div class="feat-card">
+      <div class="fc-icon">⚡</div>
+      <h4>3分钟部署</h4>
+      <p>零代码接入，预置100+行业模板。从注册到首个Dashboard上线，仅需3分钟。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA区 ===== -->
+<section class="cta-section">
+  <h2>准备好开始了吗？</h2>
+  <p>14天免费试用，无需信用卡 · 随时取消 · 7×24小时支持</p>
+  <button class="btn-primary">🚀 免费开始使用</button>
+</section>
+
+<!-- ===== Footer ===== -->
+<footer style="background:#f8fafc;padding:2rem;text-align:center;font-size:.78rem;color:#94a3b8">
+  <p>© 2026 智序科技 · 粤ICP备XXXXXXXX号 · 隐私政策 · 服务条款</p>
+</footer>
+
+<script>
+// 导航栏滚动阴影
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 10);
+});
+
+// 平滑滚动
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+</script>
+</body>
+</html>

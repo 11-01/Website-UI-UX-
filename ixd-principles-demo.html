@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>交互设计六大原则演示 | IxD Principles Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #0f172a; color: #e2e8f0;
+  }
+
+  header {
+    text-align: center; padding: 2.5rem 1rem 1rem;
+  }
+  header h1 { font-size: 1.8rem; }
+  header h1 span { background: linear-gradient(135deg, #f59e0b, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+  .page { max-width: 960px; margin: 0 auto; padding: 1rem; }
+
+  /* 五大维度条 */
+  .dimensions {
+    display: flex; gap: .3rem; flex-wrap: wrap; justify-content: center;
+    margin-bottom: 2rem;
+  }
+  .dim {
+    padding: .3rem .8rem; border-radius: 20px; font-size: .72rem;
+    background: rgba(255,255,255,.04); color: #94a3b8;
+  }
+
+  /* 原则卡片 */
+  .principle-card {
+    background: #1e293b; border-radius: 14px; border: 1px solid #334155;
+    margin-bottom: 1.5rem; overflow: hidden;
+  }
+  .principle-card .card-top {
+    background: #0f172a; padding: .65rem 1.2rem; border-bottom: 1px solid #334155;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: .82rem; font-weight: 700;
+  }
+  .card-body { background: #f8fafc; color: #1e293b; padding: 1.2rem; }
+
+  .demo-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 600px) { .demo-2col { grid-template-columns: 1fr; } }
+
+  /* ===== 1. 可见性 ===== */
+  .vis-demo { position: relative; background: white; border-radius: 10px; padding: 1.5rem; text-align: center; }
+  .vis-demo .hidden-important {
+    background: #f1f5f9; color: #94a3b8; padding: .6rem 1.2rem;
+    border-radius: 8px; font-size: .85rem; border: 1px dashed #d1d5db;
+    cursor: pointer; transition: all .3s;
+  }
+  .vis-demo .hidden-important:hover { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
+  .vis-demo .vis-hint { font-size: .72rem; color: #94a3b8; margin-top: .5rem; }
+  .vis-demo.visible .hidden-important { background: #3b82f6; color: white; border-color: #3b82f6; font-weight: 600; }
+
+  /* ===== 2. 反馈 ===== */
+  .feedback-demo { display: flex; gap: .8rem; flex-wrap: wrap; }
+  .fb-btn {
+    padding: .7rem 1.5rem; border: none; border-radius: 8px;
+    font-size: .85rem; cursor: pointer; font-weight: 600;
+    transition: all .2s cubic-bezier(.34,1.56,.64,1);
+  }
+  .fb-btn:active { transform: scale(.93); }
+  .fb-click { background: #3b82f6; color: white; }
+  .fb-click.clicked { background: #22c55e; }
+  .fb-click.clicked::after { content: ' ✓ 已点击'; }
+  .fb-counter-btn { background: #8b5cf6; color: white; }
+  .fb-counter { font-size: 2rem; font-weight: 900; color: #8b5cf6; transition: transform .3s cubic-bezier(.34,1.56,.64,1); }
+  .fb-counter.bump { transform: scale(1.3); }
+
+  /* ===== 3. 限制 ===== */
+  .constraint-demo { display: flex; flex-direction: column; gap: .8rem; }
+  .constraint-demo input[type=number] {
+    width: 200px; padding: .7rem .8rem; border: 2px solid #e2e8f0;
+    border-radius: 8px; font-size: .85rem; outline: none;
+    transition: border-color .2s;
+  }
+  .constraint-demo input[type=number]:focus { border-color: #3b82f6; }
+  .disabled-btn {
+    padding: .6rem 1.5rem; background: #f1f5f9; color: #94a3b8;
+    border: none; border-radius: 8px; cursor: not-allowed; font-size: .85rem;
+  }
+  .disabled-btn.enabled { background: #3b82f6; color: white; cursor: pointer; }
+
+  /* ===== 4. 映射 ===== */
+  .mapping-demo { display: flex; align-items: center; gap: 1.5rem; }
+  .slider-group { display: flex; flex-direction: column; gap: .5rem; align-items: center; }
+  .slider-group input[type=range] { width: 200px; accent-color: #3b82f6; }
+  .slider-group .mapped-result { font-size: 2rem; transition: transform .1s; }
+
+  /* ===== 5. 一致性 ===== */
+  .consistency-demo { display: flex; gap: .8rem; flex-wrap: wrap; }
+  .consistent-btn {
+    padding: .6rem 1.2rem; border: 2px solid #d1d5db; background: white;
+    border-radius: 8px; cursor: pointer; font-size: .82rem; font-weight: 500;
+    transition: all .2s;
+  }
+  .consistent-btn:hover { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
+  .consistent-btn.primary { background: #3b82f6; color: white; border-color: #3b82f6; }
+  .consistent-btn.primary:hover { background: #2563eb; }
+  .consistent-btn.danger { color: #ef4444; border-color: #fecaca; }
+  .consistent-btn.danger:hover { background: #fef2f2; border-color: #ef4444; }
+
+  /* ===== 6. 容错性 ===== */
+  .error-demo { display: flex; flex-direction: column; gap: .8rem; }
+  .undo-bar {
+    display: flex; align-items: center; gap: .8rem; padding: .8rem 1rem;
+    background: #1e293b; color: white; border-radius: 8px; font-size: .85rem;
+    animation: slideUp .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  .undo-bar button {
+    background: white; color: #1e293b; border: none; padding: .3rem .8rem;
+    border-radius: 6px; cursor: pointer; font-weight: 600; font-size: .8rem;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .delete-target {
+    padding: 1rem; background: #fef2f2; border: 1px solid #fecaca;
+    border-radius: 8px; text-align: center; font-size: .85rem;
+    transition: all .3s ease;
+  }
+  .delete-target.removed {
+    opacity: 0; transform: translateY(-10px); pointer-events: none;
+  }
+
+  /* 流程图演示 */
+  .flow-demo {
+    display: flex; gap: .5rem; align-items: center; flex-wrap: wrap;
+    justify-content: center; margin-top: .5rem;
+  }
+  .flow-node {
+    padding: .5rem 1rem; border-radius: 20px; font-size: .78rem;
+    background: white; border: 1px solid #e2e8f0;
+  }
+  .flow-arrow { color: #94a3b8; font-size: .9rem; }
+
+  /* 反例/正例 */
+  .bad-good { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+  @media (max-width: 500px) { .bad-good { grid-template-columns: 1fr; } }
+  .bg-box { padding: .8rem; border-radius: 8px; font-size: .8rem; }
+  .bg-bad { background: #fef2f2; border: 1px solid #fecaca; }
+  .bg-good { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .bg-bad h4 { color: #dc2626; font-size: .82rem; margin-bottom:.3rem; }
+  .bg-good h4 { color: #16a34a; font-size: .82rem; margin-bottom:.3rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🧠 交互设计 <span>六大原则</span></h1>
+  <p style="color:#64748b;font-size:.88rem;margin-top:.3rem">可见性 · 反馈 · 限制 · 映射 · 一致性 · 容错性</p>
+  <div class="dimensions">
+    <span class="dim">1D 文字</span><span class="dim">2D 视觉</span>
+    <span class="dim">3D 物理</span><span class="dim">4D 时间</span>
+    <span class="dim">5D 行为</span>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- ===== 1. 可见性 ===== -->
+  <div class="principle-card">
+    <div class="card-top"><span>👁️ 原则一：可见性（Visibility）</span></div>
+    <div class="card-body">
+      <div class="demo-2col">
+        <div class="vis-demo" id="visBox">
+          <button class="hidden-important" onclick="toggleVisibility()">
+            点击我 → 重要操作
+          </button>
+          <div class="vis-hint">👆 按钮初始不显眼，hover才变色 — 违反可见性原则</div>
+        </div>
+        <div class="bg-good">
+          <h4>✅ 正确做法</h4>
+          <p style="font-size:.8rem;line-height:1.6">
+            重要功能使用品牌色、足够大的尺寸、明确的视觉层级。<br>
+            用户不需要"寻找"或"猜测"。
+          </p>
+          <button style="margin-top:.5rem;padding:.5rem 1.5rem;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:.85rem">明确可见的操作</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 2. 反馈 ===== -->
+  <div class="principle-card">
+    <div class="card-top"><span>📢 原则二：反馈（Feedback）</span></div>
+    <div class="card-body">
+      <div class="demo-2col">
+        <div>
+          <div class="feedback-demo">
+            <button class="fb-btn fb-click" onclick="clickFeedback(this)">点击我</button>
+            <button class="fb-btn fb-counter-btn" onclick="bumpCounter()">计数 +1</button>
+            <span class="fb-counter" id="counter">0</span>
+          </div>
+          <p style="font-size:.72rem;color:#94a3b8;margin-top:.5rem">
+            每次操作都有即时反馈：变色/文案变化/数字弹跳
+          </p>
+        </div>
+        <div class="bg-bad">
+          <h4>❌ 无反馈</h4>
+          <button style="padding:.6rem 1.5rem;background:#e2e8f0;color:#94a3b8;border:none;border-radius:8px;font-size:.85rem;cursor:default">点我没反应</button>
+          <p style="font-size:.75rem;color:#dc2626;margin-top:.3rem">用户困惑："到底点上了没有？"</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 3. 限制 ===== -->
+  <div class="principle-card">
+    <div class="card-top"><span>🚫 原则三：限制（Constraints）</span></div>
+    <div class="card-body">
+      <div class="demo-2col">
+        <div>
+          <div class="constraint-demo">
+            <input type="number" placeholder="只能输入1-100的数字" min="1" max="100" oninput="checkConstraint(this)">
+            <button class="disabled-btn" id="constraintBtn" disabled>提交（仅1-100可用）</button>
+          </div>
+        </div>
+        <div class="bg-good">
+          <h4>✅ 设计防错</h4>
+          <p style="font-size:.8rem;line-height:1.6">
+            限制输入范围 → 用户不可能输入无效值<br>
+            按钮禁用 → 防止提交无效数据<br>
+            "设计上让你不可能犯错"
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 4. 映射 ===== -->
+  <div class="principle-card">
+    <div class="card-top"><span>🗺️ 原则四：映射（Mapping）</span></div>
+    <div class="card-body">
+      <div class="mapping-demo">
+        <div class="slider-group">
+          <span style="font-size:.75rem;color:#94a3b8">🔈 音量</span>
+          <input type="range" min="0" max="100" value="50" oninput="updateMapping(this)">
+          <span style="font-size:.75rem;color:#94a3b8">← 小 &nbsp; 大 →</span>
+        </div>
+        <div class="slider-group">
+          <span style="font-size:.75rem;color:#94a3b8">映射结果</span>
+          <div class="mapped-result" id="mappedVal" style="font-size:3rem">🔉</div>
+        </div>
+      </div>
+      <p style="font-size:.75rem;color:#94a3b8;margin-top:.8rem">
+        🎯 滑块向右 → 音量变大 → 图标变大。逻辑和空间映射一致。
+      </p>
+    </div>
+  </div>
+
+  <!-- ===== 5. 一致性 ===== -->
+  <div class="principle-card">
+    <div class="card-top"><span>🔄 原则五：一致性（Consistency）</span></div>
+    <div class="card-body">
+      <div class="demo-2col">
+        <div>
+          <div class="consistency-demo">
+            <button class="consistent-btn primary">主要操作</button>
+            <button class="consistent-btn">次要操作</button>
+            <button class="consistent-btn danger">危险操作</button>
+          </div>
+          <p style="font-size:.72rem;color:#94a3b8;margin-top:.5rem">
+            同一套按钮体系 → hover行为一致 → 用户一次学会全程通用
+          </p>
+        </div>
+        <div class="bg-bad">
+          <h4>❌ 不一致</h4>
+          <p style="font-size:.8rem;line-height:1.6">
+            这个页面删除是红色，另一个页面删除是灰色<br>
+            → 用户肌肉记忆被打乱，每次都要重新判断
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 6. 容错性 ===== -->
+  <div class="principle-card">
+    <div class="card-top"><span>↩️ 原则六：容错性（Error Tolerance）</span></div>
+    <div class="card-body">
+      <div class="demo-2col">
+        <div>
+          <div class="error-demo">
+            <div class="delete-target" id="deleteItem">
+              📄 项目名称 · 创建于 2026-06-17
+            </div>
+            <button class="consistent-btn danger" style="align-self:flex-start" onclick="deleteItem()">
+              🗑️ 删除（可撤销）
+            </button>
+            <div id="undoContainer"></div>
+          </div>
+        </div>
+        <div class="bg-good">
+          <h4>✅ 允许撤销</h4>
+          <p style="font-size:.8rem;line-height:1.6">
+            删除后出现撤销条 → 5秒内可恢复<br>
+            给用户"后悔药"，降低操作焦虑
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 工作流程 ===== -->
+  <div class="principle-card">
+    <div class="card-top"><span>📋 交互设计工作流程</span></div>
+    <div class="card-body" style="background:#1e293b;color:#e2e8f0">
+      <div class="flow-demo">
+        <div class="flow-node">🎯 用户研究</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-node">🗂️ 信息架构</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-node">📊 任务分析</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-node">📝 原型设计</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-node">🧪 可用性测试</div>
+      </div>
+      <div style="display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap;justify-content:center;font-size:.78rem;color:#94a3b8">
+        <span>UX ⊃ IxD</span>
+        <span>|</span>
+        <span>IxD ↔ UI</span>
+        <span>|</span>
+        <span>骨架+肌肉 ← IxD → 穿上衣服</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 速查 -->
+  <div class="principle-card">
+    <div class="card-top"><span>📋 六大原则速查</span></div>
+    <div class="card-body" style="background:#1e293b;color:#e2e8f0">
+      <table style="width:100%;font-size:.82rem;border-collapse:collapse">
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem;font-weight:700;color:#60a5fa">1. 可见性</td>
+          <td style="padding:.5rem">重要功能显而易见，不要让用户猜测</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem;font-weight:700;color:#34d399">2. 反馈</td>
+          <td style="padding:.5rem">每次操作必须响应（变色/动画/提示）</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem;font-weight:700;color:#fbbf24">3. 限制</td>
+          <td style="padding:.5rem">通过设计防止用户犯错（禁用/格式限制）</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem;font-weight:700;color:#f472b6">4. 映射</td>
+          <td style="padding:.5rem">控件与结果空间和逻辑保持一致</td>
+        </tr>
+        <tr style="border-bottom:1px solid #334155">
+          <td style="padding:.5rem;font-weight:700;color:#a78bfa">5. 一致性</td>
+          <td style="padding:.5rem">相同元素相同行为，降低学习成本</td>
+        </tr>
+        <tr>
+          <td style="padding:.5rem;font-weight:700;color:#f87171">6. 容错性</td>
+          <td style="padding:.5rem">允许撤销，错误时提供友好恢复路径</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// 1. 可见性
+function toggleVisibility() {
+  document.getElementById('visBox').classList.toggle('visible');
+}
+
+// 2. 反馈 — 点击
+function clickFeedback(btn) {
+  btn.classList.add('clicked');
+  setTimeout(() => btn.classList.remove('clicked'), 1200);
+}
+let count = 0;
+function bumpCounter() {
+  count++;
+  const el = document.getElementById('counter');
+  el.textContent = count;
+  el.classList.remove('bump');
+  void el.offsetWidth; // 触发回流重启动画
+  el.classList.add('bump');
+}
+
+// 3. 限制
+function checkConstraint(input) {
+  const val = parseInt(input.value);
+  const btn = document.getElementById('constraintBtn');
+  if (val >= 1 && val <= 100) {
+    btn.classList.add('enabled'); btn.disabled = false; btn.textContent = '✓ 现在可以提交了';
+  } else {
+    btn.classList.remove('enabled'); btn.disabled = true; btn.textContent = '提交（仅1-100可用）';
+  }
+}
+
+// 4. 映射
+function updateMapping(slider) {
+  const val = parseInt(slider.value);
+  const el = document.getElementById('mappedVal');
+  const size = 1 + val / 50;
+  el.style.transform = 'scale(' + size + ')';
+  if (val < 30) el.textContent = '🔈';
+  else if (val < 70) el.textContent = '🔉';
+  else el.textContent = '🔊';
+}
+
+// 6. 容错
+let undoTimer;
+function deleteItem() {
+  const item = document.getElementById('deleteItem');
+  const container = document.getElementById('undoContainer');
+  item.classList.add('removed');
+
+  const bar = document.createElement('div');
+  bar.className = 'undo-bar';
+  bar.innerHTML = '<span>🗑️ 已删除</span><button onclick="undoDelete()">↩ 撤销</button><span style="font-size:.7rem;opacity:.5">5秒后消失</span>';
+  container.innerHTML = '';
+  container.appendChild(bar);
+
+  undoTimer = setTimeout(() => {
+    bar.remove();
+    item.style.display = 'none';
+  }, 5000);
+}
+
+function undoDelete() {
+  clearTimeout(undoTimer);
+  document.getElementById('deleteItem').classList.remove('removed');
+  document.getElementById('undoContainer').innerHTML = '';
+}
+</script>
+</body>
+</html>

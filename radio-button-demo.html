@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>网站UI单选按钮设计指南 | Radio Button Design Guide</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f172a;--card-bg:#1e293b;--card-border:#334155;--surface:#f8fafc;--text:#e2e8f0;--text-dim:#94a3b8;--text-dark:#1e293b;--blue:#3b82f6;--green:#22c55e;--purple:#8b5cf6;--red:#ef4444;--radius:10px;--radius-lg:16px}
+body{font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.hero{text-align:center;padding:3rem 1.5rem 2rem;background:linear-gradient(180deg,#0f172a 0%,#1a2332 100%)}
+.hero h1{font-size:clamp(1.8rem,4vw,3rem);font-weight:900;margin-bottom:.6rem}
+.hero h1 span{background:linear-gradient(135deg,#06b6d4,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .subtitle{font-size:1rem;color:var(--text-dim);max-width:700px;margin:0 auto}
+.hero .meta-tags{display:flex;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
+.hero .meta-tags span{font-size:.75rem;padding:.25rem .75rem;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.2);border-radius:20px;color:#67e8f9}
+
+.page{max-width:1200px;margin:0 auto;padding:0 1.5rem 4rem}
+.section-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);margin-bottom:2rem;overflow:hidden}
+.section-card .card-header{padding:1.2rem 1.5rem;border-bottom:1px solid var(--card-border);display:flex;align-items:center;gap:.8rem}
+.section-card .card-header .section-num{width:36px;height:36px;background:linear-gradient(135deg,#06b6d4,#3b82f6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;color:white;flex-shrink:0}
+.section-card .card-header h2{font-size:1.3rem;font-weight:700}
+.section-card .card-header .en-label{font-size:.75rem;color:var(--text-dim);margin-left:auto}
+.section-card .card-body{background:var(--surface);color:var(--text-dark);padding:1.5rem}
+
+.sub-title{font-size:.95rem;font-weight:700;color:#475569;margin-bottom:1rem;margin-top:1.5rem;padding-bottom:.5rem;border-bottom:2px solid #e2e8f0;display:flex;align-items:center;gap:.5rem}
+.sub-title:first-child{margin-top:0}
+.sub-title::before{content:'';width:4px;height:18px;background:#06b6d4;border-radius:2px}
+
+.demo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.2rem}
+.demo-grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem}
+.code-block{background:#1e293b;color:#e2e8f0;border-radius:8px;padding:.9rem 1.1rem;font-family:'JetBrains Mono','Fira Code','Consolas',monospace;font-size:.76rem;line-height:1.7;overflow-x:auto;margin:.6rem 0}
+.code-block .tag{color:#f472b6}.code-block .attr{color:#67e8f9}.code-block .val{color:#a5d6ff}.code-block .comment{color:#64748b}.code-block .prop{color:#fde68a}.code-block .kw{color:#f472b6}
+
+.tip-box{display:flex;align-items:flex-start;gap:.6rem;padding:.8rem 1rem;border-radius:8px;font-size:.8rem;margin:.8rem 0}
+.tip-box.info{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
+.tip-box.success{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.tip-box.warn{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+.tip-box .icon{font-size:1rem;flex-shrink:0}
+
+.plan-card{background:white;border-radius:var(--radius);padding:1.2rem;box-shadow:0 1px 6px rgba(0,0,0,.03);border:1px solid #f1f5f9}
+.plan-card h4{font-size:.9rem;margin-bottom:.5rem}
+
+.compare-table{width:100%;border-collapse:collapse;font-size:.8rem;margin:.8rem 0}
+.compare-table th{background:#f1f5f9;padding:.5rem .8rem;text-align:left;font-weight:600}
+.compare-table td{padding:.5rem .8rem;border-bottom:1px solid #e2e8f0}
+
+/* ===== Radio 组件样式 ===== */
+
+/* 原生 Radio */
+.radio-group{display:flex;flex-direction:column;gap:.5rem}
+
+/* accen-color */
+.radio-accent{accent-color:var(--blue);width:18px;height:18px}
+
+/* 完全自定义 Radio -- 方案：隐藏input用opacity，通过兄弟选择器控制 */
+.custom-radio{display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.85rem;color:#475569;user-select:none}
+.custom-radio input{position:absolute;opacity:0;width:0;height:0}
+.custom-radio .radio-dot{
+  width:20px;height:20px;border:2px solid #d1d5db;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  transition:all .25s;flex-shrink:0;
+}
+.custom-radio:hover .radio-dot{border-color:var(--blue)}
+.custom-radio input:checked + .radio-dot{border-color:var(--blue)}
+.custom-radio input:checked + .radio-dot::after{
+  content:'';width:10px;height:10px;background:var(--blue);border-radius:50%;
+  transform:scale(1);transition:transform .2s cubic-bezier(.34,1.56,.64,1);
+}
+.custom-radio input:not(:checked) + .radio-dot::after{transform:scale(0)}
+.custom-radio input:focus-visible + .radio-dot{outline:3px solid rgba(59,130,246,.3);outline-offset:2px}
+.custom-radio input:disabled + .radio-dot{background:#f1f5f9;border-color:#e2e8f0;cursor:not-allowed}
+.custom-radio input:disabled:checked + .radio-dot::after{background:#94a3b8}
+
+/* 大号 Radio */
+.radio-lg .radio-dot{width:26px;height:26px}
+.radio-lg input:checked + .radio-dot::after{width:14px;height:14px}
+
+/* 卡片式 Radio */
+.radio-card-label{
+  display:flex;align-items:center;gap:.7rem;
+  padding:.8rem 1.2rem;border:2px solid #e2e8f0;border-radius:12px;
+  cursor:pointer;transition:all .25s;font-size:.85rem;color:#475569;
+}
+.radio-card-label:hover{border-color:#93c5fd;background:#f8faff}
+.radio-card-label input{display:none}
+.radio-card-label .card-dot{
+  width:20px;height:20px;border:2px solid #d1d5db;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .25s;
+}
+.radio-card-label:has(input:checked){border-color:var(--blue);background:#eff6ff;box-shadow:0 0 0 1px var(--blue)}
+.radio-card-label:has(input:checked) .card-dot{border-color:var(--blue)}
+.radio-card-label:has(input:checked) .card-dot::after{content:'';width:10px;height:10px;background:var(--blue);border-radius:50%}
+
+/* 按钮式 Radio (Button Group) */
+.radio-btn-group{display:inline-flex;border-radius:10px;overflow:hidden;border:2px solid #d1d5db}
+.radio-btn-group label{
+  padding:.55rem 1.2rem;font-size:.8rem;font-weight:500;color:#64748b;
+  cursor:pointer;transition:all .2s;border-right:1px solid #e2e8f0;background:white;
+}
+.radio-btn-group label:last-child{border-right:none}
+.radio-btn-group label:hover{background:#f8fafc}
+.radio-btn-group input{display:none}
+.radio-btn-group input:checked + span{color:white;font-weight:700}
+.radio-btn-group label:has(input:checked){background:var(--blue);color:white}
+
+/* fieldset 语义化 */
+fieldset.radio-fieldset{border:2px solid #e2e8f0;border-radius:12px;padding:1.2rem;margin:1rem 0}
+fieldset.radio-fieldset legend{font-weight:700;font-size:.85rem;color:#475569;padding:0 .5rem}
+
+@media(max-width:640px){.demo-grid,.demo-grid-2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1><span>网站UI单选按钮设计指南</span></h1>
+  <p class="subtitle">单选按钮核心逻辑：同一组内相同 name 属性实现互斥。始终搭配 label 使用，兼顾美观与无障碍。</p>
+  <div class="meta-tags"><span>原生Radio</span><span>accent-color</span><span>CSS自定义</span><span>卡片式</span><span>按钮组</span><span>fieldset语义化</span></div>
+</header>
+
+<div class="page">
+
+<!-- ===== 一、基础结构 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">1</div><h2>基础 HTML 结构 + 原生演示</h2><span class="en-label">Basic Structure</span></div>
+  <div class="card-body">
+    <div class="demo-grid">
+      <div class="plan-card"><h4>✅ 正确：相同 name + label 关联</h4>
+        <form>
+          <p style="font-size:.82rem;font-weight:600;margin-bottom:.5rem;">选择你最喜欢的 Web 语言：</p>
+          <div class="radio-group">
+            <label style="display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem;"><input type="radio" name="fav_lang" value="HTML" checked> HTML</label>
+            <label style="display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem;"><input type="radio" name="fav_lang" value="CSS"> CSS</label>
+            <label style="display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem;"><input type="radio" name="fav_lang" value="JavaScript"> JavaScript</label>
+            <label style="display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.85rem;color:#94a3b8;"><input type="radio" name="fav_lang" value="Python" disabled> Python (禁用)</label>
+          </div>
+        </form>
+      </div>
+      <div class="plan-card"><h4>HTML 代码</h4>
+        <div class="code-block"><span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="val">"radio"</span> <span class="attr">id</span>=<span class="val">"html"</span> <span class="attr">name</span>=<span class="val">"fav_language"</span> <span class="attr">value</span>=<span class="val">"HTML"</span><span class="tag">&gt;</span><br><span class="tag">&lt;label</span> <span class="attr">for</span>=<span class="val">"html"</span><span class="tag">&gt;</span>HTML<span class="tag">&lt;/label&gt;</span><br><br><span class="comment">&lt;!-- 同一组内 name 必须相同！--&gt;</span><br><span class="comment">&lt;!-- checked 属性设置默认选中 --&gt;</span></div></div>
+    </div>
+    <div class="tip-box info"><span class="icon">💡</span><span>核心规则：① 同组内 <code>name</code> 必须相同才能互斥 ② 始终用 <code>&lt;label for="id"&gt;</code> 关联 ③ <code>checked</code> 属性设置默认选中项。</span></div>
+  </div>
+</article>
+
+<!-- ===== 二、三种自定义方式 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">2</div><h2>三种自定义方式 — 从简到繁</h2><span class="en-label">Customization</span></div>
+  <div class="card-body">
+
+    <div class="sub-title">方式1：accent-color 快速换色</div>
+    <div class="demo-grid">
+      <div class="plan-card">
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+          <label style="display:inline-flex;align-items:center;gap:.3rem;cursor:pointer;font-size:.82rem;"><input type="radio" class="radio-accent" name="ac1" style="accent-color:#3b82f6;" checked> <span style="color:#3b82f6;">蓝色</span></label>
+          <label style="display:inline-flex;align-items:center;gap:.3rem;cursor:pointer;font-size:.82rem;"><input type="radio" class="radio-accent" name="ac1" style="accent-color:#22c55e;"> <span style="color:#22c55e;">绿色</span></label>
+          <label style="display:inline-flex;align-items:center;gap:.3rem;cursor:pointer;font-size:.82rem;"><input type="radio" class="radio-accent" name="ac1" style="accent-color:#f59e0b;"> <span style="color:#f59e0b;">橙色</span></label>
+        </div>
+        <div class="code-block" style="margin-top:.5rem;"><span class="prop">accent-color</span>: <span class="val">#3b82f6</span>;</div>
+      </div>
+    </div>
+
+    <div class="sub-title">方式2：完全自定义 CSS（隐藏原生，伪元素重绘）</div>
+    <div class="demo-grid-2">
+      <div class="plan-card" style="text-align:center;">
+        <label class="custom-radio"><input type="radio" name="demo1"><span class="radio-dot"></span>默认</label>
+        <label class="custom-radio"><input type="radio" name="demo1" checked><span class="radio-dot"></span>已选中</label>
+        <label class="custom-radio"><input type="radio" name="demo1" disabled><span class="radio-dot"></span>禁用</label>
+      </div>
+      <div class="plan-card" style="text-align:center;">
+        <label class="custom-radio radio-lg"><input type="radio" name="demo2"><span class="radio-dot"></span>大号</label>
+        <label class="custom-radio radio-lg"><input type="radio" name="demo2" checked><span class="radio-dot"></span>大号选中</label>
+      </div>
+    </div>
+
+    <div class="sub-title">方式3：卡片式 Radio（适合套餐/方案选择）</div>
+    <div style="display:flex;gap:.8rem;flex-wrap:wrap;">
+      <label class="radio-card-label"><input type="radio" name="plan" checked><span class="card-dot"></span><div><strong>免费版</strong><br><span style="font-size:.7rem;color:#94a3b8;">5GB · 基础功能</span></div></label>
+      <label class="radio-card-label"><input type="radio" name="plan"><span class="card-dot"></span><div><strong>专业版</strong><br><span style="font-size:.7rem;color:#94a3b8;">100GB · 高级分析</span></div></label>
+      <label class="radio-card-label"><input type="radio" name="plan"><span class="card-dot"></span><div><strong>企业版</strong><br><span style="font-size:.7rem;color:#94a3b8;">无限 · 专属支持</span></div></label>
+    </div>
+
+  </div>
+</article>
+
+<!-- ===== 三、按钮组样式 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">3</div><h2>按钮组式 Radio（Button Group）</h2><span class="en-label">Button Group</span></div>
+  <div class="card-body">
+    <p style="font-size:.85rem;color:#475569;margin-bottom:1rem;">适合选项较少且需要视觉突出的场景（如筛选切换、视图模式选择）。</p>
+    <div class="radio-btn-group" style="margin-bottom:1rem;">
+      <label><input type="radio" name="view" value="grid" checked><span>📱 网格视图</span></label>
+      <label><input type="radio" name="view" value="list"><span>📋 列表视图</span></label>
+      <label><input type="radio" name="view" value="table"><span>📊 表格视图</span></label>
+    </div>
+    <div class="code-block"><span class="comment">&lt;!-- 核心：隐藏input，用:has()伪类控制label背景 --&gt;</span><br><span class="tag">.btn-group label:has(input:checked)</span> { <span class="prop">background</span>: <span class="val">#3b82f6</span>; <span class="prop">color</span>: <span class="val">white</span>; }</div>
+  </div>
+</article>
+
+<!-- ===== 四、进阶实践 ===== -->
+<article class="section-card">
+  <div class="card-header"><div class="section-num">4</div><h2>进阶与最佳实践</h2><span class="en-label">Best Practices</span></div>
+  <div class="card-body">
+    <div class="demo-grid">
+      <div class="plan-card" style="border-left:4px solid var(--green);">
+        <h4>📦 fieldset 语义化分组</h4>
+        <fieldset class="radio-fieldset">
+          <legend>🎯 性别</legend>
+          <label class="custom-radio"><input type="radio" name="gender" checked><span class="radio-dot"></span>男</label>&nbsp;&nbsp;
+          <label class="custom-radio"><input type="radio" name="gender"><span class="radio-dot"></span>女</label>
+        </fieldset>
+        <p style="font-size:.72rem;color:#475569;">用 <code>&lt;fieldset&gt;</code> + <code>&lt;legend&gt;</code> 包裹单选组，屏幕阅读器可理解"性别：男/女"的语义。</p>
+      </div>
+      <div class="plan-card" style="border-left:4px solid var(--blue);">
+        <h4>⚛️ 框架开发</h4>
+        <div class="code-block"><span class="comment">&lt;!-- Vue: v-model 双向绑定 --&gt;</span><br><span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="val">"radio"</span> <span class="attr">v-model</span>=<span class="val">"picked"</span> <span class="attr">value</span>=<span class="val">"a"</span><span class="tag">&gt;</span><br><br><span class="comment">// React: useState + onChange</span><br><span class="kw">const</span> [picked, setPicked] = <span class="fn">useState</span>(<span class="val">'a'</span>);</div>
+        <p style="font-size:.72rem;color:#475569;">Vue: <code>v-model</code> · React: <code>useState</code> + <code>onChange</code>。数据驱动视图，避免直接操作DOM。</p>
+      </div>
+      <div class="plan-card" style="border-left:4px solid var(--red);">
+        <h4>🛡️ 服务端校验</h4>
+        <p style="font-size:.78rem;color:#475569;">前端单选限制可被绕过（浏览器DevTools修改name属性即可多选）。<strong>服务端必须校验</strong>接收到的参数值是否合法且唯一。</p>
+      </div>
+      <div class="plan-card" style="border-left:4px solid var(--purple);">
+        <h4>🧩 UI 组件库</h4>
+        <p style="font-size:.78rem;color:#475569;">Element Plus: <code>&lt;el-radio-group v-model="val"&gt;</code><br>Ant Design: <code>&lt;Radio.Group onChange={...}&gt;</code></p>
+        <p style="font-size:.72rem;color:#94a3b8;">企业项目推荐使用组件库，已内置 A11y、响应式、按钮组/卡片式等变体。</p>
+      </div>
+    </div>
+  </div>
+</article>
+
+</div>
+</body>
+</html>
